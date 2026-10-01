@@ -28,5 +28,5 @@ export function drawBullet(dc: DrawContext, projectile: ProjectileView): void {
       color,
     );
   });
-  drawAimed(dc, bulletTurns.sprites, bulletTurns.set, projectile.vx, projectile.vy, cx, cy);
+  drawAimed(dc, bulletTurns, projectile.vx, projectile.vy, cx, cy);
 }

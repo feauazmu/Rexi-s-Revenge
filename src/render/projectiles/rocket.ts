@@ -41,5 +41,5 @@ export function drawRocket(dc: DrawContext, projectile: ProjectileView): void {
   const flame = FLAME[projectile.age % FLAME.length] ?? P.sunYellow;
   fillDisc(surface, cx + back.x * TAIL, cy + back.y * TAIL, long ? 2 : 1, flame);
 
-  drawAimed(dc, rocketTurns.sprites, rocketTurns.set, projectile.vx, projectile.vy, cx, cy);
+  drawAimed(dc, rocketTurns, projectile.vx, projectile.vy, cx, cy);
 }

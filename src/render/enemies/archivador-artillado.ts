@@ -1,5 +1,5 @@
 import type { EnemyView } from '../../core';
-import { sprites as art } from '../art/generated/enemies';
+import { sprites as art, layout } from '../art/generated/enemies';
 import type { DrawContext } from '../draw-context';
 import { masterPalette as P } from '../palette';
 import { drawDrawerBomb } from '../projectiles/drawer';
@@ -14,10 +14,9 @@ import type { Color, Surface } from '../surface';
 const BODY = art['archivador/body'];
 const HATCH = art['archivador/hatch'];
 
-/** Where the 27×35 hitbox (the cabinet's front face) sits in BODY. */
-const HITBOX = { x: 16, y: 4 } as const;
-/** The hatch's top-left in BODY. */
-const HATCH_AT = { x: 25, y: 39 } as const;
+/** Where the 27×35 hitbox (the cabinet's front face) and the hatch sit in BODY. */
+const [HITBOX_X, HITBOX_Y] = layout.archivador.hitbox;
+const [HATCH_X, HATCH_Y] = layout.archivador.hatch;
 /** Thruster bells: the center column of each and the row their flames start on. */
 const THRUSTERS = [20, 38] as const;
 const FLAME_ROW = 41;
@@ -46,8 +45,8 @@ const DRAWER_TRAVEL = 13;
  */
 export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void {
   const { surface, sprites } = dc;
-  const left = Math.round(enemy.x) - HITBOX.x;
-  const top = Math.round(enemy.y) - HITBOX.y;
+  const left = Math.round(enemy.x) - HITBOX_X;
+  const top = Math.round(enemy.y) - HITBOX_Y;
   const winding = enemy.pose.attack === 'windup';
 
   // Thruster flames: flickering cones (3 frames), offset per side so they do not pulse together.
@@ -58,15 +57,15 @@ export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void
 
   // The armed drawer slides down out of the bay, behind the cabinet.
   if (winding) {
-    const cx = left + HITBOX.x + enemy.w / 2;
-    const cy = top + HATCH_AT.y + 8 - Math.round((1 - enemy.pose.windup) * DRAWER_TRAVEL);
+    const cx = left + HITBOX_X + enemy.w / 2;
+    const cy = top + HATCH_Y + 8 - Math.round((1 - enemy.pose.windup) * DRAWER_TRAVEL);
     drawDrawerBomb(dc, cx, cy, enemy.age);
   }
 
   surface.drawBitmap(sprites.get(BODY), left, top);
 
-  const hatchX = left + HATCH_AT.x;
-  const hatchY = top + HATCH_AT.y;
+  const hatchX = left + HATCH_X;
+  const hatchY = top + HATCH_Y;
   if (winding) {
     // The bay's dark mouth above the drawer, and the doors swung down on either side.
     surface.fillRect(hatchX + 1, hatchY - 1, HATCH.width - 2, 1, BAY);

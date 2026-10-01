@@ -253,7 +253,7 @@ sprites keep their old pixel size, so they look small inside their larger 640×3
 body stands on the bottom center of his hitbox (his gameplay shoulder and muzzle sit a little above
 and ahead of the drawn arm). Gameplay is unchanged; only the art is small. The Enemies, projectiles
 and debris are already redrawn through the pipeline (#27): each Enemy's sprite fills its real
-hitbox, placed by a `HITBOX` offset in its drawer.
+hitbox, placed by its hitbox offset from the exported art layout (`placeBody`).
 
 ## Seam 2: the renderer
 
@@ -523,7 +523,7 @@ effects are code, like the art; the only audio file is the music loop, `public/m
 5. Register it in `src/core/run/enemies/index.ts` (one line).
 6. Make its art through the pipeline (`scripts/art/README.md`: a sheet in `art/sheets.json`, the hand
    pass and debris rectangles in `scripts/art/enemies.py`, exported to `src/render/art/generated/enemies.ts`),
-   draw it in `src/render/enemies/<kind>.ts` (the sprite placed by its hitbox offset, plus code-driven
+   draw it in `src/render/enemies/<kind>.ts` (placed with `placeBody` by its `HITBOX` offset in `enemies.py`, plus code-driven
    rotors, flames and telegraphs) and register the drawer and its debris chunks in
    `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face
    Rexi).

@@ -329,7 +329,10 @@
     "enemies": {
       "sprites": ["enemies/**/*.png"],
       "format": "rle",
-      "out": "src/render/art/generated"
+      "out": "src/render/art/generated",
+      "data": {
+        "layout": "enemies/layout.json"
+      }
     },
     "projectiles": {
       "sprites": ["projectiles/**/*.png"],

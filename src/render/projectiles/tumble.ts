@@ -1,35 +1,26 @@
 import type { ProjectileView } from '../../core';
 import type { DrawContext } from '../draw-context';
-import { drawTurned, type TurnSet, type TurnSprites } from './turned';
+import { drawTurned, type TumbleTurns } from './turned';
 
 /**
- * Draws a baked part tumbling end over end: one `step`-degree turn every `ticks` ticks,
+ * Draws a baked part tumbling end over end: one `turns.step` turn every `ticksPerStep` ticks,
  * clockwise when it flies right (its top goes forward) and counter-clockwise when it flies left.
- * `turns` covers the angles from -180 (exclusive) to 180, or 0 to 180 for a part that looks the
- * same turned half round (a dumbbell).
+ * A full-circle set covers -180 (exclusive) to 180; a half-circle one 0 to 180 (exclusive).
  */
 export function drawTumbling(
   dc: DrawContext,
-  turns: { readonly sprites: TurnSprites; readonly set: TurnSet },
+  turns: TumbleTurns,
   projectile: ProjectileView,
-  step: number,
-  ticks: number,
-  period = 360,
+  ticksPerStep: number,
 ): void {
   const spin = projectile.vx < 0 ? 1 : -1;
-  let degrees = (spin * Math.floor(projectile.age / ticks) * step) % period;
+  const { step, period } = turns;
+  let degrees = (spin * Math.floor(projectile.age / ticksPerStep) * step) % period;
   if (period === 360) {
     if (degrees <= -180) degrees += 360;
     if (degrees > 180) degrees -= 360;
   } else if (degrees < 0) {
     degrees += period;
   }
-  drawTurned(
-    dc,
-    turns.sprites,
-    turns.set,
-    degrees,
-    projectile.x + projectile.w / 2,
-    projectile.y + projectile.h / 2,
-  );
+  drawTurned(dc, turns, degrees, projectile.x + projectile.w / 2, projectile.y + projectile.h / 2);
 }

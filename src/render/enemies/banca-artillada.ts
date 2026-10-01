@@ -1,10 +1,11 @@
 import type { EnemyView, RunView } from '../../core';
 import { sprites as art } from '../art/generated/enemies';
 import type { DrawContext } from '../draw-context';
-import { fillDisc } from '../effects/burst';
+import { fillDisc, ramp } from '../effects/burst';
 import { masterPalette as P } from '../palette';
-import { mirroredSprite, type SpriteDef } from '../sprite';
+import type { SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
+import { placeBody } from './placement';
 
 /**
  * The pipeline sprite, facing right (art/sheets.json `enemy_banca_v3`, scripts/art/enemies.py):
@@ -13,8 +14,6 @@ import type { Color, Surface } from '../surface';
  */
 const BODY = art['banca/body'];
 
-/** Where the 91×45 hitbox sits in BODY: the plates stick out 5 px past each side. */
-const HITBOX = { x: 5, y: 1 } as const;
 /** Rotor hubs: the left of each mast's two middle columns (symmetric, so both facings). */
 const HUBS = [23, 76] as const;
 /** Pod centers in the right-facing sprite (the core fires from the hitbox center ± its pod offset). */
@@ -47,14 +46,11 @@ const SMOKE: readonly Color[] = [P.robe, P.robeMid, P.robeSheen];
  */
 export function drawBancaArtillada(dc: DrawContext, enemy: EnemyView, run: RunView): void {
   const { surface, sprites } = dc;
-  const top = Math.round(enemy.y) - HITBOX.y;
-  const left = Math.round(enemy.x) - HITBOX.x;
   const right = run.rexi.x + run.rexi.w / 2 >= enemy.x + enemy.w / 2;
-  /** Screen x of BODY column `c` for the current facing. */
-  const column = (c: number) => (right ? left + c : left + BODY.width - 1 - c);
+  const { sprite, left, top, column } = placeBody('banca', BODY, enemy, right);
 
   for (const hub of HUBS) drawRotor(surface, left + hub, top - 1, enemy.age);
-  surface.drawBitmap(sprites.get(right ? BODY : mirroredSprite(BODY)), left, top);
+  surface.drawBitmap(sprites.get(sprite), left, top);
 
   // The engine grille glows and flickers.
   const hot = Math.floor(enemy.age / 3) % 2 === 0;
@@ -129,7 +125,7 @@ function drawPodGlow(surface: Surface, enemy: EnemyView, pods: readonly Point[])
   const { windup } = enemy.pose;
   const blinkEvery = windup < 0.6 ? 4 : 2;
   if (Math.floor(enemy.age / blinkEvery) % 2 === 1 && windup < 0.9) return;
-  const color = GLOW[Math.min(GLOW.length - 1, Math.floor(windup * GLOW.length))] ?? P.white;
+  const color = ramp(GLOW, windup);
   const r = 2 + Math.round(windup * 3);
   for (const pod of pods) fillDisc(surface, pod.x, pod.y, r, color);
 }
@@ -158,7 +154,7 @@ function drawDamageSmoke(surface: Surface, enemy: EnemyView, x: number, y: numbe
     const t = ((enemy.age + i * (period / 3)) % period) / period;
     const px = x + Math.round(Math.sin((enemy.age / 9 + i) * 1.7) * 4);
     const py = y - Math.round(t * 30);
-    const color = SMOKE[Math.min(SMOKE.length - 1, Math.floor(t * SMOKE.length))] ?? P.robeMid;
+    const color = ramp(SMOKE, t);
     fillDisc(surface, px, py, 2 + Math.round(t * 3), color);
   }
 }

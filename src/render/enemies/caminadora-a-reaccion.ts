@@ -4,6 +4,7 @@ import type { DrawContext } from '../draw-context';
 import { masterPalette as P } from '../palette';
 import { defineSprite, mirroredSprite, type SpriteDef } from '../sprite';
 import type { Color } from '../surface';
+import { placeBody } from './placement';
 
 /**
  * The pipeline sprite, facing right (art/sheets.json `enemy_caminadora`, scripts/art/enemies.py):
@@ -11,10 +12,6 @@ import type { Color } from '../surface';
  * the gatling under the front of the deck.
  */
 const BODY_RIGHT = art['caminadora/body'];
-const BODY_LEFT = mirroredSprite(BODY_RIGHT);
-
-/** Where the 43×19 hitbox (the deck and engines) sits in BODY_RIGHT. */
-const HITBOX = { x: 4, y: 5 } as const;
 
 /** Jet nozzles in BODY_RIGHT: the column just left of each nozzle and its center row. */
 const NOZZLES = [
@@ -77,14 +74,10 @@ export function drawCaminadoraAReaccion(dc: DrawContext, enemy: EnemyView): void
   const { surface, sprites } = dc;
   const right = enemy.pose.facing !== -1;
   const { attack } = enemy.pose;
-  const y = Math.round(enemy.y) - HITBOX.y + nth(BOB, Math.floor(enemy.age / BOB_TICKS));
-  const left = right
-    ? Math.round(enemy.x) - HITBOX.x
-    : Math.round(enemy.x) + enemy.w + HITBOX.x - BODY_RIGHT.width;
-  /** Screen x of BODY_RIGHT column `c` for the current facing. */
-  const column = (c: number) => (right ? left + c : left + BODY_RIGHT.width - 1 - c);
+  const bob = nth(BOB, Math.floor(enemy.age / BOB_TICKS));
+  const { sprite, left, top: y, column } = placeBody('caminadora', BODY_RIGHT, enemy, right, bob);
 
-  surface.drawBitmap(sprites.get(right ? BODY_RIGHT : BODY_LEFT), left, y);
+  surface.drawBitmap(sprites.get(sprite), left, y);
 
   // Afterburners: long and flickering while strafing, short while winding up.
   const flames = attack === 'windup' ? FLAME_IDLE : FLAME_FULL;

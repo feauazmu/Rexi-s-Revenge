@@ -9,6 +9,19 @@ export interface TurnSet {
 /** The sprites of one baked part, by angle key ('+022.5'). */
 export type TurnSprites = Readonly<Record<string, SpriteDef>>;
 
+/** One baked part: its sprites and where its pivot landed in each. */
+export interface Turns {
+  readonly sprites: TurnSprites;
+  readonly set: TurnSet;
+}
+
+/** A part baked for tumbling: `step` degrees between angles, over a full or a half turn. */
+export interface TumbleTurns extends Turns {
+  readonly step: number;
+  /** 360, or 180 for a part that looks the same turned half round (a dumbbell). */
+  readonly period: 180 | 360;
+}
+
 /** The baked angle key for `degrees` (as `art.py bake` names its files: '+022.5', '-090.0'). */
 export function turnKey(degrees: number): string {
   const rounded = Math.round(degrees * 10) / 10;
@@ -23,8 +36,7 @@ export function turnKey(degrees: number): string {
  */
 export function drawTurned(
   dc: DrawContext,
-  sprites: TurnSprites,
-  set: TurnSet,
+  { sprites, set }: Turns,
   degrees: number,
   cx: number,
   cy: number,
@@ -52,8 +64,7 @@ const AIM_STEP = 22.5;
  */
 export function drawAimed(
   dc: DrawContext,
-  sprites: TurnSprites,
-  set: TurnSet,
+  turns: Turns,
   vx: number,
   vy: number,
   cx: number,
@@ -63,7 +74,7 @@ export function drawAimed(
   // Screen y points down, baked angles turn counter-clockwise: aim up = positive angle.
   const degrees = (Math.atan2(-vy, Math.abs(vx)) * 180) / Math.PI;
   const snapped = Math.max(-90, Math.min(90, Math.round(degrees / AIM_STEP) * AIM_STEP));
-  drawTurned(dc, sprites, set, snapped, cx, cy, left);
+  drawTurned(dc, turns, snapped, cx, cy, left);
 }
 
 /** The sprites of baked part `name` from an exported module's sprite table ('turn/<name>/<key>'). */

@@ -1,7 +1,7 @@
 /**
  * The projectiles' pipeline art (ADR 0002, art/sheets.json `projectiles_v2`, hand pass in
  * scripts/art/enemies.py): one sprite per projectile, plus the RotSprite turns of those that spin
- * or point along their flight.
+ * or point along their flight (art/sheets.json `parts`).
  */
 import {
   bulletPivots,
@@ -12,22 +12,29 @@ import {
   sprites,
   stampPivots,
 } from '../art/generated/projectiles';
-import { turnSprites, type TurnSet, type TurnSprites } from './turned';
+import { turnSprites, type TumbleTurns, type Turns } from './turned';
 
 export const projectileArt = sprites;
 
-interface Turns {
-  readonly sprites: TurnSprites;
-  readonly set: TurnSet;
-}
-
 /** Full circle in 45° steps (-135..180): tumbling gavels and stamps. */
-export const gavelTurns: Turns = { sprites: turnSprites(sprites, 'gavel'), set: gavelPivots };
-export const stampTurns: Turns = { sprites: turnSprites(sprites, 'stamp'), set: stampPivots };
+export const gavelTurns: TumbleTurns = {
+  sprites: turnSprites(sprites, 'gavel'),
+  set: gavelPivots,
+  step: 45,
+  period: 360,
+};
+export const stampTurns: TumbleTurns = {
+  sprites: turnSprites(sprites, 'stamp'),
+  set: stampPivots,
+  step: 45,
+  period: 360,
+};
 /** Half circle in 22.5° steps (0..157.5): a dumbbell looks the same turned 180°. */
-export const dumbbellTurns: Turns = {
+export const dumbbellTurns: TumbleTurns = {
   sprites: turnSprites(sprites, 'dumbbell'),
   set: dumbbellPivots,
+  step: 22.5,
+  period: 180,
 };
 /** -90..90 in 22.5° steps, mirrored for the left half: things that point where they fly. */
 export const lawBookTurns: Turns = {

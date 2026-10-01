@@ -5,5 +5,5 @@ import { drawTumbling } from './tumble';
 
 /** Lluvia de Sellos: a rubber stamp tumbling through the air. */
 export function drawStamp(dc: DrawContext, projectile: ProjectileView): void {
-  drawTumbling(dc, stampTurns, projectile, 45, 3);
+  drawTumbling(dc, stampTurns, projectile, 3);
 }

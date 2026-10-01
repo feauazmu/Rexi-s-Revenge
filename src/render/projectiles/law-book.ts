@@ -1,5 +1,6 @@
 import type { ProjectileView } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { ramp } from '../effects/burst';
 import { masterPalette as P } from '../palette';
 import type { Color } from '../surface';
 import { lawBookTurns } from './art';
@@ -29,7 +30,7 @@ export function drawLawBook(dc: DrawContext, projectile: ProjectileView): void {
   // Back to front so the hotter steps nearer the book are drawn last; 2 px wide near the book.
   for (let d = length; d >= 1; d--) {
     const t = d / length;
-    const color = FLAME[Math.min(FLAME.length - 1, Math.floor(t * FLAME.length))] ?? P.redLight;
+    const color = ramp(FLAME, t);
     const size = d <= length / 2 ? 2 : 1;
     dc.surface.fillRect(
       Math.round(cx + bx * (BACK + d) - size / 2),
@@ -39,5 +40,5 @@ export function drawLawBook(dc: DrawContext, projectile: ProjectileView): void {
       color,
     );
   }
-  drawAimed(dc, lawBookTurns.sprites, lawBookTurns.set, projectile.vx, projectile.vy, cx, cy);
+  drawAimed(dc, lawBookTurns, projectile.vx, projectile.vy, cx, cy);
 }

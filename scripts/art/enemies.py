@@ -4,11 +4,18 @@
 
 Sources are the `clean` outputs in art/sprites/ (sheets enemy_*, projectiles_v2). Every change is
 a rule or a pixel-text patch here, so the pass is reviewable and repeatable (ADR 0002):
-  1. ink: dark pixels on the silhouette edge become `outline`, and a light edge pixel gets an
-     outline pixel outside it, so every sprite has the 1 px outline the snap smudged;
-  2. per-sprite pixel-text patches (PATCHES): readable LEDs, joined handlebars, glints;
-  3. projectiles were drawn at twice the game size and are reduced exactly 2:1 (reduce.py);
-  4. debris chunks are cut from each finished Enemy (DEBRIS rectangles) and re-inked along the cut.
+  1. bodies (BODIES picks the best copy of each sheet):
+     a. RECOLOR fixes colours the snap put on the wrong ramp (chrome on stone, reds on skin);
+     b. ink: dark pixels on the silhouette edge become `outline`, and a light edge pixel gets an
+        outline pixel outside it, so every sprite has the 1 px outline the snap smudged;
+     c. PATCHES: pixel-text fixes (the Caminadora's console);
+     d. HOLES: glints the cleaner cut out as background are filled back;
+     e. DEBRIS chunks are cut from the finished body and re-inked along the cut;
+     f. SPLIT cuts movable parts (the Archivador's hatch) out into their own sprite;
+  2. projectiles: DRAWN pixel text over the 2x projectiles_v2 render, except paper_tilt, which is
+     that render reduced exactly 2:1 (reduce.py) and re-inked;
+  3. LAYOUT (each body's hitbox offset and its split parts' positions) goes to
+     art/enemies/layout.json, which the export embeds, so the drawers never copy offsets by hand.
 The game draws everything facing right and mirrors it; the TypeScript comes from `art.py export`.
 """
 import os
@@ -21,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import holes  # noqa: E402
 from palette import ROOT, hex2rgb, MASTER  # noqa: E402
 from pixtext import RGB, from_text, paint  # noqa: E402
+from project import write_json  # noqa: E402
 from reduce import reduce2  # noqa: E402
 
 ART = os.path.join(ROOT, "art")
@@ -45,8 +53,7 @@ RECOLOR = {
     "maletin": STEEL,
     "archivador": {**STEEL, "a": "p", "b": "q"},
     "banca": STEEL,
-    "caminadora": {"S": "1", "T": "2", "U": "3", "L": "p", "a": "p", "b": "q", "c": "t", "d": "t", "f": "t",
-                   "N": "q"},
+    "caminadora": {**STEEL, "L": "p", "a": "p", "b": "q", "c": "t", "d": "t", "f": "t", "N": "q"},
 }
 
 # Pixel-text patches (x, y, rows) applied after the ink pass; ' ' keeps a pixel, '_' clears it.
@@ -202,11 +209,16 @@ HOLES = {
 # Archivador's bomb-bay hatch (it opens while a drawer is lowered). Its top-left pixel is (25, 39).
 SPLIT = {"archivador": {"hatch": (25, 39, 34, 41)}}
 
+# Where each Enemy's tuning hitbox (src/core/tuning/enemies.ts) sits in its right-facing body:
+# its top-left pixel. The briefcase and cockpit, the cabinet's front face, the deck and engines,
+# the bench between the plates.
+HITBOX = {"maletin": (7, 1), "archivador": (16, 4), "caminadora": (4, 5), "banca": (5, 1)}
+
 # Debris chunks, in the order the game indexes them: name -> (x0, y0, x1, y1) in the finished
 # body (end exclusive). Each is re-inked along its cut.
 DEBRIS = {
-    "maletin": {"0_mast": (17, 0, 24, 8), "1_cockpit": (29, 7, 43, 20), "2_case": (8, 10, 22, 20),
-                "3_tail": (0, 13, 9, 19)},
+    "maletin": {"0_mast": (16, 0, 26, 10), "1_cockpit": (29, 7, 43, 22), "2_case": (8, 10, 29, 25),
+                "3_tail": (0, 12, 13, 20)},
     "archivador": {"0_drawer": (17, 9, 42, 17), "1_wing": (0, 16, 17, 30), "2_thruster": (17, 38, 24, 43),
                    "3_corner": (16, 0, 30, 9), "4_pod": (43, 16, 61, 30)},
     "caminadora": {"0_jet": (3, 0, 22, 8), "1_console": (38, 0, 51, 12), "2_belt": (10, 14, 40, 20),
@@ -299,15 +311,23 @@ def projectile(name):
 
 
 def main():
+    layout = {}
     for kind in BODIES:
         sp = body(kind)
         print(f"enemies/{kind}/body.png {sp.shape[1]}x{sp.shape[0]}")
         for name, box in DEBRIS.get(kind, {}).items():
             save(chunk(sp, box), "enemies", kind, f"debris_{name}.png")
+        entry = {"hitbox": list(HITBOX[kind]), "width": int(sp.shape[1]), "height": int(sp.shape[0])}
         for name, (x0, y0, x1, y1) in SPLIT.get(kind, {}).items():
             save(sp[y0:y1, x0:x1].copy(), "enemies", kind, name + ".png")
             sp[y0:y1, x0:x1] = 0
+            entry[name] = [x0, y0]
+        if trim(sp).shape != sp.shape:
+            raise ValueError(f"{kind}: cutting out {list(SPLIT[kind])} emptied an edge, which would "
+                             "shift every offset in LAYOUT")
         save(sp, "enemies", kind, "body.png")
+        layout[kind] = entry
+    write_json(os.path.join(ART, "enemies", "layout.json"), layout)
     for name in PROJECTILES:
         sp = projectile(name)
         print(f"projectiles/{name}.png {sp.shape[1]}x{sp.shape[0]}")

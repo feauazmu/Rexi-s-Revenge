@@ -15,8 +15,8 @@ const SPARK: readonly Color[] = [P.white, P.sunYellow, P.skyPeach, P.skyOrange];
 /** How far through its life a particle is, 0..1. */
 const progress = (p: BurstParticleView): number => Math.min(1, p.age / Math.max(1, p.life));
 
-/** Picks the color for `t` (0..1) from a ramp. */
-function ramp(colors: readonly Color[], t: number): Color {
+/** Picks the color for `t` (0..1) from a ramp, first to last. */
+export function ramp(colors: readonly Color[], t: number): Color {
   const i = Math.min(colors.length - 1, Math.floor(t * colors.length));
   return colors[i] ?? P.white;
 }
