@@ -1,6 +1,6 @@
 /**
  * Title screen: backdrop, the "Rexi's Revenge" logo in the empty sky at the upper left, the
- * start prompt and the credits line.
+ * local top 10 below it, the start prompt and the credits line.
  *
  * The backdrop is either the bundled title illustration (a 480×270 bitmap handed to the
  * renderer, per ADR 0001) or, until it is wired in, a code-drawn sunset plaza with the same
@@ -12,6 +12,7 @@ import { defineSprite } from '../sprite';
 import { strings } from '../strings';
 import type { Bitmap, Color, Surface } from '../surface';
 import { fonts } from '../text';
+import { drawHighScores, HIGH_SCORES_WIDTH } from './high-scores';
 import { buildLogo } from './logo';
 import { blinkOn, drawOutlinedText, fillCircle, ui } from './ui';
 
@@ -26,6 +27,11 @@ const LOGO_Y = 12;
 /** The logo drops in from above over this many ticks when the Title appears. */
 const LOGO_DROP_TICKS = 18;
 
+/** The top 10 slides in from the left once the logo has landed. */
+const SCORES_X = 12;
+const SCORES_Y = 92;
+const SCORES_SLIDE_TICKS = 12;
+
 const PROMPT_CENTER_X = 124;
 const PROMPT_Y = 224;
 const CREDITS_BAND_Y = 254;
@@ -38,6 +44,15 @@ export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): v
   const drop = Math.max(0, LOGO_DROP_TICKS - view.screenAge);
   const logoY = LOGO_Y - Math.round((drop * drop * (LOGO.height + LOGO_Y)) / LOGO_DROP_TICKS ** 2);
   dc.surface.drawBitmap(dc.sprites.get(LOGO), LOGO_X, logoY);
+
+  const slide = Math.max(
+    0,
+    Math.min(SCORES_SLIDE_TICKS, LOGO_DROP_TICKS + SCORES_SLIDE_TICKS - view.screenAge),
+  );
+  const scoresX =
+    SCORES_X -
+    Math.round((slide * slide * (HIGH_SCORES_WIDTH + SCORES_X)) / SCORES_SLIDE_TICKS ** 2);
+  drawHighScores(dc, view.highScores, scoresX, SCORES_Y);
 
   if (view.startReady && blinkOn(view.tick)) {
     const prompt =

@@ -235,12 +235,12 @@ describe('End of the Run', () => {
     });
   });
 
-  it('returns to the Title shortly afterwards (until the Veredicto screen exists)', () => {
+  it('opens the Veredicto shortly afterwards (see verdict.test.ts)', () => {
     const game = doomed([maletinAt(300, 60)]);
     untilEvent(game, 'run-ended');
     const { tick } = untilEvent(game, 'screen-changed', 60 * 5);
     expect(tick).toBeGreaterThan(30);
-    expect(game.view).toMatchObject({ screen: 'title', run: null });
+    expect(game.view).toMatchObject({ screen: 'verdict', run: { ended: true } });
   });
 
   it('cannot be paused once over', () => {

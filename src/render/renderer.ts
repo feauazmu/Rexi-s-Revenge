@@ -12,6 +12,7 @@ import { drawHowToPlay } from './screens/how-to-play';
 import { drawPauseMenu } from './screens/pause-menu';
 import { drawTitleScreen } from './screens/title';
 import { dimScreen } from './screens/ui';
+import { dimDefeat, drawDefeatBanner, drawVerdict } from './screens/verdict';
 import { createSpriteBank } from './sprite';
 import type { Bitmap, BitmapFactory, Surface } from './surface';
 
@@ -69,8 +70,16 @@ export function createRenderer(
       drawTitleScreen(dc, options.titleIllustration ?? null);
     },
     'how-to-play': drawHowToPlay,
-    run: (dc) => {
-      drawRun(dc, WORLD_LAYERS, SCREEN_LAYERS);
+    run: (dc, view) => {
+      if (view.defeatAge === null) {
+        drawRun(dc, WORLD_LAYERS, SCREEN_LAYERS);
+        return;
+      }
+      // Defeat beat: the frozen Run darkens under its HUD (no crosshair) and a banner.
+      drawRun(dc, WORLD_LAYERS, []);
+      dimDefeat(dc, view.defeatAge);
+      drawRun(dc, [], [drawHud]);
+      drawDefeatBanner(dc, view.defeatAge);
     },
     paused: (dc, view) => {
       // The frozen Run, dimmed, without HUD and crosshair; then the HUD stays legible above it.
@@ -78,6 +87,11 @@ export function createRenderer(
       dimScreen(dc);
       drawRun(dc, [], [drawHud]);
       if (view.pauseMenu) drawPauseMenu(dc, view.pauseMenu);
+    },
+    verdict: (dc, view) => {
+      drawRun(dc, WORLD_LAYERS, []);
+      dimScreen(dc);
+      if (view.verdict) drawVerdict(dc, view.verdict);
     },
   };
   return {

@@ -17,6 +17,7 @@ export type GameEvent =
   | EnemyFiredEvent
   | RexiHitEvent
   | RunEndedEvent
+  | HighScoreRecordedEvent
   | MuteToggledEvent;
 
 export type GameEventType = GameEvent['type'];
@@ -85,6 +86,15 @@ export interface RunEndedEvent {
   readonly enemiesDestroyed: number;
   /** Run ticks survived, including the tick of the fatal hit. */
   readonly ticksSurvived: number;
+}
+
+/** The player signed a top-10 entry on the Veredicto. The table is already persisted. */
+export interface HighScoreRecordedEvent {
+  readonly type: 'high-score-recorded';
+  readonly initials: string;
+  readonly score: number;
+  /** 1-based place in the top 10. */
+  readonly rank: number;
 }
 
 /** "Silenciar música" was chosen in the pause menu. The choice is already persisted. */

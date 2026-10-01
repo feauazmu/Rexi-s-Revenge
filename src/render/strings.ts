@@ -25,6 +25,10 @@ export const strings = {
     pressAnyKey: 'Presiona cualquier tecla',
     tapToStart: 'Toca para empezar',
     credits: 'Un juego de Fili — Música generada con IA',
+    /** Heading of the local top 10 ("case law": the precedents to beat). */
+    highScores: 'Jurisprudencia',
+    /** Shown instead of the top 10 while it is empty ("no criminal record"). */
+    noHighScores: 'Sin antecedentes',
   },
 
   howToPlay: {
@@ -60,10 +64,39 @@ export const strings = {
 
   verdict: {
     title: 'Veredicto',
+    caseName: 'Rexi contra Bufete & Pesas S.A.',
     score: 'Puntos',
     enemiesDestroyed: 'Demandas desestimadas',
     timeSurvived: 'Tiempo sobrevivido',
+    /** The stamp on the record, by outcome. */
+    stamp: {
+      record: '¡RÉCORD!',
+      ranked: 'PRECEDENTE',
+      closed: 'CASO CERRADO',
+    },
+    /** The court's ruling under the stamp, by outcome. */
+    ruling: {
+      record: 'La corte se pone de pie: ¡nuevo récord!',
+      ranked: 'Tu caso sienta jurisprudencia.',
+      closed: 'Se te condena a 50 sentadillas y a intentarlo de nuevo.',
+    },
+    sign: 'Firma el acta con tus iniciales',
+    /** Followed by the place earned: "Acta firmada — Puesto 3". */
+    signed: 'Acta firmada — Puesto',
+    hints: {
+      letter: 'Letra',
+      move: 'Mover',
+      sign: 'Firmar',
+      enter: 'Enter',
+    },
+    /** Without a top-10 Run: "Récord vigente: REX — 128450". */
+    recordToBeat: 'Récord vigente:',
+    continueDesktop: 'Presiona cualquier tecla',
+    continueTouch: 'Toca para continuar',
   },
+
+  /** The banner over the defeat beat, before the Veredicto ("court is adjourned"). */
+  defeat: '¡Se levanta la sesión!',
 
   rotateDevice: 'Gira tu teléfono',
 
