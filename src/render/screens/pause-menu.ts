@@ -21,7 +21,7 @@ const HEADER_H = 46;
 const PANEL_Y = 104;
 
 /** A small gavel pointing at the selected entry. */
-const CURSOR = defineSprite({ k: ui.ink, g: ui.gold, G: ui.goldDeep, h: '#8a5a2a' }, [
+const CURSOR = defineSprite({ k: ui.ink, g: ui.gold, G: ui.goldDeep, h: ui.wood }, [
   '.kkk.....',
   'kgggk....',
   'kgGgkkkkk',
@@ -67,7 +67,7 @@ export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
     align: 'center',
   });
   surface.fillRect(x + 14, PANEL_Y + HEADER_H - 7, PANEL_W - 28, 1, ui.panelEdge);
-  surface.fillRect(x + 14, PANEL_Y + HEADER_H - 6, PANEL_W - 28, 1, ui.ink);
+  surface.fillRect(x + 14, PANEL_Y + HEADER_H - 6, PANEL_W - 28, 1, ui.panelLine);
 
   const font = fonts.regular;
   menu.items.forEach((item, i) => {
@@ -76,7 +76,7 @@ export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
     const textTop = rowTop + Math.floor((ROW_H - 7) / 2) - (font.baseline - 7);
     if (selected) {
       surface.fillRect(x + 8, rowTop, PANEL_W - 16, ROW_H - 2, ui.panelLight);
-      surface.fillRect(x + 8, rowTop + ROW_H - 3, PANEL_W - 16, 1, ui.ink);
+      surface.fillRect(x + 8, rowTop + ROW_H - 3, PANEL_W - 16, 1, ui.panelLine);
       const nudge = blinkOn(view.tick) ? 0 : 1;
       surface.drawBitmap(dc.sprites.get(CURSOR), x + 16 + nudge, rowTop + 6);
     }

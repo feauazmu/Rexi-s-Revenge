@@ -5,25 +5,40 @@
  */
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../core';
 import type { DrawContext } from '../draw-context';
-import { palette } from '../palette';
+import { drawCornerBrackets, fillCutRect } from '../frame';
+import { masterPalette } from '../palette';
 import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
 import { drawText, fonts, type BitmapFont, type TextAlign, type TextTarget } from '../text';
 
+/** The menu screens' colors: master-palette names only (ADR 0002). */
 export const ui = {
-  ink: palette.outline,
-  text: palette.white,
-  gold: '#ffd88a',
-  goldDeep: '#e89a3c',
-  muted: '#b8a8d0',
-  panel: '#241a3a',
-  panelLight: '#3d2f5c',
-  panelEdge: '#6a5a92',
-  dim: '#120a1c',
-  keyFace: '#efe6d6',
-  keyLip: '#a8998a',
-  keyText: '#2a2030',
-  keyLit: '#ffd24a',
+  ink: masterPalette.outline,
+  text: masterPalette.white,
+  gold: masterPalette.gold,
+  goldDeep: masterPalette.brass,
+  goldLight: masterPalette.light,
+  muted: masterPalette.grey2,
+  /** Panels: robe fill on a night inner line, inside a robeMid bevel lit with robeSheen. */
+  panel: masterPalette.robe,
+  panelLight: masterPalette.robeMid,
+  panelEdge: masterPalette.robeSheen,
+  panelLine: masterPalette.night,
+  dim: masterPalette.night,
+  keyFace: masterPalette.marble,
+  keyLip: masterPalette.grey2,
+  keyShade: masterPalette.grey3,
+  keyText: masterPalette.robe,
+  keyLit: masterPalette.gold,
+  wood: masterPalette.leather3,
+  red: masterPalette.red3,
+  redLight: masterPalette.coral,
+  redShade: masterPalette.red2,
+  ghost: masterPalette.grey3,
+  knob: masterPalette.grey2,
+  knobShade: masterPalette.grey1,
+  backdrop: masterPalette.robe,
+  backdropStripe: masterPalette.robeMid,
 } as const satisfies Record<string, Color>;
 
 /** Blinking for prompts: on for 2/3 of each second, phase taken from the view's tick. */
@@ -51,13 +66,21 @@ export function drawOutlinedText(
   drawText(dc, font, text, x, y, { color, align });
 }
 
-/** A framed panel: dark outline, light bevel edge, flat fill and a 1 px inner highlight row. */
+/**
+ * A framed panel: outline with cut corners, a bevel (lit top and left, shaded bottom and
+ * right), a night inner line, a robe fill with a highlight row, and brass corner brackets.
+ */
 export function drawPanel(surface: Surface, x: number, y: number, w: number, h: number): void {
-  surface.fillRect(x, y, w, h, ui.ink);
-  surface.fillRect(x + 1, y + 1, w - 2, h - 2, ui.panelEdge);
-  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ui.ink);
+  fillCutRect(surface, x, y, w, h, ui.ink);
+  surface.fillRect(x + 1, y + 1, w - 2, h - 2, ui.panelLight);
+  surface.fillRect(x + 1, y + 1, w - 2, 1, ui.panelEdge);
+  surface.fillRect(x + 1, y + 1, 1, h - 2, ui.panelEdge);
+  surface.fillRect(x + 2, y + h - 2, w - 3, 1, ui.panel);
+  surface.fillRect(x + w - 2, y + 2, 1, h - 3, ui.panel);
+  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ui.panelLine);
   surface.fillRect(x + 3, y + 3, w - 6, h - 6, ui.panel);
   surface.fillRect(x + 3, y + 3, w - 6, 1, ui.panelLight);
+  drawCornerBrackets(surface, { x: x + 4, y: y + 4, w: w - 8, h: h - 8 }, 4, ui.goldDeep, ui.gold);
 }
 
 /** A filled disc drawn as one rectangle per row (no arcs: determinism rule). */
@@ -88,8 +111,7 @@ export function keyWidth(label: KeyLabel): number {
 export function drawKey(dc: DrawContext, label: KeyLabel, x: number, y: number): number {
   const { surface } = dc;
   const w = keyWidth(label);
-  surface.fillRect(x + 1, y, w - 2, KEY_HEIGHT, ui.ink);
-  surface.fillRect(x, y + 1, w, KEY_HEIGHT - 2, ui.ink);
+  fillCutRect(surface, x, y, w, KEY_HEIGHT, ui.ink);
   surface.fillRect(x + 1, y + 1, w - 2, KEY_HEIGHT - 2, ui.keyLip);
   surface.fillRect(x + 1, y + 1, w - 2, KEY_HEIGHT - 5, ui.keyFace);
   if (typeof label === 'string') {

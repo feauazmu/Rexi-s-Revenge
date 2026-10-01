@@ -1,0 +1,6 @@
+This template is a row of 4 square cells, each 32x32 art pixels inside a light grey guide frame. Cell 1 (far left) holds a finished 16x16 game icon, a gold shield. Keep it exactly as it is: it fixes the art-pixel size (one of its pixels is one pixel of everything you draw) and the outline and shading style. Draw one ornament for an old court record (a parchment document) inside each of the other 3 cells, centred on the plain white background, never crossing its frame. Each has a clean 1-pixel near-black outline, 3-4 flat tones per material, light from the upper left. No text, no letters, no numbers.
+
+1) (keep: the gold shield icon)
+2) a round official court seal, about 30 pixels across: a gold-and-brass medallion with a raised rim of small beads, a laurel wreath around the edge and the scales of justice in the middle, in dark brown on gold.
+3) a red wax seal, about 22 pixels across, with an irregular blobby edge and a pressed scales-of-justice emblem in darker red, with two short red ribbon tails hanging below it, forked at the ends; about 30 pixels tall in all.
+4) a judge's wooden gavel lying horizontally, about 30 pixels wide and 14 pixels tall: a barrel-shaped brown head with two gold bands on the left, the handle pointing right, plus its round wooden sound block under the head.

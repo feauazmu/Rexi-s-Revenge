@@ -246,6 +246,23 @@ The run-length format is byte pairs `(palette index, run length − 1)`, row-maj
 
 It also lists the palette colours used. The renderer side has its own check in `tests/render/palette.test.ts`.
 
+## UI art: icons and the court record (#29)
+
+The production root's first shipped art. `scripts/art/ui/` holds its hand pass:
+
+```sh
+uv run -q --with pillow --with numpy python scripts/art/ui/icons.py anchor   # the template's size anchor
+npm run art -- templates icon_cells record_cells
+npm run art -- clean icons record
+uv run -q --with pillow --with numpy python scripts/art/ui/icons.py finish   # art/sprites/icons/
+uv run -q --with pillow --with numpy python scripts/art/ui/record.py         # art/sprites/record/
+npm run art -- export icons record && npm run art -- audit
+```
+
+- **Icons** (`icons`, 16×16): a hand-drawn Creatina tub anchors cell 0 of a 12-cell grid. The model drew the eleven designs at about 2× (32 px, the anchor too) and repeated the bottom row. A 2:1 reduction (`reduce.py`) keeps the silhouettes but loses emblems and labels at 16 px, so `icons.py` redraws each icon as pixel text over its reduced copy, keeping the generated design.
+- **Court record** (`record`): the court seal, the wax seal and the gavel, in 32-cell slots next to a finished 16 px icon. That anchor held the grid: they came out at the asked size. `record.py` inks the seals' rims, which had no outline.
+- **Lesson:** an empty 16-cell grid is too small a target for Flash; a finished icon at the target density next to larger cells works.
+
 ## The version C prototype (`reference/manu-pipeline/`)
 
 The prototype's six sheets are in its `sheets.json`. `npm run art -- clean --root reference/manu-pipeline` rebuilds `clean/` byte for byte from `grid/`, and `npm run art:test` asserts it. Then:
@@ -291,4 +308,5 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 | `preview.py`, `audit.py`              | Contact sheets; palette and pixel-rule lint.                                                            |
 | `pixtext.py`, `reduce.py`             | Pixel text (one fixed code per colour); exact 2:1 reduction.                                            |
 | `characters/`                         | Rexi's prototype: shared setup, templates, hand pass, rig and exports.                                  |
+| `ui/`                                 | Hand pass for the UI art: the 16×16 icons (`icons.py`) and the court record ornaments (`record.py`).    |
 | `tests/`                              | pytest: ledger and cap, grid recovery, snap, fit, RotSprite, IK, audit, export, prototype reproduction. |

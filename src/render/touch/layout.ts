@@ -50,7 +50,7 @@ export const TOUCH_LAYOUT = {
   /** Top right, under the score. */
   pause: { x: 621, y: 39, r: 11, hit: 21 },
   /** The HUD Weapon icon and its ammo (tap to cycle Weapons). */
-  weapon: { x: 0, y: 15, w: 56, h: 26 },
+  weapon: { x: 0, y: 18, w: 60, h: 32 },
 
   /** Menu d-pad: a press anywhere within `hit` picks the arrow on its dominant axis. */
   dpad: { x: 69, y: 285, arm: 23, hit: 59 },

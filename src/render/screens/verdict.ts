@@ -11,7 +11,9 @@
  * Every animation is a function of `screenAge`/`defeatAge` and `tick`, never a clock.
  */
 import { INITIALS_LENGTH, SCREEN_WIDTH, type VerdictView } from '../../core';
+import { sprites as record } from '../art/generated/record';
 import type { DrawContext } from '../draw-context';
+import { masterPalette as P } from '../palette';
 import { defineSprite } from '../sprite';
 import { strings } from '../strings';
 import type { Color } from '../surface';
@@ -20,16 +22,19 @@ import { arrows, blinkOn, dimScreen, drawKey, drawOutlinedText, keyWidth, ui } f
 
 const t = strings.verdict;
 
+/** The court record's colors (master palette): marble paper, mauve rules, robe ink, red stamps. */
 const doc = {
-  paper: '#efe6d6',
-  paperShade: '#ddd0b8',
-  rule: '#b9a68e',
-  ink: '#2a2030',
-  inkSoft: '#6b5a68',
-  red: '#c8323a',
-  redDeep: '#8c1d2a',
-  redFaint: '#e89a9a',
-  highlight: '#ffd88a',
+  paper: P.marble,
+  paperLight: P.white,
+  paperShade: P.stoneLight,
+  rule: P.stone2,
+  ink: P.robe,
+  inkSoft: P.stone1,
+  red: P.red3,
+  redDeep: P.red2,
+  redFaint: P.coral,
+  highlight: P.light,
+  highlightEdge: P.gold,
 } as const satisfies Record<string, Color>;
 
 /** Capitals start this far below a text cell's top (the rows above hold accents). */
@@ -60,7 +65,7 @@ export function drawDefeatBanner(dc: DrawContext, age: number): void {
   const { surface } = dc;
   const drop = Math.max(0, BANNER_AT + BANNER_DROP_TICKS - age);
   const y = BANNER.y - Math.round((drop * drop * (BANNER.y + BANNER.h)) / BANNER_DROP_TICKS ** 2);
-  surface.fillRect(0, y, SCREEN_WIDTH, BANNER.h, ui.ink);
+  surface.fillRect(0, y, SCREEN_WIDTH, BANNER.h, ui.panelLine);
   surface.fillRect(0, y + 3, SCREEN_WIDTH, 1, doc.red);
   surface.fillRect(0, y + BANNER.h - 4, SCREEN_WIDTH, 1, doc.red);
   drawOutlinedText(dc, fonts.large, strings.defeat, SCREEN_WIDTH / 2, y + 13 - LARGE_CAP, ui.gold, {
@@ -83,23 +88,8 @@ const STAMP_JOLT_TICKS = 3;
 const RULING_AT = STAMP_AT + STAMP_HOVER_TICKS;
 const SIGNATURE_AT = RULING_AT + 4;
 
-/** A gavel for the heading, head up-left, handle down-right. */
-const GAVEL = defineSprite({ k: doc.ink, w: '#a8693a', W: '#6e3f22', h: '#c48a52' }, [
-  '..kkk.......',
-  '.kwwwk......',
-  'kwhwwwk.....',
-  'kwwhwwwk....',
-  '.kwwwwWk....',
-  '..kwwWk.k...',
-  '...kWk.khk..',
-  '....k...khk.',
-  '.........khk',
-  '..........kk',
-]);
-const GAVEL_MIRRORED = defineSprite(
-  GAVEL.palette,
-  GAVEL.rows.map((row) => Array.from(row).reverse().join('')),
-);
+/** Pipeline ornaments (`scripts/art/ui/record.py`): the court seal, the gavel, the wax seal. */
+const { seal: SEAL, gavel: GAVEL, wax: WAX } = record;
 
 const docArrows = {
   up: defineSprite({ '#': doc.redDeep }, arrows.up.rows),
@@ -121,7 +111,10 @@ export function drawVerdict(dc: DrawContext, verdict: VerdictView): void {
   drawStats(dc, verdict, x, y + 82, age);
   if (age >= STAMP_AT) drawStamp(dc, verdict, x + PANEL.w / 2, y + 160, age - STAMP_AT);
   if (age >= RULING_AT) drawRuling(dc, verdict, x, y + 190);
-  if (age >= SIGNATURE_AT) drawFooter(dc, verdict, x, y);
+  if (age >= SIGNATURE_AT) {
+    drawFooter(dc, verdict, x, y);
+    if (verdict.recorded || !verdict.initials) drawWax(dc, x, y);
+  }
 }
 
 function drawPaper(dc: DrawContext, x: number, y: number): void {
@@ -129,11 +122,30 @@ function drawPaper(dc: DrawContext, x: number, y: number): void {
   const { w, h } = PANEL;
   // Drop shadow, outline, paper, and a ruled double border inside it.
   surface.fillRect(x + 3, y + 3, w, h, ui.dim);
-  surface.fillRect(x, y, w, h, doc.ink);
+  surface.fillRect(x, y, w, h, P.outline);
   surface.fillRect(x + 1, y + 1, w - 2, h - 2, doc.paper);
-  surface.fillRect(x + 1, y + h - 4, w - 2, 3, doc.paperShade);
-  strokeRect(dc, x + 4, y + 4, w - 8, h - 8, doc.rule);
-  strokeRect(dc, x + 6, y + 6, w - 12, h - 12, doc.rule);
+  // Aged edges: a lit top edge, a shaded band along the bottom and right, dithered inward.
+  surface.fillRect(x + 1, y + 1, w - 2, 1, doc.paperLight);
+  surface.fillRect(x + 1, y + h - 3, w - 2, 2, doc.paperShade);
+  surface.fillRect(x + w - 2, y + 2, 1, h - 3, doc.paperShade);
+  for (let dx = x + 2; dx < x + w - 2; dx += 2) {
+    surface.fillRect(dx + ((dx - x) % 4 === 0 ? 0 : 1), y + h - 4, 1, 1, doc.paperShade);
+  }
+  for (let dy = y + 3; dy < y + h - 3; dy += 2)
+    surface.fillRect(x + w - 3, dy, 1, 1, doc.paperShade);
+  strokeRect(dc, x + 5, y + 5, w - 10, h - 10, doc.rule);
+  strokeRect(dc, x + 7, y + 7, w - 14, h - 14, doc.rule);
+  // Corner flourishes: a small square knot where the two rules meet.
+  for (const [cx, cy] of [
+    [x + 4, y + 4],
+    [x + w - 9, y + 4],
+    [x + 4, y + h - 9],
+    [x + w - 9, y + h - 9],
+  ] as const) {
+    surface.fillRect(cx + 1, cy + 1, 3, 3, doc.paper);
+    strokeRect(dc, cx, cy, 5, 5, doc.inkSoft);
+    surface.fillRect(cx + 2, cy + 2, 1, 1, doc.red);
+  }
 }
 
 function strokeRect(dc: DrawContext, x: number, y: number, w: number, h: number, color: Color) {
@@ -152,9 +164,9 @@ function drawHeading(dc: DrawContext, x: number, y: number): void {
     shadow: doc.rule,
     align: 'center',
   });
-  const half = Math.ceil(fonts.large.measure(title) / 2);
-  dc.surface.drawBitmap(dc.sprites.get(GAVEL_MIRRORED), center - half - 22, y + 21);
-  dc.surface.drawBitmap(dc.sprites.get(GAVEL), center + half + 10, y + 21);
+  // The court's seal on the left, the gavel on its block on the right.
+  dc.surface.drawBitmap(dc.sprites.get(SEAL), x + 18, y + 14);
+  dc.surface.drawBitmap(dc.sprites.get(GAVEL), x + PANEL.w - 18 - GAVEL.width, y + 18);
   drawText(dc, fonts.regular, t.caseName, center, y + 46 - CAP, {
     color: doc.inkSoft,
     align: 'center',
@@ -216,6 +228,23 @@ function drawStamp(dc: DrawContext, verdict: VerdictView, cx: number, cy: number
   surface.fillRect(left + w - 2, top + 15, 2, 4, doc.paper);
   surface.fillRect(left + w - 30, top + h - 2, 7, 2, doc.paper);
   drawText(dc, fonts.large, text, cx + 1, top + 6 - LARGE_CAP, { color: doc.red, align: 'center' });
+  // Ink that did not take: paper specks on the stamp's frame (never on the glyphs, so the
+  // word stays readable), on a fixed hash so the wear is the same every frame.
+  for (let i = 0; i < (w * h) / 22; i++) {
+    const sx = (i * 37 + ((i * i * 13) % 11)) % (w - 2);
+    const sy = (i * 23 + ((i * 7) % 5)) % (h - 2);
+    if (sy >= 3 && sy < h - 5 && sx >= 3 && sx < w - 5) continue;
+    surface.fillRect(left + 1 + sx, top + 1 + sy, 1, 1, doc.paper);
+  }
+}
+
+/** The wax seal, hanging off the record's right edge once there is nothing left to sign. */
+function drawWax(dc: DrawContext, x: number, y: number): void {
+  dc.surface.drawBitmap(
+    dc.sprites.get(WAX),
+    x + PANEL.w - WAX.width + 9,
+    y + PANEL.h - WAX.height - 18,
+  );
 }
 
 function drawRuling(dc: DrawContext, verdict: VerdictView, x: number, top: number): void {

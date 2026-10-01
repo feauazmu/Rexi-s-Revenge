@@ -159,7 +159,8 @@ where it was. Scripted spawns replace the Director's spawning, but the ramp cloc
   One collected on Run tick T is active for the rest of T and the next `duration − 1` ticks. Pausing
   freezes them with the Run.
 - The view lists them in pickup order as `RexiView.powerUps` (`id`, `ticksLeft`, `totalTicks`); the HUD
-  draws one icon + seconds-left row per entry under the Weapon row (the icon blinks in the last 2 s).
+  draws one framed icon + seconds-left row per entry under the Weapon slot, with a bar that drains
+  over `totalTicks` (the icon blinks in the last 2 s).
 - **Effects live where they apply.** Each timed Power-up's file exports an effect hook built on
   `isPowerUpActive(rexi, id)` (`active.ts`), and the subsystem it changes calls that hook:
   `hasInmunidadJudicial` in `canHurtRexi` (all damage blocked; Enemy projectiles fly through),
@@ -265,7 +266,13 @@ then, in the left column over the illustration's empty sky, the logo, the top 10
 solid dark panel), the start prompt on a dark plate and the outlined credits line; Rexi stays uncovered on
 the right. `verdict.ts` draws the defeat beat (the frozen Run dims
 in two dither steps under the HUD, with a banner) and the Veredicto (a court record over the dimmed Run:
-stats counting up, a stamp with the outcome, the ruling and the signature line).
+stats counting up, a stamp with the outcome, the ruling and the signature line; the court seal,
+the gavel and the wax seal are pipeline sprites from `src/render/art/generated/record.ts`). Menu screens,
+the HUD (`src/render/hud/`), Crates and the Dialogue Box frame draw with master-palette colors only;
+the Weapon and Power-up icons are 16×16 pipeline sprites (`src/render/art/generated/icons.ts`) shared
+by the HUD, the Crates and Cómo jugar. Frames, plates, the parachute and the stamps are hand-authored
+palette data drawn in code (shared frame helpers in `src/render/frame.ts`), not pipeline art: #29
+uses the pipeline only where generated art helps (icons, the court record).
 
 - **Determinism rule**: the renderer only uses `Surface.fillRect` (integer-snapped solid rectangles) and
   `Surface.drawBitmap` (unscaled pre-rasterized bitmaps at integer positions). No paths, arcs, gradients or
@@ -322,7 +329,11 @@ from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of i
   (`findOffPaletteColors`) or sprite definitions (`findOffPaletteSpriteColors`), each with its
   nearest palette color. Tests use `expectOnPalette` and `loadGoldens` from `tests/support/palette.ts`.
   The check over every golden (`tests/render/palette.test.ts`) is **skipped**: the art predates the
-  palette. The art pass remaps all sprites and drawers, then enables it.
+  palette. The art pass remaps all sprites and drawers, then enables it. Until then, the UI layers
+  redrawn in #29 are checked on their own: `tests/render/ui-palette.test.ts` draws the HUD, Crates,
+  Dialogue Box frame, touch controls, pause menu and Veredicto alone over a palette color, and
+  `palette.test.ts` checks the goldens drawn only by the UI layer (Cómo jugar, the rotate prompt,
+  the code-drawn Title backdrop) plus the icon and court record sprites.
 - **A new color**: first try the nearest ramp step (`nearestPaletteColor` suggests one). If no
   step works, ask the owner, with a mock-up showing why. An accepted color gets a semantic name,
   goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
@@ -351,8 +362,9 @@ with `uv`, outside the game build: the game only ever sees the TypeScript it exp
   `decodeSprite` and export `sprites` (plus animation tables and pivots as `as const` data). The
   run-length format is fixed by `src/render/sprite-data.ts`; `tests/render/sprite-data.test.ts`
   decodes a fixture written by the Python exporter, so the two cannot drift.
-- Nothing from the pipeline is wired into the renderer yet; each area of the art pass (#24) swaps
-  its code-drawn sprites for an exported module.
+- Each area of the art pass (#24) swaps its code-drawn sprites for an exported module. Wired so
+  far: the icons and the court record ornaments (#29, `exports.icons`, `exports.record`; their hand
+  pass is in `scripts/art/ui/`).
 
 ## Brand art: logo, icons and share preview
 
@@ -377,6 +389,8 @@ master-palette colors only (a test in `tests/golden/brand.golden.test.ts` checks
   absolute (`https://feauazmu.github.io/Rexi-s-Revenge/og-image.png`). `tests/content/share-preview.test.ts`
   checks the tags, that every referenced file exists, and that the committed images match the renderer:
   after changing the logo, icons, card or `public/title.png`, re-run `npm run share-preview`.
+  At 640×360 (#29) the logo and the card were checked again: `npm run share-preview` reproduces the
+  committed files unchanged.
 
 ## Text: bitmap fonts, metrics and the strings catalog
 

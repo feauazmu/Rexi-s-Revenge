@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThis template is a row of 4 square cells, each 32x32 art pixels inside a light grey guide frame. Cell 1 (far left) holds a finished 16x16 game icon, a gold shield. Keep it exactly as it is: it fixes the art-pixel size (one of its pixels is one pixel of everything you draw) and the outline and shading style. Draw one ornament for an old court record (a parchment document) inside each of the other 3 cells, centred on the plain white background, never crossing its frame. Each has a clean 1-pixel near-black outline, 3-4 flat tones per material, light from the upper left. No text, no letters, no numbers.\n\n1) (keep: the gold shield icon)\n2) a round official court seal, about 30 pixels across: a gold-and-brass medallion with a raised rim of small beads, a laurel wreath around the edge and the scales of justice in the middle, in dark brown on gold.\n3) a red wax seal, about 22 pixels across, with an irregular blobby edge and a pressed scales-of-justice emblem in darker red, with two short red ribbon tails hanging below it, forked at the ends; about 30 pixels tall in all.\n4) a judge's wooden gavel lying horizontally, about 30 pixels wide and 14 pixels tall: a barrel-shaped brown head with two gold bands on the left, the handle pointing right, plus its round wooden sound block under the head.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a728b10ab158a8ef2/art/templates/record_cells.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.1016295,
+  "created_at": "2026-10-01T11:31:07.605Z",
+  "asset": {
+    "file": "record.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/record.txt",
+    "style": true,
+    "references": ["art/templates/record_cells.png"],
+    "note": "Refs #29",
+    "spent_after_usd": 2.016815
+  }
+}

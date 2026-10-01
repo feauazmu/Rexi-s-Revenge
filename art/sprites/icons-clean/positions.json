@@ -1,0 +1,121 @@
+{
+  "citaciones-teledirigidas": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 202,
+    "y": 15
+  },
+  "codigo-penal": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 162,
+    "y": 9
+  },
+  "creatina": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 202,
+    "y": 52
+  },
+  "creatina_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 204,
+    "y": 94
+  },
+  "dia-de-pierna": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 165,
+    "y": 51
+  },
+  "dia-de-pierna_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 168,
+    "y": 93
+  },
+  "inmunidad-judicial": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 125,
+    "y": 51
+  },
+  "inmunidad-judicial_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 124,
+    "y": 93
+  },
+  "lluvia-de-sellos": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 86,
+    "y": 9
+  },
+  "mancuernas": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 123,
+    "y": 9
+  },
+  "mazo-automatico": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 44,
+    "y": 9
+  },
+  "pre-entreno": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 49,
+    "y": 50
+  },
+  "pre-entreno_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 48,
+    "y": 93
+  },
+  "receso": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 88,
+    "y": 52
+  },
+  "receso_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 87,
+    "y": 93
+  },
+  "sentencia-firme": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 5,
+    "y": 50
+  },
+  "sentencia-firme_b": {
+    "h": 40,
+    "sheet": "icons",
+    "w": 40,
+    "x": 6,
+    "y": 93
+  }
+}
