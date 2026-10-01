@@ -21,6 +21,8 @@ export interface InputFrame {
   readonly move: number;
   /** Jump button held. */
   readonly jump: boolean;
+  /** Drop-down button held: fall through the one-way platform Rexi stands on. */
+  readonly drop: boolean;
   /** Aim target in game coordinates (480×270 space). */
   readonly aim: Vec2;
   /** Fire button held. */
@@ -52,6 +54,7 @@ const NO_MENU: MenuInput = {
 export const NEUTRAL_INPUT: InputFrame = {
   move: 0,
   jump: false,
+  drop: false,
   aim: { x: 240, y: 135 },
   fire: false,
   weaponNext: false,

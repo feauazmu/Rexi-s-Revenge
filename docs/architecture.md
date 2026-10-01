@@ -37,7 +37,7 @@ const events = game.tick(inputFrame); // exactly one 1/60 s step
 draw(game.view);                       // read-only snapshot, rebuilt lazily after each tick
 ```
 
-- **`InputFrame`** (`src/core/input.ts`): device-agnostic intent. Held fields (move, jump, aim, fire) and
+- **`InputFrame`** (`src/core/input.ts`): device-agnostic intent. Held fields (move, jump, drop, aim, fire) and
   edge fields (weapon next/previous/slot, pause, menu, start) that are true for exactly one tick.
 - **`GameEvent`** (`src/core/events.ts`): discriminated union on `type`.
 - **`GameView`** (`src/core/view.ts`): everything needed to draw, including `tick` for animation phase.
@@ -130,6 +130,13 @@ Each tick samples the keyboard/mouse adapter once (edges are consumed by the fir
 5. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
 6. Draw its HUD icon in `src/render/hud/weapon-icons.ts` and add its Spanish name to `strings.weapons`.
+
+### A platform
+
+Add `{ x, y, w }` (y = walkable top) to `arena.platforms` in `src/core/tuning/arena.ts`. Physics
+(`src/core/run/physics.ts`) treats every platform as one-way and the renderer draws each as a stone
+ledge, so no other code changes. Keep each one less than a full jump above the surface below it
+(the layout tests in `tests/core/platforms.test.ts` check this).
 
 ### An event
 

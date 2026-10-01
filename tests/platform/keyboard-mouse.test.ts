@@ -38,6 +38,10 @@ describe('keyboard + mouse to input frame', () => {
     expect(frame({ held: new Set([key]) }).jump).toBe(true);
   });
 
+  it.each(['KeyS', 'ArrowDown'])('holds drop (down through platforms) with %s', (key) => {
+    expect(frame({ held: new Set([key]) }).drop).toBe(true);
+  });
+
   it('aims at the pointer, mapped through the viewport', () => {
     expect(frame({ pointer: { x: 160 + 100, y: 90 + 50 } }).aim).toEqual({ x: 50, y: 25 });
   });
