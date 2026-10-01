@@ -1,8 +1,7 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type ActivePowerUpView, type RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { masterPalette as P } from '../palette';
-import { bodyOrigin, bodyPoint, bootsOf } from '../rexi/art';
-import { rexiPose } from '../rexi/pose';
+import { bodyOrigin, bodyPoint, bootsOf, type BodyFrame } from '../rexi/art';
 import { defineSprite } from '../sprite';
 import type { Color } from '../surface';
 
@@ -98,10 +97,9 @@ const EXHAUST_TRAVEL = 20;
  * Día de Pierna: jet flames and exhaust from his boots while the thrust pushes him, anchored
  * under the soles of the body frame he is drawn in (the pipeline's per-frame boot anchors).
  */
-function drawJetTrail(dc: DrawContext, run: RunView): void {
+function drawJetTrail(dc: DrawContext, run: RunView, frame: BodyFrame): void {
   const { rexi } = run;
   if (!rexi.flying) return;
-  const { frame } = rexiPose(rexi, run.tick);
   const origin = bodyOrigin(rexi, rexi.facing);
   bootsOf(frame).forEach(([bx, by], boot) => {
     const sole = bodyPoint(bx, by, rexi.facing);
@@ -119,8 +117,8 @@ function drawJetTrail(dc: DrawContext, run: RunView): void {
   });
 }
 
-/** Drawn behind Rexi's figure: the trails his Power-ups leave as he moves. */
-export function drawRexiTrails(dc: DrawContext, run: RunView): void {
+/** Drawn behind Rexi's figure: the trails his Power-ups leave as he moves (`frame`: his body frame). */
+export function drawRexiTrails(dc: DrawContext, run: RunView, frame: BodyFrame): void {
   drawSpeedLines(dc, run);
-  drawJetTrail(dc, run);
+  drawJetTrail(dc, run, frame);
 }

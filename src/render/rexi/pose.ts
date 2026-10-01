@@ -1,7 +1,6 @@
-import { defaultTuning, secondsToTicks, TICKS_PER_SECOND, type RexiView } from '../../core';
+import { TICKS_PER_SECOND, type RexiView } from '../../core';
 import { aimStep } from './arm';
-import { rexiArt } from '../art/generated/rexi';
-import type { BodyFrame } from './art';
+import { REXI_ANIMS as anims, type BodyFrame } from './art';
 
 /**
  * Picks Rexi's animation frame from his view and the Run tick (never a clock). Pure, so the
@@ -20,10 +19,6 @@ export interface RexiPose {
   readonly flash: boolean;
 }
 
-const { anims } = rexiArt;
-/** Ticks of the hurt reaction (`tuning.rexi.hurtDuration`): the hurt frames play over it. */
-const HURT_TICKS = secondsToTicks(defaultTuning.rexi.hurtDuration);
-
 /** Ticks each frame of an animation is shown. */
 function frameTicks(fps: number): number {
   return TICKS_PER_SECOND / fps;
@@ -35,10 +30,13 @@ function looped(frames: readonly BodyFrame[], fps: number, tick: number): BodyFr
   return frames[i] ?? frames[0] ?? 'rest';
 }
 
-/** The frame of a one-shot animation `age` ticks after it started (holds the last frame). */
-function once(frames: readonly BodyFrame[], fps: number, age: number): BodyFrame {
-  const i = Math.min(frames.length - 1, Math.floor(age / frameTicks(fps)));
-  return frames[i] ?? 'rest';
+/**
+ * The frame of a one-shot animation with `left` ticks to go, counted from its end (the view
+ * knows how long a reaction has left, not how long it lasts). Holds the first frame before that.
+ */
+function fromEnd(frames: readonly BodyFrame[], fps: number, left: number): BodyFrame {
+  const fromLast = Math.min(frames.length - 1, Math.floor((left - 1) / frameTicks(fps)));
+  return frames[frames.length - 1 - fromLast] ?? 'rest';
 }
 
 /** Vertical speed below which an airborne Rexi is at the apex of his jump, px/s. */
@@ -46,8 +44,9 @@ const APEX_SPEED = 60;
 
 function bodyFrame(rexi: RexiView, tick: number): BodyFrame {
   if (rexi.hurtTicks > 0) {
+    // The hurt frames read the same backwards (hurt_0, hurt_1, hurt_1, hurt_0).
     const { frames, fps } = anims.hurt;
-    return once(frames, fps, HURT_TICKS - rexi.hurtTicks);
+    return fromEnd(frames, fps, rexi.hurtTicks);
   }
   const [rise, apex, fall, land] = anims.jump.frames;
   if (!rexi.grounded) {

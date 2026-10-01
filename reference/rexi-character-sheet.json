@@ -29,6 +29,6 @@
     "note": "Rexi character sheet: sleeve ends at the elbow, inset redrawn (Refs #26)",
     "spent_after_usd": 1.949562
   },
-  "post_processing": "Right-arm sleeve (#26). Made in two edits through the art pipeline (art/raw/*.json, CREDITS.md 'Art pipeline'): ref_rexi_sheet_v3 edited art/templates/ref_sheet_composite.png (rexi-character-sheet-v2.png with its front and back views mirrored in place, so the ink already sat on his right arm; `rexi_refs.py sheet`) to redraw the sleeve as one piece, and ref_rexi_sheet_v4 (this prompt) ended it at the elbow. The model drew the tattoo inset as a lion next to a separate building twice, so the inset is refilled with a 1x crop of the side view's own sleeve on a robe-dark backdrop (`rexi_refs.py finish`).",
+  "post_processing": "Right-arm sleeve (#26). Two edits through the art pipeline (art/raw/*.json, CREDITS.md 'Art pipeline'): ref_rexi_sheet_v3 edited art/templates/ref_sheet_composite.png (rexi-character-sheet-v2.png with its front view mirrored in place, so the ink already sat on his right arm; `rexi_refs.py sheet`) to redraw the sleeve as one piece, and ref_rexi_sheet_v4 (this prompt) ended it at the elbow. `rexi_refs.py finish` then mirrors the back view back (the composite had mirrored it too, which put the sleeve on his left arm from behind) and refills the tattoo inset, twice drawn as a lion next to a separate building, with a 1x crop of the side view's own sleeve on a robe-dark backdrop.",
   "sources": ["art/raw/ref_rexi_sheet_v3.json", "art/raw/ref_rexi_sheet_v4.json"]
 }

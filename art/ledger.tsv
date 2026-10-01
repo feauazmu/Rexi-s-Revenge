@@ -10,3 +10,4 @@ time	root	name	model	cost_usd	file	credited	note
 2026-10-01T13:32:25	art	rexi_sleeve_v1	google/gemini-3.1-flash-image	0.1022395	rexi_sleeve_v1.png	yes	Rexi master: right-arm sleeve on the near arm (Refs #26)
 2026-10-01T13:38:36	art	rexi_run_v1	google/gemini-3.1-flash-image	0.102827	rexi_run_v1.png	yes	Rexi run keys: up A, passing B (twice), up B (Refs #26)
 2026-10-01T14:01:18	art	rexi_portrait_v1	google/gemini-3.1-flash-image	0.1021075	rexi_portrait_v1.png	yes	Dialogue Box portrait redrawn with the right-arm sleeve (Refs #26)
+2026-10-01T14:17:25	art	ref_title_v8	google/gemini-3.1-flash-image	0.0684535	ref_title_v8.png	yes	Title illustration, same composition: rough sleeve pasted on the flexing (right) arm, cleaned up (Refs #26)

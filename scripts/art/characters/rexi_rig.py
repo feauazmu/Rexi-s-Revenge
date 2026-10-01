@@ -45,7 +45,7 @@ ANGLES = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
 
 SKIN = set("abcde")
 TATTOO_INK = set("MNL")
-ROBE = set("knrR")
+ROBE = set("knurR")   # robeMid (u) only appears in the keys re-snapped to 56 colours (rexi.py)
 
 
 def rgba(code):
@@ -63,16 +63,14 @@ def load(name):
 
 
 def blit(dst, src, x0, y0, mask=None):
-    """Alpha-stamp src onto dst at integer (x0, y0)."""
-    h, w = src.shape[:2]
-    for y in range(h):
-        Y = y0 + y
-        if not 0 <= Y < dst.shape[0]:
-            continue
-        for x in range(w):
-            X = x0 + x
-            if 0 <= X < dst.shape[1] and src[y, x, 3] and (mask is None or mask[y, x]):
-                dst[Y, X] = src[y, x]
+    """Alpha-stamp src onto dst at integer (x0, y0), clipped; `mask` limits which src pixels."""
+    keep = src[..., 3] > 0
+    if mask is not None:
+        keep &= mask.astype(bool)
+    ys, xs = np.nonzero(keep)
+    X, Y = xs + x0, ys + y0
+    ok = (X >= 0) & (Y >= 0) & (X < dst.shape[1]) & (Y < dst.shape[0])
+    dst[Y[ok], X[ok]] = src[ys[ok], xs[ok]]
     return dst
 
 
@@ -143,7 +141,7 @@ def detattoo(sp, x0, x1, y0, y1, ink=frozenset("MNL"), passes=2):
                     continue              # silhouette outline of the arm: keep
                 skin = [n for n in ns if n in SKIN and n not in ink]
                 if skin:
-                    plain[y, x] = rgba(max(set(skin), key=skin.count))
+                    plain[y, x] = rgba(max(sorted(set(skin)), key=skin.count))   # sorted: ties break alike every run
     return plain
 
 

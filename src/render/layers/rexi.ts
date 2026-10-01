@@ -17,7 +17,7 @@ import {
 } from '../rexi/art';
 import { heldWeapons } from '../rexi/held-weapons';
 import { drawRexiTrails } from './power-up-effects';
-import { rexiPose } from '../rexi/pose';
+import { rexiPose, type RexiPose } from '../rexi/pose';
 import { masterPalette as P } from '../palette';
 import { defineSprite } from '../sprite';
 import type { Color } from '../surface';
@@ -47,7 +47,8 @@ const OUTLINE_OFFSETS = [
  * outlined by a glow while Inmunidad Judicial protects him.
  */
 export function drawRexi(dc: DrawContext, run: RunView): void {
-  drawRexiTrails(dc, run);
+  const pose = rexiPose(run.rexi, run.tick);
+  drawRexiTrails(dc, run, pose.frame);
   const immunity = run.rexi.powerUps.find((p) => p.id === 'inmunidad-judicial');
   const flickerOff =
     immunity !== undefined &&
@@ -57,22 +58,24 @@ export function drawRexi(dc: DrawContext, run: RunView): void {
     const color =
       IMMUNITY_GLOW[Math.floor(run.tick / IMMUNITY_GLOW_TICKS) % IMMUNITY_GLOW.length] ?? P.white;
     const glow = silhouetteContext(dc, color);
-    for (const [dx, dy] of OUTLINE_OFFSETS) drawFigure(translatedContext(glow, dx, dy), run);
+    for (const [dx, dy] of OUTLINE_OFFSETS) {
+      drawFigure(translatedContext(glow, dx, dy), run, pose);
+    }
   }
-  drawFigure(dc, run);
+  drawFigure(dc, run, pose);
 }
 
 /**
  * Rexi's figure (pipeline art, ADR 0002): the body frame for his pose and facing, then the
  * aiming arm holding his Weapon in one of 16 directions at the frame's shoulder, the lapel over
  * its root, and the muzzle flash. The sleeve is on his right arm in every facing: in the body
- * frame facing right (the near arm) and on the aiming arm facing left.
+ * frame facing right (the near arm) and on the aiming arm facing left. `pose` is
+ * `rexiPose(run.rexi, run.tick)`.
  */
-export function drawFigure(dc: DrawContext, run: RunView): void {
+export function drawFigure(dc: DrawContext, run: RunView, pose: RexiPose): void {
   const { surface, sprites } = dc;
   const { rexi } = run;
   const { facing } = rexi;
-  const pose = rexiPose(rexi, run.tick);
 
   const origin = bodyOrigin(rexi, facing);
   surface.drawBitmap(sprites.get(bodySprite(pose.frame, facing, pose.flash)), origin.x, origin.y);

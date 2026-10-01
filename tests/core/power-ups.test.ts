@@ -397,8 +397,9 @@ describe('Pre-entreno', () => {
             ? [slow.shots, twin.shots]
             : [twin.shots, slow.shots];
         for (const shot of fewer) {
-          // Half-size steps integrate gravity, thrust and homing a little differently; a drawer
-          // falling for its whole flight (Archivador Artillado) drifts the most, about 9 px.
+          // Half-size steps integrate gravity, thrust and homing a little differently. A drawer
+          // falls for its whole flight (Archivador Artillado), so it drifts the most: about 9 px
+          // since Rexi's 22-px-wide hitbox (#26) moved the moment it drops over him.
           const gap = Math.min(
             ...more
               .filter((p) => p.kind === shot.kind)

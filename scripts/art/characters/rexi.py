@@ -1,7 +1,8 @@
 """Rexi for the game (#26): the production master, the rig, the body frames, the aiming-arm parts.
 
-    uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py master  # art/sprites/rexi/master.png
-    uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py build   # master + frames + parts
+    uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py master    # sprites/rexi/master.png
+    uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py portrait  # sprites/rexi/portrait.png
+    uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py build     # both, then frames/rexi/
 
 Built on the version C prototype (rexi_rig.py, reference/manu-pipeline), whose generated key poses
 are re-snapped to the full character class in art/ (sheets.json), plus the new run keys
@@ -12,10 +13,11 @@ are re-snapped to the full character class in art/ (sheets.json), plus the new r
   torso       the master's head, torso and robe pixel for pixel (no boiling); the hurt frames keep
               their key's own head and torso (a different expression and a lean);
   near arm    the master's near arm with its sleeve, cut out once and swung about the shoulder
-              with RotSprite (run, jump, hurt), so the sleeve is the same pixels in every frame;
+              (run, jump, hurt): a row shear up to SHEAR_MAX degrees, RotSprite past that, so the
+              sleeve is the same pixels in every frame;
   aiming arm  not in the body frames: the far arm, cut from arm_forward_a, holding each Weapon,
-              pre-rotated with RotSprite into 9 angles (parts/), drawn by the game at the frame's
-              shoulder, with the robe's lapel cap over its root.
+              pre-rotated with RotSprite into 9 angles (frames/rexi/arm/), drawn by the game at
+              the frame's shoulder, with the robe's lapel cap over its root.
 
 Facing (CONTEXT.md, the owner's correction in #26): the sleeve is on his RIGHT arm. Facing right
 the camera sees his right side, so the near arm wears the sleeve and he aims with the far arm,
@@ -24,7 +26,7 @@ and the aiming arm is his right arm (inked). So both the near arm and the aiming
 inked and a plain version, and the facing-left body frames are not plain mirrors.
 
 Outputs (art/):
-  frames/rexi/body/{right,left}/<frame>.png   body frames on the BODY canvas (no aiming arm)
+  frames/rexi/body/{right,left}/<frame>.png   body frames on one canvas (no aiming arm)
   frames/rexi/cap.png                          the lapel over the aiming arm's root (facing right)
   frames/rexi/arm/<weapon>/{plain,inked}/<angle>.png
                                                the aiming arm and Weapon (facing right; the game
@@ -43,10 +45,11 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rexi_common import ROOT  # noqa: E402
-from pixtext import INV, RGB, from_text, paint, to_text  # noqa: E402
+from pixtext import RGB, from_text, paint, to_text  # noqa: E402
 from project import write_json  # noqa: E402
 from rotsprite import rotate  # noqa: E402
 import rexi_master  # noqa: E402
+from rexi_rig import blit, code_at, despeckle, hand_pass, rgba  # noqa: E402
 
 ART = os.path.join(ROOT, "art")
 SRC = os.path.join(ART, "sprites", "rexi", "src")
@@ -54,8 +57,6 @@ MASTER = os.path.join(ART, "sprites", "rexi", "master.png")
 OUT = os.path.join(ART, "frames", "rexi")
 
 # ---------------------------------------------------------------- geometry (master frame coords)
-WORK = (120, 100)                  # working canvas while composing
-BODY = (37, 20)                    # master frame (48x72) origin on the working canvas
 FEET = 69                          # master frame row of the soles
 TORSO_X = 23                       # master frame column of the torso centre (the hitbox centre line)
 MASTER_LOCAL = (10, 5)             # the cleaned m34_b's (0, 0) inside the master frame
@@ -82,26 +83,27 @@ SLOTS = {"key_contact": 0, "key_passing": 1, "key_jump": 2, "key_hurt": 3,
 
 # ---------------------------------------------------------------- hand-drawn pieces (pixel text)
 # The sleeve on the near arm, from (10, 19): one continuous piece from the robe's armhole to the
-# elbow. The lion's mane rings his face (eyes, nose and mouth in ink), closes under the chin and
-# flows down into the courthouse's pediment, architrave and three columns; the steps end the
-# sleeve at the elbow. Ink is leather2 on the lit side and leather1 where the arm turns away;
-# the bare forearm gets a skin5 highlight and a skinWarm/skin3 shadow. The image model's version
-# (rexi_sleeve_v1) inked the whole arm into a brown mass, so this is drawn by hand.
+# elbow. The lion's mane rings his face (eyes, nose and mouth in ink) and streams down the arm's
+# edges into the courthouse: a pediment, the architrave, three skin columns four rows tall, and
+# the steps that end the sleeve at the elbow. Ink is leather2 on the lit side and leather1 where
+# the arm turns away; the bare forearm gets a skin5 highlight and a skinWarm/skin3 shadow. The
+# image model's version (rexi_sleeve_v1) inked the whole arm into a brown mass, so this is drawn
+# by hand.
 SLEEVE = (10, 19, [
     "     MML    ",  # 19 mane under the armhole
     "  kMMMdMML  ",  # 20
-    " kMMMdddMML ",  # 21 mane ring around the face
-    " kMMdedddML ",  # 22
-    " kMMdLdLdMLf",  # 23 eyes
-    " keMddeddMLc",  # 24
-    " kMMdeLedMLc",  # 25 nose
-    "kdMMMdLdMLc ",  # 26 mouth
-    "keMMMMdMMLc ",  # 27 the mane closes under the chin
-    "keMddMddMfc ",  # 28 strands flow down; pediment apex
-    "kedMMMMMdfc ",  # 29 pediment
-    "kMMMMMMMML  ",  # 30 architrave
-    "keMdMdMdLc  ",  # 31 columns
-    "keMdMdMdL   ",  # 32 columns
+    " kMMdedddML ",  # 21 mane ring around the face
+    " kMMdLdLdML ",  # 22 eyes
+    " keMddeddMLf",  # 23
+    " kMMdeLedMLc",  # 24 nose
+    " kMMMLdLMMLc",  # 25 mouth
+    "keMddMddMLc ",  # 26 the mane streams down both edges; pediment apex
+    "keMdMMMdMLc ",  # 27 pediment
+    "kMMMMMMMMLc ",  # 28 architrave
+    "kedMdMdMdLc ",  # 29 columns
+    "kedMdMdMdL  ",  # 30
+    "kedMdMdMdL  ",  # 31
+    "kedMdMdML   ",  # 32
     "kMMMMMMLL   ",  # 33 steps: the sleeve ends at the elbow
     " kedddddfc  ",  # 34 bare forearm
     " kedddddfc  ",  # 35
@@ -237,44 +239,18 @@ def save(sp, path):
     Image.fromarray(sp).save(path)
 
 
-def rgba(code):
-    return np.array(RGB[code] + (255,), np.uint8)
-
-
-def code_at(sp, x, y):
-    if not (0 <= y < sp.shape[0] and 0 <= x < sp.shape[1]) or sp[y, x, 3] == 0:
-        return "."
-    return INV.get(tuple(int(v) for v in sp[y, x, :3]), "?")
-
-
-def blit(dst, src, x0, y0):
-    """Alpha-stamp src onto dst at integer (x0, y0), clipped."""
-    h, w = src.shape[:2]
-    ys, xs = np.nonzero(src[..., 3])
-    X, Y = xs + x0, ys + y0
-    ok = (X >= 0) & (Y >= 0) & (X < dst.shape[1]) & (Y < dst.shape[0])
-    dst[Y[ok], X[ok]] = src[ys[ok], xs[ok]]
-    return dst
+def grow4(m):
+    """Mask `m` grown by its 4-neighbours."""
+    g = m.copy()
+    g[1:] |= m[:-1]; g[:-1] |= m[1:]; g[:, 1:] |= m[:, :-1]; g[:, :-1] |= m[:, 1:]
+    return g
 
 
 def ring(sp, code="k"):
     """A 1 px outline around the sprite's silhouette (ADR 0002, rule 4)."""
     m = sp[..., 3] > 0
-    r = np.zeros_like(m)
-    r[1:] |= m[:-1]; r[:-1] |= m[1:]; r[:, 1:] |= m[:, :-1]; r[:, :-1] |= m[:, 1:]
-    sp[r & ~m] = rgba(code)
+    sp[grow4(m) & ~m] = rgba(code)
     return sp
-
-
-def despeckle(sp):
-    """Drop lone pixels (no opaque 8-neighbour)."""
-    a = sp[..., 3] > 0
-    p = np.pad(a, 1)
-    n = sum(p[1 + dy:1 + dy + a.shape[0], 1 + dx:1 + dx + a.shape[1]]
-            for dy in (-1, 0, 1) for dx in (-1, 0, 1)) - a
-    out = sp.copy()
-    out[a & (n == 0)] = 0
-    return out
 
 
 def flood(sp, seed, codes, box):
@@ -293,10 +269,8 @@ def flood(sp, seed, codes, box):
 
 def with_outline(sp, m):
     """Grow mask `m` by the outline pixels (k) that touch it."""
-    g = m.copy()
-    g[1:] |= m[:-1]; g[:-1] |= m[1:]; g[:, 1:] |= m[:, :-1]; g[:, :-1] |= m[:, 1:]
     k = np.zeros_like(m)
-    for y, x in zip(*np.nonzero(g & ~m)):
+    for y, x in zip(*np.nonzero(grow4(m) & ~m)):
         k[y, x] = code_at(sp, x, y) == "k"
     return m | k
 
@@ -340,10 +314,11 @@ class Rig:
         self.pos = json.load(open(os.path.join(SRC, "positions.json")))
         self.master = load(MASTER)
         self.keys, self.offsets, self.near_cache, self.arm_cache = {}, {}, {}, {}
-        self.torso, near_mask = self._torso()
+        self.near_mask = self._near_mask(self.master, (15, 28))
+        self.torso = self._torso()
         plain = self.master.copy()
         paint(plain, PLAIN[0], PLAIN[1], PLAIN[2])
-        self.near = {True: self._cut(self.master, near_mask), False: self._cut(plain, near_mask)}
+        self.near = {True: self._cut(self.master, self.near_mask), False: self._cut(plain, self.near_mask)}
         self.arm, self.arm_pivot, self.cap, self.fist = self._arm()
 
     # ------------------------------------------------------------ master-derived parts
@@ -354,15 +329,14 @@ class Rig:
 
     def _torso(self):
         """The master without its near arm (the hole filled with robe) and without the far fist
-        (the aiming arm replaces it). Returns (torso, near-arm mask)."""
+        (the aiming arm replaces it)."""
         m = self.master.copy()
         for y in range(34, 47):
             for x in range(34, 40):
                 if code_at(m, x, y) in SKIN | INK:
                     m[y, x] = 0
-        mask = self._near_mask(self.master, (15, 28))
-        fill_robe(m, mask, ROBE_LEFT)
-        return m, mask
+        fill_robe(m, self.near_mask, ROBE_LEFT)
+        return m
 
     def _cut(self, src, mask):
         out = np.zeros_like(src)
@@ -407,8 +381,7 @@ class Rig:
                 if src[y, x, 3] and code_at(src, x, y) in SKIN | INK:
                     arm[y + ly - oy, x + lx - ox] = src[y, x]
         border = arm[..., 3] > 0
-        inner = border.copy()
-        inner[1:] &= border[:-1]; inner[:-1] &= border[1:]; inner[:, 1:] &= border[:, :-1]; inner[:, :-1] &= border[:, 1:]
+        inner = ~grow4(~border)
         for y, x in zip(*np.nonzero(border & ~inner)):
             if code_at(arm, x, y) in ("a", "b"):
                 arm[y, x] = 0                     # the key's dark border: the outline goes here
@@ -468,7 +441,7 @@ class Rig:
         its own near arm and far fist still in."""
         if name not in self.keys:
             p = self.pos[name]
-            sp = rexi_master_hand_pass(load(os.path.join(SRC, name + ".png")))
+            sp = hand_pass(load(os.path.join(SRC, name + ".png")))
             mx = SLOTS[name] * SLOT_W + SLOT_W // 2 - MASTER_BBOX_W // 2
             my = SHEET_GROUND - MASTER_H
             fx, fy = p["x"] - mx + MASTER_LOCAL[0], p["y"] - my + MASTER_LOCAL[1]
@@ -529,7 +502,7 @@ class Rig:
             y0 = ys.min()
             sel = ys < y0 + 6
             return xs[sel].mean(), y0
-        (mx, my), (kx, ky) = top(self._near_mask(self.master, (15, 28))), top(mask)
+        (mx, my), (kx, ky) = top(self.near_mask), top(mask)
         return int(round(kx - margin - mx)), int(ky - margin - my)
 
     # ------------------------------------------------------------ composition
@@ -604,8 +577,8 @@ class Rig:
                 elif code_at(before, x, y) in ROBE | {"."}:
                     out[y, x] = band[y, x]
         out = despeckle(out)
-        shoulder = (PIVOT[0] + lx + mg, PIVOT[1] + ly + bob + mg - (1 if breath else 0))
-        cap_at = (lx + mg, ly + bob + mg - (1 if breath else 0))
+        shoulder = (PIVOT[0] + lx + mg, PIVOT[1] + ly + bob + mg - lift)
+        cap_at = (lx + mg, ly + bob + mg - lift)
         return out, shoulder, cap_at
 
     def _shorten(self, sp, n, top):
@@ -650,9 +623,11 @@ BODY_FRAMES = {
     "hurt_1": {"key": "key_hurt2", "own_upper": True, "swing": -30},
 }
 RUN = [f"run_{i}" for i in range(8)]
-# Animations: fps, loop and body frames. `shoot` and `aim` also move the aiming arm, which the
-# game draws: shoot frames carry (recoil px, muzzle flash size 0..2) and run 3 frames at 25 fps,
-# 0.12 s, the Mazo Automático's fire interval (tuning.weapons), so each shot plays it once.
+# Animations: fps, loop and body frames. `shoot` also moves the aiming arm, which the game draws:
+# its frames carry (recoil px, muzzle flash size 0..2) and run 3 frames at 25 fps, 0.12 s, the
+# Mazo Automático's fire interval (tuning.weapons), so each shot plays it once. `hurt` runs 4
+# frames over 16 of the hurt reaction's 18 ticks; it reads the same backwards (the game plays it
+# from the ticks left). Aiming is the 16 arm directions over the idle body, no table needed.
 ANIMS = {
     "idle": {"fps": 6, "loop": True, "frames": ["rest", "rest", "breath", "breath", "rest", "rest", "rest", "blink"]},
     "run": {"fps": 15, "loop": True, "frames": RUN},
@@ -660,7 +635,6 @@ ANIMS = {
     "jump": {"fps": 6, "loop": False, "frames": ["jump_0", "jump_1", "jump_2", "jump_3"]},
     "hurt": {"fps": 15, "loop": False, "frames": ["hurt_0", "hurt_1", "hurt_1", "hurt_0"]},
     "shoot": {"fps": 25, "loop": False, "frames": ["rest", "rest", "rest"], "recoil": [2, 1, 0], "flash": [2, 1, 0]},
-    "aim": {"fps": 4, "loop": True, "frames": ["rest"] * 16},
 }
 
 
@@ -774,24 +748,6 @@ def portrait():
         sp[(sp[..., :3] == RGB[src]).all(-1)] = rgba(dst)
     save(sp, PORTRAIT)
     return sp
-
-
-def rexi_master_hand_pass(sp):
-    """The master's rule-based hand pass applied to a key: interior outline black in the robe
-    becomes night, boot leather1 inside the boot becomes leather2 (rexi_rig.hand_pass)."""
-    out = sp.copy()
-    h, w = sp.shape[:2]
-    for y in range(h):
-        for x in range(w):
-            c = code_at(sp, x, y)
-            if c not in "kL":
-                continue
-            ns = [code_at(sp, x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
-            if c == "k" and all(n in ROBE for n in ns):
-                out[y, x] = rgba("n")
-            elif c == "L" and "." not in ns and code_at(sp, x, y + 1) != "k" and y > h - 16:
-                out[y, x] = rgba("M")
-    return out
 
 
 if __name__ == "__main__":

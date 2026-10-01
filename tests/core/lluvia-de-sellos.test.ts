@@ -71,18 +71,16 @@ describe('Lluvia de Sellos', () => {
 
   /**
    * Three Maletín-cópteros at `distance` px from the muzzle, one per edge and center of the fan.
-   * The muzzle is at arm's reach from the shoulder along the aim, where the shot leaves.
+   * The muzzle is read from the view with Rexi already aiming along the fan's center line.
    */
   function fanOfEnemies(distance: number) {
     const probe = armed();
-    const { shoulder } = runOf(probe.view).rexi;
     const aimAngle = -40;
-    const toAim = (aimAngle * Math.PI) / 180;
-    const reach = defaultTuning.rexi.muzzleReach;
-    const muzzle = {
-      x: shoulder.x + Math.cos(toAim) * reach,
-      y: shoulder.y + Math.sin(toAim) * reach,
-    };
+    const rad = (aimAngle * Math.PI) / 180;
+    const { shoulder } = runOf(probe.view).rexi;
+    const aim = { x: shoulder.x + Math.cos(rad) * 200, y: shoulder.y + Math.sin(rad) * 200 };
+    probe.ticks(1, { aim });
+    const { muzzle } = runOf(probe.view).rexi;
     const spawns = [-sellos.spreadAngle / 2, 0, sellos.spreadAngle / 2].map(
       (offset): ScriptedSpawn => {
         const a = ((aimAngle + offset) * Math.PI) / 180;
@@ -93,8 +91,6 @@ describe('Lluvia de Sellos', () => {
         };
       },
     );
-    const rad = (aimAngle * Math.PI) / 180;
-    const aim = { x: muzzle.x + Math.cos(rad) * 133, y: muzzle.y + Math.sin(rad) * 133 };
     return { spawns, aim };
   }
 

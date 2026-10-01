@@ -253,7 +253,9 @@ keep their old pixel size, so they look small inside their larger 640×360 hitbo
 art is drawn centered in its hitbox through `ART_BOX` in `src/render/enemies/index.ts`, the box
 size its art was drawn for. Gameplay is unchanged; only the art is small. Remove an `ART_BOX`
 entry when that Enemy is redrawn. Rexi is redrawn (#26): 64 px tall, with a 22×60 hitbox
-(`tuning.rexi`) whose shoulder and muzzle reach match the drawn arm and the Mazo Automático.
+(`tuning.rexi`) whose shoulder matches the drawn arm and whose `muzzleReach` (38 px) is the
+Mazo Automático's tip. Shots of every Weapon leave from there; the shorter held looks (the
+dumbbell, the book) draw their muzzle flash at their own tip (`rexiArt.arms[...].reach`).
 
 ## Seam 2: the renderer
 

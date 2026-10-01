@@ -172,28 +172,6 @@
       "frames": ["rest", "rest", "rest"],
       "recoil": [2, 1, 0],
       "flash": [2, 1, 0]
-    },
-    "aim": {
-      "fps": 4,
-      "loop": true,
-      "frames": [
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest",
-        "rest"
-      ]
     }
   },
   "arms": {

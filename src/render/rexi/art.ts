@@ -14,6 +14,19 @@ import type { Color } from '../surface';
 export type BodyFrame = keyof typeof rexiArt.frames;
 export type Facing = 1 | -1;
 
+/** The animation table (frames, fps; shoot adds recoil and flash), `ANIMS` in the rig. */
+export const REXI_ANIMS = rexiArt.anims;
+
+/** Column `x` of a `width`-wide sprite drawn facing right, in the same sprite drawn for `facing`. */
+function facingColumn(x: number, width: number, facing: Facing): number {
+  return facing === 1 ? x : width - 1 - x;
+}
+
+/** The sprite, or its hurt-blink version. */
+function blinking(sprite: SpriteDef, flash: boolean): SpriteDef {
+  return flash ? flashSprite(sprite) : sprite;
+}
+
 /** Size of every body frame's canvas. */
 export const BODY_WIDTH = rexiArt.canvas[0];
 export const BODY_HEIGHT = rexiArt.canvas[1];
@@ -34,7 +47,7 @@ export function bodyOrigin(
 
 /** A point given on the facing-right body canvas, for the frame drawn with `facing`. */
 export function bodyPoint(x: number, y: number, facing: Facing): { x: number; y: number } {
-  return { x: facing === 1 ? x : BODY_WIDTH - 1 - x, y };
+  return { x: facingColumn(x, BODY_WIDTH, facing), y };
 }
 
 function spriteAt(key: string): SpriteDef {
@@ -79,8 +92,7 @@ export function flashSprite(sprite: SpriteDef): SpriteDef {
 
 /** A body frame for the facing (`flash`: the hurt blink). */
 export function bodySprite(frame: BodyFrame, facing: Facing, flash: boolean): SpriteDef {
-  const sprite = spriteAt(`body/${facing === 1 ? 'right' : 'left'}/${frame}`);
-  return flash ? flashSprite(sprite) : sprite;
+  return blinking(spriteAt(`body/${facing === 1 ? 'right' : 'left'}/${frame}`), flash);
 }
 
 const capRight = spriteAt('cap');
@@ -93,10 +105,10 @@ export function capSprite(
   flash: boolean,
 ): { sprite: SpriteDef; x: number; y: number } {
   const [x, y] = rexiArt.frames[frame].cap;
-  const sprite = facing === 1 ? capRight : capLeft;
   return {
-    sprite: flash ? flashSprite(sprite) : sprite,
-    x: facing === 1 ? x : BODY_WIDTH - x - capRight.width,
+    sprite: blinking(facing === 1 ? capRight : capLeft, flash),
+    // the cap's left edge: facing left it is the mirrored right edge
+    x: facingColumn(facing === 1 ? x : x + capRight.width - 1, BODY_WIDTH, facing),
     y,
   };
 }
@@ -153,10 +165,9 @@ export function armSprite(
       rexiArt.arms[art].pivots[ink][
         angle as keyof (typeof rexiArt.arms)[ArmArt]['pivots']['plain']
       ];
-    const sprite = facing === 1 ? base : mirrorSprite(base);
     arm = {
-      sprite: flash ? flashSprite(sprite) : sprite,
-      pivotX: facing === 1 ? px : base.width - 1 - px,
+      sprite: blinking(facing === 1 ? base : mirrorSprite(base), flash),
+      pivotX: facingColumn(px, base.width, facing),
       pivotY: py,
     };
     arms.set(id, arm);

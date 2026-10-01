@@ -59,7 +59,7 @@
     },
     "enemy_slots": {
       "type": "slotsheet",
-      "anchor": "sprites/rexi/master.png",
+      "anchor": "../reference/manu-pipeline/master_side.png",
       "n": 3,
       "box": [48, 36],
       "ground": null
@@ -134,6 +134,7 @@
       "names": ["arm_forward_a", "arm_forward_b"]
     },
     "rexi_sleeve_v1": {
+      "_doc": "Its rexi_x4 was built from master.png before the SLEEVE patch existed (the prototype hand pass on the re-snapped m34_b): a rebuild of rexi_x4 now includes the sleeve.",
       "kind": "sprite",
       "out": "sprites/rexi/src",
       "prompt": "prompts/rexi_sleeve_v1.txt",

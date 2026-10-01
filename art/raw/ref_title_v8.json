@@ -15,7 +15,7 @@
   "cost_usd": 0.0684535,
   "created_at": "2026-10-01T12:17:09.717Z",
   "asset": {
-    "file": "title-source.png",
+    "file": "ref_title_v8.png",
     "media_type": "image/png",
     "width": 1376,
     "height": 768,
@@ -29,7 +29,5 @@
     "references": ["art/templates/ref_title_hint.png", "reference/rexi-character-sheet.png"],
     "note": "Title illustration, same composition: rough sleeve pasted on the flexing (right) arm, cleaned up (Refs #26)",
     "spent_after_usd": 2.734754
-  },
-  "post_processing": "Right-arm sleeve (#26), same composition as title-source-v2.png. The model would not move the tattoo (ref_title_v3 changed nothing; v5-v7 inked the arm holding the gavel, even on a mirrored picture), so ref_title_v4 removed it, `rexi_refs.py title-hint` pasted the new character sheet's front-view sleeve ink roughly onto the flexing arm (his right arm), and ref_title_v8 (this prompt) redrew it as a finished sleeve. v8 also inked the gavel arm, so `rexi_refs.py title-source` pastes that arm's box back from ref_title_v4 (the edit keeps the picture's geometry). ref_title_plate (an empty plate) was made for an abandoned composite.",
-  "sources": ["art/raw/ref_title_v4.json", "art/raw/ref_title_v8.json"]
+  }
 }
