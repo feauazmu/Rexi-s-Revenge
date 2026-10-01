@@ -57,5 +57,5 @@ export const powerUpsTuning = {
   'inmunidad-judicial': { duration: 8 },
   creatina: { duration: 10, damageMultiplier: 3 },
   'pre-entreno': { duration: 8, enemyTimeScale: 0.4 },
-  'dia-de-pierna': { duration: 6, thrust: 2000, riseSpeed: 170, ceiling: 6 },
+  'dia-de-pierna': { duration: 6, thrust: 2667, riseSpeed: 227, ceiling: 8 },
 } as const satisfies PowerUpsTuning & Record<PowerUpId, object>;

@@ -1,4 +1,4 @@
-import { DT, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../constants';
+import { DT, OFFSCREEN_MARGIN, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../constants';
 import type { ProjectileKind } from '../ids';
 import { center, clamp, overlaps, rotate, type Box, type Vec2 } from '../math';
 import type { RunContext } from './context';
@@ -8,9 +8,6 @@ import { detonate } from './explosives';
 import { enemyTimeScale } from './power-ups/pre-entreno';
 import { canHurtRexi, damageRexi } from './rexi';
 import type { Blast, ProjectileHoming, ProjectileState, ProjectileThrust } from './state';
-
-/** How far outside the screen a projectile may travel before it is discarded, px. */
-const OFFSCREEN_MARGIN = 32;
 
 export interface ProjectileSpawn {
   readonly kind: ProjectileKind;

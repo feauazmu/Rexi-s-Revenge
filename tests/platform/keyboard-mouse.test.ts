@@ -3,7 +3,7 @@ import { NEUTRAL_INPUT } from '../../src/core';
 import { toInputFrame, type KeyboardMouseSnapshot } from '../../src/platform/keyboard-mouse';
 import { computeViewport } from '../../src/platform/viewport';
 
-const viewport = computeViewport(1280, 720, 1); // 2×, letterbox offset (160, 90)
+const viewport = computeViewport(1366, 768, 1); // 2×, letterbox offset (43, 24)
 
 function snapshot(patch: Partial<KeyboardMouseSnapshot> = {}): KeyboardMouseSnapshot {
   return {
@@ -43,7 +43,7 @@ describe('keyboard + mouse to input frame', () => {
   });
 
   it('aims at the pointer, mapped through the viewport', () => {
-    expect(frame({ pointer: { x: 160 + 100, y: 90 + 50 } }).aim).toEqual({ x: 50, y: 25 });
+    expect(frame({ pointer: { x: 43 + 100, y: 24 + 50 } }).aim).toEqual({ x: 50, y: 25 });
   });
 
   it('fires while the primary button is held', () => {

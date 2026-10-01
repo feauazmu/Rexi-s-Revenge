@@ -34,7 +34,7 @@ const angleOf = (v: Vec2) => Math.atan2(v.y, v.x);
 describe('Citaciones Teledirigidas', () => {
   it('fires one subpoena from the muzzle along the aim', () => {
     const game = armed();
-    const events = game.ticks(1, { aim: { x: 400, y: 120 }, fire: true });
+    const events = game.ticks(1, { aim: { x: 533, y: 160 }, fire: true });
     expect(eventsOf(events, 'weapon-fired')).toEqual([
       { type: 'weapon-fired', weapon: 'citaciones-teledirigidas' },
     ]);
@@ -51,7 +51,7 @@ describe('Citaciones Teledirigidas', () => {
 
   it('flies straight when there is no Enemy to home onto', () => {
     const game = armed();
-    game.ticks(1, { aim: { x: 400, y: 120 }, fire: true });
+    game.ticks(1, { aim: { x: 533, y: 160 }, fire: true });
     const start = headingOf(subpoenasOf(game)[0] ?? expect.unreachable('no subpoena'));
     game.seconds(0.5);
     const later = subpoenasOf(game)[0] ?? expect.unreachable('subpoena gone');
@@ -62,17 +62,17 @@ describe('Citaciones Teledirigidas', () => {
     // A Maletín-cóptero bobbing a lot and drifting, up and to the left; the shot leaves low
     // to the right.
     const wobbly = { enemies: { 'maletin-coptero': { hoverAmplitude: 30, hoverPeriod: 1 } } };
-    const game = armed([{ kind: 'maletin-coptero', x: 60, y: 80 }], wobbly);
+    const game = armed([{ kind: 'maletin-coptero', x: 80, y: 107 }], wobbly);
     const enemyAt = () => runOf(game.view).enemies[0] ?? expect.unreachable('no Enemy');
 
     const before = { ...enemyAt() };
     const events = [
-      ...game.ticks(1, { aim: { x: 400, y: 200 }, fire: true }),
-      ...game.ticks(10, { aim: { x: 400, y: 200 } }),
+      ...game.ticks(1, { aim: { x: 533, y: 267 }, fire: true }),
+      ...game.ticks(10, { aim: { x: 533, y: 267 } }),
     ];
     expect(enemyAt().y).not.toBeCloseTo(before.y, 0);
     expect(enemyAt().x).not.toBeCloseTo(before.x, 0);
-    events.push(...game.seconds(citaciones.projectileLifetime, { aim: { x: 400, y: 200 } }));
+    events.push(...game.seconds(citaciones.projectileLifetime, { aim: { x: 533, y: 267 } }));
 
     const hits = eventsOf(events, 'enemy-hit');
     expect(hits).toHaveLength(1);
@@ -81,8 +81,8 @@ describe('Citaciones Teledirigidas', () => {
   });
 
   it('turns no faster than its turn rate', () => {
-    const game = armed([{ kind: 'maletin-coptero', x: 60, y: 60 }]);
-    game.ticks(1, { aim: { x: 400, y: 200 }, fire: true });
+    const game = armed([{ kind: 'maletin-coptero', x: 80, y: 80 }]);
+    game.ticks(1, { aim: { x: 533, y: 267 }, fire: true });
     const maxTurn = ((citaciones.turnRate * Math.PI) / 180) * (1 / 60);
     let heading = headingOf(subpoenasOf(game)[0] ?? expect.unreachable('no subpoena'));
     let turned = 0;
@@ -101,8 +101,8 @@ describe('Citaciones Teledirigidas', () => {
   });
 
   it('steers toward the nearest Enemy', () => {
-    const near: ScriptedSpawn = { kind: 'maletin-coptero', x: 70, y: 120 };
-    const far: ScriptedSpawn = { kind: 'maletin-coptero', x: 420, y: 120 };
+    const near: ScriptedSpawn = { kind: 'maletin-coptero', x: 93, y: 160 };
+    const far: ScriptedSpawn = { kind: 'maletin-coptero', x: 560, y: 160 };
     const game = armed([far, near], holdStill());
     const nearId = eventsOf(game.log, 'enemy-spawned')[1]?.enemyId;
     const aim = { x: ON_REXI.x + 10, y: 0 }; // straight up, between the two
@@ -114,7 +114,7 @@ describe('Citaciones Teledirigidas', () => {
 
   it('spends one ammo per subpoena and respects its fire interval', () => {
     const game = armed();
-    const shots = eventsOf(game.holdFireToward({ x: 400, y: 100 }, 3), 'weapon-fired');
+    const shots = eventsOf(game.holdFireToward({ x: 533, y: 133 }, 3), 'weapon-fired');
     expect(shots).toHaveLength(Math.ceil((3 * 60) / secondsToTicks(citaciones.fireInterval)));
     expect(runOf(game.view).rexi.weapon.ammo).toBe(citaciones.pickupAmmo - shots.length);
   });

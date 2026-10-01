@@ -27,9 +27,9 @@ import {
 import { aimTarget, followFinger, readStick, stickToMove, wantsDrop } from './stick';
 
 /** Distance from Rexi's shoulder to the aim point the aim stick produces, game px. */
-export const AIM_DISTANCE = 96;
+export const AIM_DISTANCE = 128;
 /** A menu-mode touch that travels this far (game px) before lifting is a swipe. */
-export const SWIPE_DISTANCE = 24;
+export const SWIPE_DISTANCE = 32;
 
 type Role =
   | { readonly kind: 'button'; readonly button: TouchButton }

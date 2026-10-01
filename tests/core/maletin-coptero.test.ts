@@ -35,13 +35,13 @@ function track(game: Driver, seconds: number): EnemyView[] {
 
 describe('Maletín-cóptero drift', () => {
   it('drifts around the Arena instead of staying put', () => {
-    const path = track(maletinAt(200, 80), 30);
+    const path = track(maletinAt(267, 107), 30);
     const xs = path.map((e) => e.x);
     expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(60);
   });
 
   it('stays inside its roaming area once there', () => {
-    const path = track(maletinAt(200, 80), 60);
+    const path = track(maletinAt(267, 107), 60);
     for (const e of path) {
       expect(e.x).toBeGreaterThanOrEqual(maletin.roamMarginX - 1e-9);
       expect(e.x + e.w).toBeLessThanOrEqual(SCREEN_WIDTH - maletin.roamMarginX + 1e-9);
@@ -51,7 +51,7 @@ describe('Maletín-cóptero drift', () => {
   });
 
   it('never moves faster than its drift speed (plus the hover bob)', () => {
-    const path = track(maletinAt(200, 80), 20);
+    const path = track(maletinAt(267, 107), 20);
     const bobPerTick = (2 * Math.PI * maletin.hoverAmplitude) / maletin.hoverPeriod / 60;
     path.slice(1).forEach((e, i) => {
       const previous = path[i] ?? expect.unreachable();
@@ -71,18 +71,18 @@ describe('Maletín-cóptero drift', () => {
 
   it('only hovers in place when its drift speed is zero', () => {
     const path = track(
-      maletinAt(200, 80, { enemies: { 'maletin-coptero': { driftSpeed: 0 } } }),
+      maletinAt(267, 107, { enemies: { 'maletin-coptero': { driftSpeed: 0 } } }),
       5,
     );
-    expect(new Set(path.map((e) => e.x))).toEqual(new Set([200]));
+    expect(new Set(path.map((e) => e.x))).toEqual(new Set([267]));
     const ys = path.map((e) => e.y);
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(maletin.hoverAmplitude);
-    expect(Math.max(...ys)).toBeLessThanOrEqual(80 + maletin.hoverAmplitude + 1e-9);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(107 + maletin.hoverAmplitude + 1e-9);
   });
 
   it('takes a different path with a different seed', () => {
-    const a = track(maletinAt(200, 80, {}, 1), 10).map((e) => e.x);
-    const b = track(maletinAt(200, 80, {}, 2), 10).map((e) => e.x);
+    const a = track(maletinAt(267, 107, {}, 1), 10).map((e) => e.x);
+    const b = track(maletinAt(267, 107, {}, 2), 10).map((e) => e.x);
     expect(a).not.toEqual(b);
   });
 });

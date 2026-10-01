@@ -9,14 +9,14 @@ import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
-const AIM = { x: 312, y: 159 };
+const AIM = { x: 416, y: 212 };
 
 /** A Run where the first shot destroys a Maletín-cóptero and Rexi always talks. */
 function talkingGame(seed: number): Driver {
   const game = drive({
     seed,
     overrides: {
-      spawns: [{ kind: 'maletin-coptero', x: 300, y: 150 }],
+      spawns: [{ kind: 'maletin-coptero', x: 400, y: 200 }],
       tuning: holdStill({ quips: { chance: 1 }, enemies: { 'maletin-coptero': { health: 1 } } }),
     },
   });
@@ -36,7 +36,7 @@ describe('Dialogue Box goldens', () => {
     await expectGolden('dialogue-typing', renderView(game.view));
   });
 
-  it('dialogue-complete: the whole Quip on two lines with the blinking cursor', async () => {
+  it('dialogue-complete: the whole Quip, centered on one line, with the blinking cursor', async () => {
     const game = talkingGame(12);
     while (runOf(game.view).dialogue?.complete !== true) game.ticks(1, { aim: AIM });
     // Wait until the cursor's blink is in its visible half.
@@ -45,7 +45,7 @@ describe('Dialogue Box goldens', () => {
     }
     const dialogue = runOf(game.view).dialogue;
     expect(dialogue?.openness).toBe(1);
-    expect(fonts.regular.wrap(dialogue?.text ?? '', DIALOGUE_TEXT_WIDTH)).toHaveLength(2);
+    expect(fonts.regular.wrap(dialogue?.text ?? '', DIALOGUE_TEXT_WIDTH)).toHaveLength(1);
     await expectGolden('dialogue-complete', renderView(game.view));
   });
 });

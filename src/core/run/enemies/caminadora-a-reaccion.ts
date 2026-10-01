@@ -10,7 +10,7 @@ import { defineEnemy } from './types';
 /** Tolerance for comparing accumulated seconds against a timer. */
 const EPSILON = 1e-9;
 /** The gun hangs under the front of the deck: muzzle height above the hitbox bottom, px. */
-const MUZZLE_RISE = 2;
+const MUZZLE_RISE = 3;
 
 interface CaminadoraMemory {
   /** Direction of travel, which is also the way it faces: 1 right, -1 left. */

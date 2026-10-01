@@ -1,6 +1,6 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type Vec2 } from '../core';
 
-/** Where and how big the 480×270 game image is drawn inside its container. */
+/** Where and how big the 640×360 game image is drawn inside its container. */
 export interface Viewport {
   /** Whole device pixels per game pixel (crisp integer scaling). */
   readonly scale: number;
@@ -23,7 +23,7 @@ export interface ImageSize {
 const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
 
 /**
- * Largest integer scale (in device pixels) that fits an image (by default the 480×270 game)
+ * Largest integer scale (in device pixels) that fits an image (by default the 640×360 game)
  * in the container, centered with letterbox bars. Offsets are snapped to device pixels so
  * image pixels stay perfectly square.
  */
@@ -68,7 +68,7 @@ export function screenToGame(point: Vec2, viewport: Viewport): Vec2 {
 
 /**
  * Like {@link screenToGame} but not clamped: points over the letterbox bars land outside
- * 0..480 × 0..270. Touch sticks use it so a thumb on a bar still moves its stick truthfully.
+ * 0..640 × 0..360. Touch sticks use it so a thumb on a bar still moves its stick truthfully.
  */
 export function screenToGameUnclamped(point: Vec2, viewport: Viewport): Vec2 {
   return {

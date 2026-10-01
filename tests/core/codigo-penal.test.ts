@@ -50,13 +50,13 @@ function followShot(game: Armed, aim: Vec2, seconds = 4) {
 /** Level to the right, at shoulder height. */
 const aimRight = (game: Armed): Vec2 => {
   const { shoulder } = runOf(game.view).rexi;
-  return { x: shoulder.x + 200, y: shoulder.y };
+  return { x: shoulder.x + 267, y: shoulder.y };
 };
 
 describe('Código Penal', () => {
   it('fires one law book per trigger pull, leaving slowly along the aim', () => {
     const game = armed();
-    const aim = { x: 400, y: 60 };
+    const aim = { x: 533, y: 80 };
     const events = game.ticks(1, { aim, fire: true });
     expect(eventsOf(events, 'weapon-fired')).toEqual([
       { type: 'weapon-fired', weapon: 'codigo-penal' },
@@ -74,7 +74,7 @@ describe('Código Penal', () => {
 
   it('flies in a straight line, accelerating up to its top speed', () => {
     const game = armed();
-    const aim = { x: 400, y: 60 };
+    const aim = { x: 533, y: 80 };
     const { path } = followShot(game, aim);
     const first = path[0];
     if (!first || path.length < 60) throw new Error('The law book vanished too soon');
@@ -102,7 +102,7 @@ describe('Código Penal', () => {
 
   it('leaves a smoke trail', () => {
     const game = armed();
-    followShot(game, { x: 400, y: 60 }, 0.5);
+    followShot(game, { x: 533, y: 80 }, 0.5);
     expect(runOf(game.view).effects.particles.some((p) => p.kind === 'smoke')).toBe(true);
   });
 
@@ -114,15 +114,15 @@ describe('Código Penal', () => {
     // A target on the line of fire, a neighbor just above it, and one well out of reach.
     const target: ScriptedSpawn = {
       kind: 'maletin-coptero',
-      x: shoulder.x + 160,
+      x: shoulder.x + 213,
       y: line - maletin.height / 2,
     };
     const neighbor: ScriptedSpawn = { ...target, y: target.y - maletin.height - 6 };
-    const distant: ScriptedSpawn = { ...target, y: target.y - maletin.height - 60 };
+    const distant: ScriptedSpawn = { ...target, y: target.y - maletin.height - 80 };
 
     const game = armed([target, neighbor, distant]);
     const [targetId, neighborId] = eventsOf(game.log, 'enemy-spawned').map((e) => e.enemyId);
-    const { events } = followShot(game, { x: shoulder.x + 200, y: line });
+    const { events } = followShot(game, { x: shoulder.x + 267, y: line });
 
     const hits = eventsOf(events, 'enemy-hit');
     expect(hits.filter((h) => h.enemyId === targetId).map((h) => h.damage)).toEqual([
@@ -150,7 +150,7 @@ describe('Código Penal', () => {
   it('explodes where it hits the ground, without hurting Rexi', () => {
     const game = armed();
     const { rexi } = runOf(game.view);
-    const { events } = followShot(game, { x: rexi.muzzle.x + 40, y: groundY + 20 });
+    const { events } = followShot(game, { x: rexi.muzzle.x + 53, y: groundY + 27 });
     const [explosion, ...more] = eventsOf(events, 'explosion');
     expect(more).toHaveLength(0);
     expect(explosion?.y).toBeCloseTo(groundY - codigo.projectileSize / 2, 6);

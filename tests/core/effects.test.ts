@@ -58,8 +58,8 @@ const particlesOf = (run: RunView, kind: ParticleView['kind']) =>
 
 describe('Hit flash', () => {
   it('flashes an Enemy for the tuned duration after each hit', () => {
-    const target = centerOf(300, 60);
-    const game = arena([maletinAt(300, 60)], {});
+    const target = centerOf(400, 80);
+    const game = arena([maletinAt(400, 80)], {});
     game.ticks(1, { aim: target });
     expect(runOf(game.view).enemies[0]?.hitFlash).toBe(false);
 
@@ -73,7 +73,7 @@ describe('Hit flash', () => {
     const duration = secondsToTicks(fx.hitFlash.duration);
     const flashing: boolean[] = [runOf(game.view).enemies[0]?.hitFlash ?? false];
     for (let i = 0; i < duration + 2; i++) {
-      game.ticks(1, { aim: centerOf(300, 60) });
+      game.ticks(1, { aim: centerOf(400, 80) });
       flashing.push(runOf(game.view).enemies[0]?.hitFlash ?? false);
     }
     expect(flashing).toEqual([
@@ -84,13 +84,13 @@ describe('Hit flash', () => {
 
   it('keeps showing the sprite between flashes under very rapid fire', () => {
     // Fire every tick: hits land on consecutive ticks, but flashes are spaced out.
-    const game = arena([maletinAt(300, 60)], {
+    const game = arena([maletinAt(400, 80)], {
       enemies: { 'maletin-coptero': { health: 10_000 } },
       weapons: { 'mazo-automatico': { fireInterval: 0 } },
     });
     const samples: boolean[] = [];
     for (let i = 0; i < 120; i++) {
-      game.ticks(1, { aim: centerOf(300, 60), fire: true });
+      game.ticks(1, { aim: centerOf(400, 80), fire: true });
       samples.push(runOf(game.view).enemies[0]?.hitFlash ?? false);
     }
     const lastSecond = samples.slice(60);
@@ -101,8 +101,8 @@ describe('Hit flash', () => {
 
 describe('Explosions and debris', () => {
   it('blows a destroyed Enemy up where it was, with debris from its own sprite', () => {
-    const game = arena([maletinAt(300, 60)]);
-    fireUntilKill(game, centerOf(300, 60));
+    const game = arena([maletinAt(400, 80)]);
+    fireUntilKill(game, centerOf(400, 80));
     const destroyed = eventsOf(game.log, 'enemy-destroyed')[0];
     const run = runOf(game.view);
 
@@ -124,8 +124,8 @@ describe('Explosions and debris', () => {
   });
 
   it('plays the explosion out over time: flash first, then fire and rising smoke', () => {
-    const game = arena([maletinAt(300, 60)]);
-    fireUntilKill(game, centerOf(300, 60));
+    const game = arena([maletinAt(400, 80)]);
+    fireUntilKill(game, centerOf(400, 80));
     expect(particlesOf(runOf(game.view), 'flash')).not.toHaveLength(0);
 
     game.ticks(10);
@@ -139,8 +139,8 @@ describe('Explosions and debris', () => {
   });
 
   it('lets debris fall, settle on the ground and blink out', () => {
-    const game = arena([maletinAt(300, 60)]);
-    fireUntilKill(game, centerOf(300, 60));
+    const game = arena([maletinAt(400, 80)]);
+    fireUntilKill(game, centerOf(400, 80));
 
     game.seconds(2);
     const settled = particlesOf(runOf(game.view), 'debris');
@@ -155,11 +155,11 @@ describe('Explosions and debris', () => {
 
   it('scales the explosion with the Enemy: large explosions throw more sparks', () => {
     const sparksAfterKill = (explosion: 'small' | 'large') => {
-      const game = arena([maletinAt(300, 60)], {
+      const game = arena([maletinAt(400, 80)], {
         ...oneShotKills,
         enemies: { 'maletin-coptero': { explosion } },
       });
-      fireUntilKill(game, centerOf(300, 60));
+      fireUntilKill(game, centerOf(400, 80));
       return particlesOf(runOf(game.view), 'spark').length;
     };
     expect(sparksAfterKill('small')).toBe(fx.explosions.small.sparks);
@@ -175,9 +175,9 @@ describe('Screen shake', () => {
   };
 
   const shakeTrace = (tuning: TuningOverrides, ticks: number) => {
-    const game = arena([maletinAt(300, 60)], tuning);
+    const game = arena([maletinAt(400, 80)], tuning);
     const before = runOf(game.view).effects.shake;
-    fireUntilKill(game, centerOf(300, 60));
+    fireUntilKill(game, centerOf(400, 80));
     const trace = [runOf(game.view).effects.shake];
     for (let i = 0; i < ticks; i++) {
       game.ticks(1);
@@ -187,7 +187,7 @@ describe('Screen shake', () => {
   };
 
   it('is still until something explodes', () => {
-    const game = arena([maletinAt(300, 60)]);
+    const game = arena([maletinAt(400, 80)]);
     game.seconds(2, { move: 1, jump: true, aim: { x: 0, y: 0 }, fire: true });
     expect(runOf(game.view).effects.shake).toEqual({ x: 0, y: 0 });
   });
@@ -226,9 +226,9 @@ describe('Screen shake', () => {
 describe('Determinism', () => {
   /** A busy scripted fight: several Maletín-cópteros destroyed while Rexi runs and jumps. */
   function fight(seed: number, tuning: TuningOverrides = oneShotKills) {
-    const spawns = [maletinAt(300, 60), maletinAt(200, 50, 40), maletinAt(380, 90, 80)];
+    const spawns = [maletinAt(400, 80), maletinAt(267, 67, 40), maletinAt(507, 120, 80)];
     const game = drive({ seed, overrides: { spawns, tuning: holdStill(tuning) } });
-    const targets = [centerOf(300, 60), centerOf(200, 50), centerOf(380, 90)];
+    const targets = [centerOf(400, 80), centerOf(267, 67), centerOf(507, 120)];
     const log = [];
     const views: RunView[] = [];
     for (let t = 0; t < 240; t++) {
@@ -270,13 +270,13 @@ describe('Determinism', () => {
 describe('Particle budget', () => {
   it('never holds more particles than the budget, dropping the oldest first', () => {
     const budget = 24;
-    const spawns = [0, 30, 60, 90].map((t) => maletinAt(300, 60, t));
+    const spawns = [0, 30, 60, 90].map((t) => maletinAt(400, 80, t));
     const game = arena(spawns, { ...oneShotKills, effects: { maxParticles: budget } });
 
     let kills = 0;
     let peak = 0;
     for (let t = 0; t < 240; t++) {
-      const events = game.ticks(1, { aim: centerOf(300, 60), fire: true });
+      const events = game.ticks(1, { aim: centerOf(400, 80), fire: true });
       const run = runOf(game.view);
       peak = Math.max(peak, run.effects.particles.length);
       if (eventsOf(events, 'enemy-destroyed').length > 0) {
@@ -294,7 +294,7 @@ describe('Particle budget', () => {
     const every = 45;
     const ticks = minutes * 60 * 60;
     const spawns = Array.from({ length: Math.floor(ticks / every) }, (_, i) =>
-      maletinAt(140 + ((i * 97) % 280), 30 + ((i * 53) % 120), i * every),
+      maletinAt(187 + ((i * 97) % 373), 40 + ((i * 53) % 160), i * every),
     );
     // No Quips: Hit-stops would push the scripted spawns past the end of the loop.
     const game = arena(spawns, { ...oneShotKills, quips: { chance: 0 } });

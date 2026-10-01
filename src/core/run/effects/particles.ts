@@ -1,13 +1,11 @@
-import { DT, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../../constants';
+import { DT, OFFSCREEN_MARGIN, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../../constants';
 import type { EnemyKind, ParticleKind } from '../../ids';
 import type { Rng } from '../../rng';
 import type { EffectsTuning } from '../../tuning';
 import type { ParticleView } from '../../view';
 
-/** How far outside the screen a particle may drift before it is culled, px. */
-const OFFSCREEN_MARGIN = 32;
 /** A bouncing chunk whose rebound is slower than this comes to rest, px/s. */
-const SETTLE_SPEED = 60;
+const SETTLE_SPEED = 80;
 /** Velocity kept per tick by drifting particles (fire, smoke). */
 const DRIFT_DRAG = 0.92;
 /**

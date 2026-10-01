@@ -9,7 +9,7 @@ import { holdStill } from './fixtures';
 const maletin = defaultTuning.enemies['maletin-coptero'];
 /** Ticks between two targets: plenty for one gavel to reach and destroy the previous one. */
 const TARGET_EVERY = 30;
-const TARGET = { x: 300, y: 60 } as const;
+const TARGET = { x: 400, y: 80 } as const;
 
 export interface RunEndOptions extends Partial<Omit<GameOptions, 'overrides'>> {
   /** Maletín-cópteros destroyed before the end (default 0). */
@@ -28,8 +28,8 @@ export function driveToRunEnd(options: RunEndOptions = {}): Driver {
   }));
   const killer: ScriptedSpawn = {
     kind: 'maletin-coptero',
-    x: 440,
-    y: 20,
+    x: 587,
+    y: 27,
     atTick: kills * TARGET_EVERY,
   };
   const game = drive({

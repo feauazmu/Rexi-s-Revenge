@@ -34,7 +34,7 @@ const mazo = defaultTuning.weapons['mazo-automatico'];
 const onRexi = { y: ON_REXI.y };
 
 /** A Maletín-cóptero that fires often and aims true, so papers keep reaching Rexi. */
-const sharpshooter: ScriptedSpawn = { kind: 'maletin-coptero', x: 300, y: 60 };
+const sharpshooter: ScriptedSpawn = { kind: 'maletin-coptero', x: 400, y: 80 };
 const sharpshooterTuning = (paperDamage = 5): TuningOverrides => ({
   enemies: {
     'maletin-coptero': {
@@ -46,7 +46,7 @@ const sharpshooterTuning = (paperDamage = 5): TuningOverrides => ({
     },
   },
 });
-const atSharpshooter = { x: 312, y: 69 };
+const atSharpshooter = { x: 416, y: 92 };
 
 describe('Receso', () => {
   it('restores the tuned share of max health, at once', () => {
@@ -214,7 +214,7 @@ describe('Inmunidad Judicial', () => {
 });
 
 describe('Creatina', () => {
-  const target: ScriptedSpawn = { kind: 'maletin-coptero', x: 300, y: 60 };
+  const target: ScriptedSpawn = { kind: 'maletin-coptero', x: 400, y: 80 };
   const tankyTarget: TuningOverrides = holdStill({
     enemies: { 'maletin-coptero': { health: 100_000, fireIntervalMin: 99, fireIntervalMax: 99 } },
   });
@@ -313,7 +313,7 @@ describe('Pre-entreno', () => {
   });
 
   it('moves Enemies as if only the scaled time had passed', () => {
-    const drifter: ScriptedSpawn = { kind: 'maletin-coptero', x: 300, y: 60 };
+    const drifter: ScriptedSpawn = { kind: 'maletin-coptero', x: 400, y: 80 };
     const tuning: TuningOverrides = { powerUps: { 'pre-entreno': { enemyTimeScale: 0.5 } } };
     const enemyAfter = (spawns: ScriptedSpawn[], ticks: number) => {
       const game = drive({ seed: 3, overrides: { spawns, tuning } });
@@ -360,7 +360,7 @@ describe('Pre-entreno', () => {
         enemies: { [kind]: { health: 100_000 } },
       };
       const immune = powerUpCrate('inmunidad-judicial', ON_REXI.x, onRexi);
-      const enemy: ScriptedSpawn = { kind, x: 300, y: 80 };
+      const enemy: ScriptedSpawn = { kind, x: 400, y: 107 };
       /** Snapshots of the Enemy and its shots every `every` ticks, `samples` times. */
       const snapshots = (spawns: ScriptedSpawn[], every: number, samples: number) => {
         const game = drive({ seed: 5, overrides: { spawns: [enemy, immune, ...spawns], tuning } });
@@ -457,7 +457,7 @@ describe('Día de Pierna', () => {
   const normalJumpTop = apex(driveEmptyArena(), secondsToTicks(2), jump);
 
   it('holding jump flies Rexi far above a normal jump, up to the top of the Arena', () => {
-    expect(groundTop - normalJumpTop).toBeLessThan(70);
+    expect(groundTop - normalJumpTop).toBeLessThan(93);
     const game = legDay();
     expect(apex(game, secondsToTicks(2), jump)).toBe(pierna.ceiling);
     expect(runOf(game.view).rexi.flying).toBe(true);

@@ -46,14 +46,14 @@ function untilEvent(game: Driver, type: GameEvent['type'], maxTicks = 60 * 60) {
 
 describe('Maletín-cóptero fire', () => {
   it('shoots papers at Rexi at its configured interval', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: sharpshooter(1) } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: sharpshooter(1) } });
     const fired = eventsOf(game.seconds(5.05), 'enemy-fired');
     expect(fired).toHaveLength(5);
     expect(fired[0]).toMatchObject({ kind: 'maletin-coptero' });
   });
 
   it('waits a random time between its tuned bounds before each shot', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)] } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)] } });
     const ticks: number[] = [];
     for (let t = 1; t <= 60 * 30; t++) {
       if (eventsOf(game.ticks(1, { move: t % 240 < 120 ? 1 : -1 }), 'enemy-fired').length) {
@@ -69,7 +69,7 @@ describe('Maletín-cóptero fire', () => {
   });
 
   it('fires visible enemy papers that fly toward Rexi', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: sharpshooter(1) } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: sharpshooter(1) } });
     game.seconds(1.1);
     const run = runOf(game.view);
     const papers = run.projectiles.filter((p) => p.owner === 'enemy');
@@ -83,7 +83,7 @@ describe('Maletín-cóptero fire', () => {
   });
 
   it('can be dodged: a paper aimed at Rexi misses once he runs away', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: sharpshooter(5) } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: sharpshooter(5) } });
     game.seconds(5.05);
     expect(runOf(game.view).projectiles).toHaveLength(1);
     const events = game.seconds(3, { move: -1 });
@@ -96,7 +96,7 @@ describe('Maletín-cóptero fire', () => {
 
 describe("Rexi's health", () => {
   it('drops by the paper damage when a paper hits him', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: sharpshooter(1) } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: sharpshooter(1) } });
     const { events } = untilEvent(game, 'rexi-hit');
     const [hit] = eventsOf(events, 'rexi-hit');
     expect(hit).toEqual({
@@ -110,7 +110,7 @@ describe("Rexi's health", () => {
   it('uses the configured paper damage', () => {
     const game = drive({
       overrides: {
-        spawns: [maletinAt(300, 60)],
+        spawns: [maletinAt(400, 80)],
         tuning: sharpshooter(1, { enemies: { 'maletin-coptero': { paperDamage: 13 } } }),
       },
     });
@@ -119,14 +119,14 @@ describe("Rexi's health", () => {
   });
 
   it('removes a paper when it hits him', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: sharpshooter(10) } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: sharpshooter(10) } });
     untilEvent(game, 'rexi-hit');
     expect(runOf(game.view).projectiles.filter((p) => p.owner === 'enemy')).toHaveLength(0);
   });
 
   it('is not hurt by his own gavels', () => {
     const game = drive({ overrides: { spawns: [] } });
-    const events = game.holdFireToward({ x: 127, y: 300 }, 2);
+    const events = game.holdFireToward({ x: 169, y: 400 }, 2);
     expect(eventsOf(events, 'rexi-hit')).toHaveLength(0);
   });
 });
@@ -135,7 +135,7 @@ describe('Invulnerability after a hit', () => {
   const rapidFire = (invulnerability: number) =>
     drive({
       overrides: {
-        spawns: [maletinAt(300, 60)],
+        spawns: [maletinAt(400, 80)],
         tuning: sharpshooter(0.1, { rexi: { invulnerability } }),
       },
     });
@@ -194,8 +194,8 @@ describe('End of the Run', () => {
 
   it('emits run-ended with the score, Enemies destroyed and time survived at zero health', () => {
     // The first Maletín-cóptero is shot down; the second, out of reach of the gavels, wins.
-    const game = doomed([maletinAt(300, 60), maletinAt(440, 20, 120)]);
-    game.holdFireToward({ x: 312, y: 69 }, 0.1);
+    const game = doomed([maletinAt(400, 80), maletinAt(587, 27, 120)]);
+    game.holdFireToward({ x: 416, y: 92 }, 0.1);
     game.seconds(0.9);
     expect(runOf(game.view).stats.enemiesDestroyed).toBe(1);
     expect(runOf(game.view).rexi.health).toBe(10);
@@ -215,13 +215,13 @@ describe('End of the Run', () => {
   });
 
   it('happens in the same tick as the fatal hit', () => {
-    const game = doomed([maletinAt(300, 60)]);
+    const game = doomed([maletinAt(400, 80)]);
     const { events } = untilEvent(game, 'run-ended');
     expect(eventsOf(events, 'rexi-hit')).toEqual([{ type: 'rexi-hit', damage: 5, health: 0 }]);
   });
 
   it('freezes the ended Run and marks it as ended', () => {
-    const game = doomed([maletinAt(300, 60)]);
+    const game = doomed([maletinAt(400, 80)]);
     expect(runOf(game.view).ended).toBe(false);
     untilEvent(game, 'run-ended');
     const atEnd = runOf(game.view);
@@ -237,7 +237,7 @@ describe('End of the Run', () => {
   });
 
   it('opens the Veredicto shortly afterwards (see verdict.test.ts)', () => {
-    const game = doomed([maletinAt(300, 60)]);
+    const game = doomed([maletinAt(400, 80)]);
     untilEvent(game, 'run-ended');
     const { tick } = untilEvent(game, 'screen-changed', 60 * 5);
     expect(tick).toBeGreaterThan(30);
@@ -245,7 +245,7 @@ describe('End of the Run', () => {
   });
 
   it('cannot be paused once over', () => {
-    const game = doomed([maletinAt(300, 60)]);
+    const game = doomed([maletinAt(400, 80)]);
     untilEvent(game, 'run-ended');
     game.ticks(1, { pause: true });
     game.pause();
@@ -256,7 +256,7 @@ describe('End of the Run', () => {
 describe('Projectile bookkeeping', () => {
   it('stays bounded over a long Run: papers that miss leave the Arena', () => {
     const game = drive({
-      overrides: { spawns: [maletinAt(300, 60)], tuning: { rexi: { maxHealth: 1_000_000 } } },
+      overrides: { spawns: [maletinAt(400, 80)], tuning: { rexi: { maxHealth: 1_000_000 } } },
     });
     let peak = 0;
     let fired = 0;

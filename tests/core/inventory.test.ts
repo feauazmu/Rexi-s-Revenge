@@ -24,7 +24,7 @@ const withSellos = (count = 1, tuning: Parameters<typeof driveEmptyArena>[0] = {
 
 /** One trigger pull, then enough idle ticks for any Weapon's cooldown to pass. */
 const pull = (game: ReturnType<typeof driveEmptyArena>, input: InputFramePatch = {}) => {
-  const events = game.ticks(1, { ...input, fire: true, aim: { x: 400, y: 100 } });
+  const events = game.ticks(1, { ...input, fire: true, aim: { x: 533, y: 133 } });
   game.seconds(1.5);
   return events;
 };

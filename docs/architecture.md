@@ -19,7 +19,7 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
 | `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                      |                    |
 | `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).  |                    |
 | `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                      |                    |
-| `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                      | `src/core` (index) |
+| `src/render/`       | Pure renderer: `GameView` → pixels on a 640×360 `Surface`. No DOM, no clock.                      | `src/core` (index) |
 | `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
 | `src/main.ts`       | Entry point: starts the shell.                                                                    |                    |
 | `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.           |                    |
@@ -237,7 +237,22 @@ changes gameplay randomness. Events: `quip-started`, `quip-character` (one per v
 for the blip) and `dialogue-closed`; the view exposes `run.hitStop` and `run.dialogue`.
 
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
-Positions are game coordinates (480×270); boxes use their top-left corner.
+Positions are game coordinates (640×360); boxes use their top-left corner.
+
+**Resolution history.** The game ran at 480×270 until the art-quality pass (#24, #32) moved it to
+640×360 so sprites can carry more detail. The move was one scale step: every spatial tuning value
+(positions, sizes, hitboxes, speeds, accelerations, gravity, jump speed, ranges, splash radii,
+platforms, spawn and altitude bands) was multiplied by 4/3 and rounded to the nearest whole pixel
+(half-pixel offsets such as Rexi's shoulder kept at .5); time values did not change. Gravity and
+jump speed were rounded so a full jump stays 4/3 as high (about 78 px), and the platform
+reachability tests still hold. The catalog holds the resulting literal numbers, not a multiplier.
+
+**Interim art (until the art pass redraws the sprites).** Rexi, the Enemies, projectiles and icons
+keep their old pixel size, so they look small inside their larger 640×360 hitboxes: Rexi's body
+stands on the bottom center of his hitbox (his gameplay shoulder and muzzle sit a little above
+and ahead of the drawn arm), and each Enemy's art is drawn centered in its hitbox through
+`ART_BOX` in `src/render/enemies/index.ts`, the box size its art was drawn for. Gameplay is
+unchanged; only the art is small. Remove an `ART_BOX` entry when that Enemy is redrawn.
 
 ## Seam 2: the renderer
 
@@ -314,11 +329,12 @@ master-palette colors only (a test in `tests/golden/brand.golden.test.ts` checks
   `SHINE_PERIOD` ticks as small overlay sprites; the Title drives it with `screenAge`.
 - **Icons** (`icons.ts`): the favicon (a gavel on the 45° pixel lattice, crisp at 16, 32 and 48 px)
   and the app icon art (48×48: the gavel over a striped sun, opaque).
-- **Share card** (`share-card.ts`): the link preview at game resolution (480×252): the title
+- **Share card** (`share-card.ts`): the link preview at game pixel density (600×315, a window into
+  the 640×360 title illustration): the title
   illustration, the logo with its twinkle and the tagline (`strings.share`).
 - **Files**: `npm run share-preview` (`scripts/share-preview/`) renders these in Node with the game's
   renderer and writes `public/favicon.ico`, `favicon-{16,32,48}.png`, `apple-touch-icon.png` (180),
-  `icon-{192,512}.png` (manifest) and `og-image.png` (the card at 2.5×, nearest-neighbor, 1200×630).
+  `icon-{192,512}.png` (manifest) and `og-image.png` (the card at 2×, nearest-neighbor, 1200×630).
   `index.html` links them, with the Spanish description and Open Graph / Twitter tags; the image URL is
   absolute (`https://feauazmu.github.io/Rexi-s-Revenge/og-image.png`). `tests/content/share-preview.test.ts`
   checks the tags, that every referenced file exists, and that the committed images match the renderer:
@@ -358,7 +374,7 @@ DIALOGUE_MAX_LINES` (2), both exported from `src/render`. Quips are game content
 
 ## Platform shell
 
-`src/platform/shell.ts` creates the canvas, applies `computeViewport` (largest integer device-pixel scale,
+`src/platform/shell.ts` creates the 640×360 canvas, applies `computeViewport` (largest integer device-pixel scale: 2× at 720p, 3× at 1080p, 4× at 1440p;
 letterboxed, snapped to device pixels), and runs a `requestAnimationFrame` loop. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
 Each tick samples the device's input adapter once (edges are consumed by the first sample).
@@ -397,12 +413,12 @@ the touch adapter (no keyboard/mouse adapter, so a finger is never also a mouse 
   (the keyboard's S/↓). The 45° cone means running with a downward slant never drops by accident, and it needs
   no extra button on a crowded screen.
 - **Menu mode**: a d-pad (bottom left), confirm ✓ and back ✕ (bottom right), and swipes anywhere else
-  (≥ 24 game px, dominant axis, on release) produce `menu` edges. This covers the pause menu and initials
+  (≥ 32 game px, dominant axis, on release) produce `menu` edges. This covers the pause menu and initials
   entry without the adapter knowing any menu's layout.
 - **Overlay** (`src/render/touch/overlay.ts`): drawn last by `render(surface, view, overlay)`. Idle controls
   are dithered outlines so the Arena shows through (no alpha: determinism rule); held controls turn solid.
 - **Portrait**: the shell hides the game canvas, freezes the game (pausing a Run) and draws the "Gira tu
-  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 144×256 canvas, scaled like the game.
+  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 192×340 canvas, scaled like the game.
 
 **Manual check on a real phone** (emulation covers the rest in `e2e/touch.spec.ts`): open the site in
 landscape → "Toca para empezar" → tap → Cómo jugar (touch) → tap → Run: move with the left stick, pull it

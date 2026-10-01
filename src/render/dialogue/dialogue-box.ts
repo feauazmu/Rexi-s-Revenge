@@ -14,12 +14,15 @@ const TEXT: Color = palette.white;
 const NAME_FILL: Color = '#ffd88a';
 
 /** Fully open geometry, game coordinates. The box slides up from below the screen. */
-const PORTRAIT_FRAME = { x: 56, y: 224, w: 44, h: 44 } as const;
-/** Kept narrow (centered with the portrait) so it hides as little of the Arena as possible. */
-const BOX = { x: 104, y: 232, w: 320, h: 36 } as const;
+const PORTRAIT_FRAME = { x: 96, y: 314, w: 44, h: 44 } as const;
+/**
+ * Centered with the portrait and no wider than two lines of a long Quip need, so it hides as
+ * little of the Arena as possible.
+ */
+const BOX = { x: 144, y: 318, w: 400, h: 40 } as const;
 const PADDING_X = 8;
 /** Top of the first text line's cell. */
-const TEXT_TOP = BOX.y + 5;
+const TEXT_TOP = BOX.y + 7;
 /** Room kept free at the right of the text for the "more" cursor. */
 const CURSOR_ROOM = 8;
 const NAME_TAB = { x: BOX.x + 8, y: BOX.y - 9, h: 11, padding: 4 } as const;
@@ -51,7 +54,9 @@ export function drawDialogueBox(dc: DrawContext, run: RunView): void {
 
   const font = fonts.regular;
   const text = revealedLines(font, dialogue.text, dialogue.revealed, DIALOGUE_TEXT_WIDTH);
-  drawText(dc, font, text.join('\n'), BOX.x + PADDING_X, TEXT_TOP + dy, {
+  // Most Quips fit on one line of the wide box: center them on its two-line text area.
+  const lift = Math.floor(((DIALOGUE_MAX_LINES - text.length) * font.lineHeight) / 2);
+  drawText(dc, font, text.join('\n'), BOX.x + PADDING_X, TEXT_TOP + lift + dy, {
     color: TEXT,
     shadow: OUTLINE,
   });

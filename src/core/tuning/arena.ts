@@ -20,21 +20,21 @@ export interface ArenaTuning {
   readonly maxFallSpeed: number;
   /**
    * The Arena's one-way platforms (HA3-style vertical play). Each one sits less than a full
-   * jump (about 59 px with the default jump and gravity) above the ground or a lower platform.
+   * jump (about 78 px with the default jump and gravity) above the ground or a lower platform.
    * Rexi's spawn point stays clear, so a standing jump there lands back on the ground.
    */
   readonly platforms: readonly PlatformTuning[];
 }
 
 export const arenaTuning: ArenaTuning = {
-  groundY: 238,
-  gravity: 980,
-  maxFallSpeed: 520,
+  groundY: 317,
+  gravity: 1307,
+  maxFallSpeed: 693,
   platforms: [
-    // Low ledges at both sides, 50 px above the ground.
-    { x: 22, y: 188, w: 76 },
-    { x: 382, y: 188, w: 76 },
-    // High ledge in the middle, 50 px above the low ones.
-    { x: 186, y: 138, w: 108 },
+    // Low ledges at both sides, 66 px above the ground.
+    { x: 29, y: 251, w: 102 },
+    { x: 509, y: 251, w: 102 },
+    // High ledge in the middle, 67 px above the low ones.
+    { x: 248, y: 184, w: 144 },
   ],
 };

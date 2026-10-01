@@ -27,7 +27,7 @@ export interface ShellOptions {
   /** Receives each tick's events (audio and other reactive adapters plug in here). */
   readonly onEvents?: (events: readonly GameEvent[]) => void;
   /**
-   * The decoded 480×270 title illustration (see {@link loadTitleIllustration}). Without it the
+   * The decoded 640×360 title illustration (see {@link loadTitleIllustration}). Without it the
    * Title draws its code-drawn backdrop.
    */
   readonly titleIllustration?: HTMLCanvasElement | null;
@@ -57,7 +57,7 @@ interface InputAdapter {
 }
 
 /**
- * Browser shell: creates the 480×270 canvas, scales it by the largest integer factor that fits
+ * Browser shell: creates the 640×360 canvas, scales it by the largest integer factor that fits
  * (letterboxed, no smoothing), and runs the fixed-timestep loop that feeds input frames to the
  * Game core and draws its view. It pauses the Run when the tab is hidden or loses focus.
  *

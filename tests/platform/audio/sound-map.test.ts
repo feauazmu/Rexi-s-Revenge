@@ -91,7 +91,7 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
         size: 'large',
         x: 240,
         y: 200,
-        radius: 36,
+        radius: 48,
       },
       'explosion-large',
     ],
@@ -205,8 +205,8 @@ describe('soundForEvent', () => {
       y: 100,
     });
     const left = soundForEvent(destroyedAt(0))?.pan ?? 0;
-    const center = soundForEvent(destroyedAt(240))?.pan ?? 1;
-    const right = soundForEvent(destroyedAt(480))?.pan ?? 0;
+    const center = soundForEvent(destroyedAt(320))?.pan ?? 1;
+    const right = soundForEvent(destroyedAt(640))?.pan ?? 0;
     expect(left).toBeLessThan(-0.3);
     expect(center).toBeCloseTo(0, 5);
     expect(right).toBeGreaterThan(0.3);
@@ -221,11 +221,11 @@ describe('soundForEvent', () => {
       size: 'large',
       x,
       y: 200,
-      radius: 36,
+      radius: 48,
     });
     expect(soundForEvent(blastAt(0))?.pan).toBeLessThan(-0.3);
-    expect(soundForEvent(blastAt(240))?.pan).toBeCloseTo(0, 5);
-    expect(soundForEvent(blastAt(480))?.pan).toBeGreaterThan(0.3);
+    expect(soundForEvent(blastAt(320))?.pan).toBeCloseTo(0, 5);
+    expect(soundForEvent(blastAt(640))?.pan).toBeGreaterThan(0.3);
   });
 });
 

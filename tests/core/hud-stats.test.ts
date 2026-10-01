@@ -25,22 +25,22 @@ describe('HUD score', () => {
   it("increases by the Maletín-cóptero's configured points when one is destroyed", () => {
     const game = drive({
       overrides: {
-        spawns: [maletinAt(300, 60)],
+        spawns: [maletinAt(400, 80)],
         tuning: holdStill({ enemies: { 'maletin-coptero': { points: 275 } } }),
       },
     });
-    const events = game.holdFireToward(centerOf(300, 60), 5);
+    const events = game.holdFireToward(centerOf(400, 80), 5);
     expect(eventsOf(events, 'enemy-destroyed')).toEqual([expect.objectContaining({ points: 275 })]);
     expect(runOf(game.view).stats.score).toBe(275);
   });
 
   it('adds up the points of every Enemy destroyed', () => {
     const game = drive({
-      overrides: { spawns: [maletinAt(300, 60), maletinAt(100, 40, 240)], tuning: holdStill() },
+      overrides: { spawns: [maletinAt(400, 80), maletinAt(133, 53, 240)], tuning: holdStill() },
     });
-    game.holdFireToward(centerOf(300, 60), 3);
+    game.holdFireToward(centerOf(400, 80), 3);
     expect(runOf(game.view).stats.score).toBe(maletin.points);
-    game.holdFireToward(centerOf(100, 40), 3);
+    game.holdFireToward(centerOf(133, 53), 3);
     expect(runOf(game.view).stats.score).toBe(2 * maletin.points);
   });
 });

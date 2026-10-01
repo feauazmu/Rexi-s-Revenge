@@ -44,7 +44,7 @@ describe('Brand goldens', () => {
     await expectGolden('logo-sheet', image);
   });
 
-  it('share-card: the link preview at game resolution (public/og-image.png is it at 2.5×)', async () => {
+  it('share-card: the link preview at game resolution (public/og-image.png is it at 2×)', async () => {
     const illustration = await loadTitleIllustration();
     const image = renderPart(
       masterPalette.outline,

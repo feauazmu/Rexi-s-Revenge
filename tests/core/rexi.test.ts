@@ -8,14 +8,14 @@ const maletin = defaultTuning.enemies['maletin-coptero'];
 describe("Rexi's aiming arm", () => {
   it('pivots at the shoulder on the facing side, mirrored when facing left', () => {
     const game = driveEmptyArena();
-    game.ticks(1, { aim: { x: 400, y: 100 } });
+    game.ticks(1, { aim: { x: 533, y: 133 } });
     const right = runOf(game.view).rexi;
     expect(right.shoulder).toEqual({
       x: right.x + tuning.shoulderOffsetX,
       y: right.y + tuning.shoulderOffsetY,
     });
 
-    game.ticks(1, { aim: { x: 10, y: 100 } });
+    game.ticks(1, { aim: { x: 13, y: 133 } });
     const left = runOf(game.view).rexi;
     expect(left.facing).toBe(-1);
     expect(left.shoulder).toEqual({
@@ -26,7 +26,7 @@ describe("Rexi's aiming arm", () => {
 
   it('puts the muzzle at arm’s reach from the shoulder, toward the aim point', () => {
     const game = driveEmptyArena();
-    const aim = { x: 300, y: 60 };
+    const aim = { x: 400, y: 80 };
     game.ticks(1, { aim });
     const { shoulder, muzzle, aimDirection } = runOf(game.view).rexi;
     expect(Math.hypot(muzzle.x - shoulder.x, muzzle.y - shoulder.y)).toBeCloseTo(

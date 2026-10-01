@@ -3,7 +3,7 @@
  * left, and below it, in the same left column, the local top 10, the start prompt and the
  * credits line. Rexi stays uncovered on the right.
  *
- * The backdrop is the bundled title illustration (a 480×270 bitmap the platform decodes and
+ * The backdrop is the bundled title illustration (a 640×360 bitmap the platform decodes and
  * hands to the renderer, per ADR 0001) or, when it is missing, a code-drawn sunset plaza with
  * the same composition, so the layout works over both. Over the illustration, every text sits
  * on a solid dark plate or has a black outline, so it stays readable over the busy art.
@@ -20,24 +20,24 @@ import { drawHighScores, HIGH_SCORES_WIDTH } from './high-scores';
 import { blinkOn, drawOutlinedText, fillCircle } from './ui';
 
 /** Center of the left column (the sky over the courthouse) that holds everything but Rexi. */
-const COLUMN_CENTER_X = 126;
+export const COLUMN_CENTER_X = 160;
 
 const LOGO_X = COLUMN_CENTER_X - LOGO_WIDTH / 2;
-const LOGO_Y = 5;
+const LOGO_Y = 10;
 /** The logo drops in from above over this many ticks when the Title appears. */
 const LOGO_DROP_TICKS = 18;
 
 /** The top 10 slides in from the left once the logo has landed. */
 const SCORES_X = COLUMN_CENTER_X - HIGH_SCORES_WIDTH / 2;
-const SCORES_Y = LOGO_Y + LOGO_HEIGHT + 4;
+const SCORES_Y = LOGO_Y + LOGO_HEIGHT + 8;
 const SCORES_SLIDE_TICKS = 12;
 
 /** Top of the start prompt's text cell, and its plate's padding around the capitals. */
-const PROMPT_Y = 228;
-const PLATE_PAD_X = 6;
+const PROMPT_Y = 300;
+const PLATE_PAD_X = 8;
 
 /** Top of the credits line's text cell. */
-const CREDITS_Y = 255;
+const CREDITS_Y = 340;
 
 const ink = {
   outline: masterPalette.outline,
@@ -94,8 +94,8 @@ export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): v
 function drawPlate(surface: Surface, width: number, textY: number): void {
   const capTop = textY + fonts.regular.baseline - 7;
   const x = Math.round(COLUMN_CENTER_X - width / 2);
-  const y = capTop - 4;
-  const h = 7 + 8;
+  const y = capTop - 5;
+  const h = 7 + 10;
   surface.fillRect(x + 1, y, width - 2, h, ink.outline);
   surface.fillRect(x, y + 1, width, h - 2, ink.outline);
   surface.fillRect(x + 1, y + 1, width - 2, h - 2, ink.plate);
@@ -106,14 +106,14 @@ function drawPlate(surface: Surface, width: number, textY: number): void {
 // Code-drawn backdrop (when the illustration is missing): sunset over the plaza, striped sun
 // behind the skyline, courthouse on the right.
 
-const HORIZON = 198;
+const HORIZON = 264;
 const SKY: readonly (readonly [until: number, color: Color])[] = [
-  [40, masterPalette.skyIndigo],
-  [72, masterPalette.skyPurple],
-  [124, masterPalette.skyMagenta],
-  [160, masterPalette.skyRose],
-  [174, masterPalette.coral],
-  [186, masterPalette.skyOrange],
+  [53, masterPalette.skyIndigo],
+  [96, masterPalette.skyPurple],
+  [165, masterPalette.skyMagenta],
+  [213, masterPalette.skyRose],
+  [232, masterPalette.coral],
+  [248, masterPalette.skyOrange],
   [HORIZON, masterPalette.gold],
 ];
 
@@ -121,28 +121,28 @@ function skyColorAt(y: number): Color {
   return SKY.find(([until]) => y < until)?.[1] ?? masterPalette.gold;
 }
 
-const SUN = { x: 246, y: HORIZON - 2, r: 38 } as const;
+const SUN = { x: 328, y: HORIZON - 2, r: 50 } as const;
 const SUN_TOP: Color = masterPalette.light;
 const SUN_BOTTOM: Color = masterPalette.gold;
 
 /** Distant skyline: [x, width, height] of each building, left to right. */
 const SKYLINE: readonly (readonly [number, number, number])[] = [
-  [0, 18, 26],
-  [16, 14, 40],
-  [30, 22, 30],
-  [50, 10, 52],
-  [60, 20, 36],
-  [80, 16, 24],
-  [96, 26, 44],
-  [122, 12, 30],
-  [134, 18, 58],
-  [152, 24, 34],
-  [176, 14, 46],
-  [190, 12, 22],
-  [262, 14, 18],
-  [276, 18, 30],
-  [446, 14, 30],
-  [458, 22, 48],
+  [0, 24, 35],
+  [21, 19, 53],
+  [40, 29, 40],
+  [67, 13, 69],
+  [80, 27, 48],
+  [107, 21, 32],
+  [128, 35, 59],
+  [163, 16, 40],
+  [179, 24, 77],
+  [203, 32, 45],
+  [235, 19, 61],
+  [253, 16, 29],
+  [349, 19, 24],
+  [368, 24, 40],
+  [595, 19, 40],
+  [611, 29, 64],
 ];
 const SKYLINE_FAR: Color = masterPalette.skyPurple;
 const SKYLINE_WINDOW: Color = masterPalette.skyMagenta;
@@ -158,10 +158,10 @@ const GROUND_LINE: Color = masterPalette.robeSheen;
 
 /** Long thin clouds: [x, y, width]. They drift a few pixels back and forth with the tick. */
 const CLOUDS: readonly (readonly [number, number, number])[] = [
-  [250, 34, 54],
-  [370, 62, 40],
-  [300, 96, 64],
-  [40, 120, 46],
+  [333, 45, 72],
+  [493, 83, 53],
+  [400, 128, 85],
+  [53, 160, 61],
 ];
 const CLOUD: Color = masterPalette.skyMagenta;
 const CLOUD_SHADE: Color = masterPalette.skyPurple;
@@ -187,8 +187,8 @@ function drawBackdrop(surface: Surface, dc: DrawContext, view: GameView): void {
 
   for (const [x, w, h] of SKYLINE) {
     surface.fillRect(x, HORIZON - h, w, h, SKYLINE_FAR);
-    for (let wy = HORIZON - h + 4; wy < HORIZON - 4; wy += 6) {
-      for (let wx = x + 3; wx < x + w - 3; wx += 5) surface.fillRect(wx, wy, 2, 2, SKYLINE_WINDOW);
+    for (let wy = HORIZON - h + 5; wy < HORIZON - 5; wy += 8) {
+      for (let wx = x + 4; wx < x + w - 4; wx += 7) surface.fillRect(wx, wy, 2, 2, SKYLINE_WINDOW);
     }
   }
 
@@ -204,10 +204,10 @@ function drawBackdrop(surface: Surface, dc: DrawContext, view: GameView): void {
     const t = (view.tick + phase) % 80;
     return Math.round((t < 40 ? t : 80 - t) / 10);
   };
-  surface.drawBitmap(dc.sprites.get(COPTER), 260, 128 + bob(0));
-  surface.drawBitmap(dc.sprites.get(COPTER), 290, 142 + bob(30));
+  surface.drawBitmap(dc.sprites.get(COPTER), 347, 171 + bob(0));
+  surface.drawBitmap(dc.sprites.get(COPTER), 387, 189 + bob(30));
 
-  drawCourthouse(surface, 304, HORIZON);
+  drawCourthouse(surface, 405, HORIZON);
   drawGround(surface);
 }
 
@@ -229,21 +229,21 @@ function drawSun(surface: Surface): void {
 
 /** A columned courthouse: stepped pediment, entablature, six columns and front steps. */
 function drawCourthouse(surface: Surface, x: number, ground: number): void {
-  const w = 150;
-  const stepsH = 9;
-  const columnsH = 46;
-  const beamH = 8;
+  const w = 200;
+  const stepsH = 12;
+  const columnsH = 61;
+  const beamH = 10;
   const base = ground - stepsH;
   const beamTop = base - columnsH - beamH;
 
   // Pediment: stepped triangle.
-  const pedimentH = 18;
+  const pedimentH = 24;
   for (let i = 0; i < pedimentH; i++) {
     const inset = Math.round(((pedimentH - i) * (w / 2 - 4)) / pedimentH);
     surface.fillRect(x + inset, beamTop - pedimentH + i, w - inset * 2, 1, ROOF);
   }
   surface.fillRect(x + 4, beamTop - 2, w - 8, 2, STONE_SHADE);
-  fillCircle(surface, x + w / 2, beamTop - 7, 3, STONE_SHADE);
+  fillCircle(surface, x + w / 2, beamTop - 9, 4, STONE_SHADE);
 
   // Entablature.
   surface.fillRect(x - 2, beamTop, w + 4, beamH, STONE);
@@ -252,7 +252,7 @@ function drawCourthouse(surface: Surface, x: number, ground: number): void {
   // Hall behind the columns, then the columns.
   surface.fillRect(x + 6, beamTop + beamH, w - 12, columnsH, STONE_DARK);
   const columns = 6;
-  const colW = 10;
+  const colW = 13;
   const spacing = (w - 16 - colW) / (columns - 1);
   for (let i = 0; i < columns; i++) {
     const cx = Math.round(x + 8 + i * spacing);
@@ -265,12 +265,12 @@ function drawCourthouse(surface: Surface, x: number, ground: number): void {
 
   // Steps, each wider than the one above.
   for (let i = 0; i < 3; i++) {
-    const inset = 6 - i * 4;
+    const inset = 8 - i * 5;
     surface.fillRect(
-      x + inset - 4,
-      base + i * 3,
-      w - inset * 2 + 8,
-      3,
+      x + inset - 5,
+      base + i * 4,
+      w - inset * 2 + 10,
+      4,
       i % 2 ? STONE_SHADE : STONE,
     );
   }
@@ -282,9 +282,9 @@ function drawGround(surface: Surface): void {
   // Paving rows get taller toward the viewer, and their joints wider apart and staggered.
   let y = HORIZON + 2;
   for (let row = 0; y < SCREEN_HEIGHT; row++) {
-    const h = 3 + row * 2;
+    const h = 4 + row * 3;
     surface.fillRect(0, y, SCREEN_WIDTH, 1, GROUND_LINE);
-    const joint = 20 + row * 10;
+    const joint = 27 + row * 13;
     const offset = row % 2 ? joint / 2 : 0;
     for (let x = offset - joint; x < SCREEN_WIDTH; x += joint) {
       surface.fillRect(Math.round(x), y + 1, 1, h - 1, GROUND_LINE);

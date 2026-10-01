@@ -1,5 +1,5 @@
 /**
- * Where the on-screen touch controls are, in game coordinates (480×270). The renderer draws
+ * Where the on-screen touch controls are, in game coordinates (640×360). The renderer draws
  * them here and the platform's touch adapter hit-tests fingers against the same layout, so
  * what you see is exactly what you can press.
  */
@@ -39,23 +39,23 @@ interface Circle {
 
 export const TOUCH_LAYOUT = {
   /** Stick travel and dead zone (share of the travel). Sticks float where the thumb lands. */
-  stick: { radius: 22, deadZone: 0.2 },
+  stick: { radius: 29, deadZone: 0.2 },
   /** Where each stick is drawn while no finger holds it. */
-  moveStickRest: { x: 50, y: 216 },
-  aimStickRest: { x: 430, y: 216 },
+  moveStickRest: { x: 67, y: 288 },
+  aimStickRest: { x: 573, y: 288 },
   /** Touches left of this line drive the move stick, right of it the aim stick. */
   splitX: SCREEN_WIDTH / 2,
 
-  jump: { x: 354, y: 236, r: 13, hit: 22 },
+  jump: { x: 472, y: 315, r: 17, hit: 29 },
   /** Top right, under the score. */
-  pause: { x: 467, y: 31, r: 8, hit: 16 },
+  pause: { x: 621, y: 39, r: 11, hit: 21 },
   /** The HUD Weapon icon and its ammo (tap to cycle Weapons). */
-  weapon: { x: 0, y: 12, w: 46, h: 22 },
+  weapon: { x: 0, y: 15, w: 56, h: 26 },
 
   /** Menu d-pad: a press anywhere within `hit` picks the arrow on its dominant axis. */
-  dpad: { x: 52, y: 214, arm: 17, hit: 44 },
-  confirm: { x: 432, y: 210, r: 14, hit: 24 },
-  back: { x: 396, y: 236, r: 10, hit: 17 },
+  dpad: { x: 69, y: 285, arm: 23, hit: 59 },
+  confirm: { x: 576, y: 280, r: 19, hit: 32 },
+  back: { x: 528, y: 315, r: 13, hit: 23 },
 } as const satisfies Record<string, unknown>;
 
 const within = (p: Vec2, c: Circle) => Math.hypot(p.x - c.x, p.y - c.y) <= c.hit;
@@ -77,7 +77,7 @@ export function touchButtonAt(mode: TouchControlsMode, point: Vec2): TouchButton
     if (within(point, L.back)) return 'back';
     const dx = point.x - L.dpad.x;
     const dy = point.y - L.dpad.y;
-    if (Math.hypot(dx, dy) > L.dpad.hit || Math.max(Math.abs(dx), Math.abs(dy)) < 4) return null;
+    if (Math.hypot(dx, dy) > L.dpad.hit || Math.max(Math.abs(dx), Math.abs(dy)) < 5) return null;
     if (Math.abs(dx) > Math.abs(dy)) return dx < 0 ? 'left' : 'right';
     return dy < 0 ? 'up' : 'down';
   }

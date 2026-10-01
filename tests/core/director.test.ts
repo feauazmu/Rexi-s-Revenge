@@ -121,7 +121,7 @@ describe('The ramp table', () => {
   it('raises the Enemy fire rate stage by stage', () => {
     const game = drive({
       overrides: {
-        spawns: [{ kind: 'maletin-coptero', x: 300, y: 60 }],
+        spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }],
         tuning: {
           ...invincible,
           enemies: {
@@ -143,7 +143,7 @@ describe('The ramp table', () => {
   it('raises the fire rate after the last stage, up to its maximum', () => {
     const game = drive({
       overrides: {
-        spawns: [{ kind: 'maletin-coptero', x: 300, y: 60 }],
+        spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }],
         tuning: {
           ...invincible,
           enemies: {
@@ -274,8 +274,8 @@ describe('Overriding the Director', () => {
     const game = drive({
       overrides: {
         spawns: [
-          { kind: 'maletin-coptero', x: 100, y: 40, atTick: 10 },
-          { kind: 'maletin-coptero', x: 300, y: 60, atTick: 200 },
+          { kind: 'maletin-coptero', x: 133, y: 53, atTick: 10 },
+          { kind: 'maletin-coptero', x: 400, y: 80, atTick: 200 },
         ],
         tuning: invincible,
       },
@@ -297,7 +297,7 @@ describe('The ramp clock', () => {
   it('does not advance while the Run is not being simulated, and restarts with a new Run', () => {
     const game = drive({
       overrides: {
-        spawns: [{ kind: 'maletin-coptero', x: 300, y: 60 }],
+        spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }],
         tuning: {
           rexi: { maxHealth: 5, invulnerability: 0.1 },
           enemies: {
@@ -342,7 +342,7 @@ describe('The ramp clock', () => {
   });
 
   it('does not advance during Hit-stop, and resumes with the Run', () => {
-    const spot = { x: 300, y: 150 };
+    const spot = { x: 400, y: 200 };
     const aim = { x: spot.x + 12, y: spot.y + 9 };
     const hitStopTicks = secondsToTicks(defaultTuning.quips.hitStop);
     const game = drive({

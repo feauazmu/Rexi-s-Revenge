@@ -4,32 +4,34 @@ import { computeViewport, screenToGame, screenToGameUnclamped } from '../../src/
 describe('computeViewport', () => {
   it.each([
     // container w, h, dpr -> scale, offsets (CSS px)
-    { w: 480, h: 270, dpr: 1, scale: 1, x: 0, y: 0 },
-    { w: 1920, h: 1080, dpr: 1, scale: 4, x: 0, y: 0 },
-    { w: 1280, h: 720, dpr: 1, scale: 2, x: 160, y: 90 },
-    { w: 1000, h: 1000, dpr: 1, scale: 2, x: 20, y: 230 }, // pillarbox + letterbox
-    { w: 2560, h: 1080, dpr: 1, scale: 4, x: 320, y: 0 }, // ultrawide
-    { w: 300, h: 200, dpr: 1, scale: 1, x: -90, y: -35 }, // too small: never below 1
+    { w: 640, h: 360, dpr: 1, scale: 1, x: 0, y: 0 },
+    { w: 1920, h: 1080, dpr: 1, scale: 3, x: 0, y: 0 }, // 1080p
+    { w: 1280, h: 720, dpr: 1, scale: 2, x: 0, y: 0 }, // 720p
+    { w: 1366, h: 768, dpr: 1, scale: 2, x: 43, y: 24 },
+    { w: 1000, h: 1000, dpr: 1, scale: 1, x: 180, y: 320 }, // pillarbox + letterbox
+    { w: 2560, h: 1080, dpr: 1, scale: 3, x: 320, y: 0 }, // ultrawide
+    { w: 2560, h: 1440, dpr: 1, scale: 4, x: 0, y: 0 }, // 1440p
+    { w: 400, h: 300, dpr: 1, scale: 1, x: -120, y: -30 }, // too small: never below 1
   ])('fits $w×$h @$dpr at integer scale $scale', ({ w, h, dpr, scale, x, y }) => {
     const vp = computeViewport(w, h, dpr);
     expect(vp.scale).toBe(scale);
     expect(vp.offsetX).toBe(x);
     expect(vp.offsetY).toBe(y);
-    expect(vp.width).toBe(480 * vp.cssScale);
-    expect(vp.height).toBe(270 * vp.cssScale);
+    expect(vp.width).toBe(640 * vp.cssScale);
+    expect(vp.height).toBe(360 * vp.cssScale);
   });
 
   it('fits other image sizes too (the portrait rotate prompt)', () => {
-    const vp = computeViewport(390, 844, 3, { width: 144, height: 256 }); // phone portrait
-    expect(vp.scale).toBe(8); // 1170 / 144 = 8.1, 2532 / 256 = 9.9
+    const vp = computeViewport(390, 844, 3, { width: 192, height: 340 }); // phone portrait
+    expect(vp.scale).toBe(6); // 1170 / 192 = 6.1, 2532 / 340 = 7.4
     expect(vp.width).toBeCloseTo(384);
-    expect(vp.height).toBeCloseTo((256 * 8) / 3);
+    expect(vp.height).toBeCloseTo(680);
   });
 
   it('scales in whole device pixels on high-DPI screens', () => {
     const vp = computeViewport(844, 390, 3); // phone landscape
-    expect(vp.scale).toBe(4); // 2532×1170 device px fit 4× (1920×1080)
-    expect(vp.cssScale).toBeCloseTo(4 / 3);
+    expect(vp.scale).toBe(3); // 2532×1170 device px fit 3× (1920×1080)
+    expect(vp.cssScale).toBeCloseTo(1);
     expect(vp.width).toBeCloseTo(640);
     // Offsets land on device pixel boundaries.
     expect(Number.isInteger(Math.round(vp.offsetX * 3 * 1e6) / 1e6)).toBe(true);
@@ -39,7 +41,7 @@ describe('computeViewport', () => {
 
 describe('screenToGame', () => {
   it.each([
-    { w: 480, h: 270, dpr: 1 },
+    { w: 640, h: 360, dpr: 1 },
     { w: 1280, h: 720, dpr: 1 },
     { w: 1000, h: 1000, dpr: 1 },
     { w: 2560, h: 1080, dpr: 1 },
@@ -53,9 +55,9 @@ describe('screenToGame', () => {
     });
     for (const [gx, gy] of [
       [0, 0],
-      [240, 135],
-      [479.5, 269.5],
-      [12.25, 200.75],
+      [320, 180],
+      [639.5, 359.5],
+      [12.25, 267.75],
     ] as const) {
       const game = screenToGame(toScreen(gx, gy), vp);
       expect(game.x).toBeCloseTo(gx, 6);
@@ -64,22 +66,22 @@ describe('screenToGame', () => {
   });
 
   it('accounts for the letterbox offset', () => {
-    const vp = computeViewport(1280, 720, 1); // 2×, offset (160, 90)
-    expect(screenToGame({ x: 160, y: 90 }, vp)).toEqual({ x: 0, y: 0 });
-    expect(screenToGame({ x: 640, y: 360 }, vp)).toEqual({ x: 240, y: 135 });
+    const vp = computeViewport(1366, 768, 1); // 2×, offset (43, 24)
+    expect(screenToGame({ x: 43, y: 24 }, vp)).toEqual({ x: 0, y: 0 });
+    expect(screenToGame({ x: 683, y: 384 }, vp)).toEqual({ x: 320, y: 180 });
   });
 
   it('clamps points in the letterbox bars to the screen edges', () => {
-    const vp = computeViewport(1280, 720, 1);
+    const vp = computeViewport(1366, 768, 1);
     expect(screenToGame({ x: 10, y: 5 }, vp)).toEqual({ x: 0, y: 0 });
-    expect(screenToGame({ x: 1275, y: 719 }, vp)).toEqual({ x: 480, y: 270 });
+    expect(screenToGame({ x: 1360, y: 767 }, vp)).toEqual({ x: 640, y: 360 });
   });
 });
 
 describe('screenToGameUnclamped', () => {
   it('maps points over the letterbox bars outside the screen instead of clamping', () => {
-    const vp = computeViewport(1280, 720, 1); // 2×, offset (160, 90)
-    expect(screenToGameUnclamped({ x: 100, y: 60 }, vp)).toEqual({ x: -30, y: -15 });
-    expect(screenToGame({ x: 100, y: 60 }, vp)).toEqual({ x: 0, y: 0 });
+    const vp = computeViewport(1366, 768, 1); // 2×, offset (43, 24)
+    expect(screenToGameUnclamped({ x: 3, y: 4 }, vp)).toEqual({ x: -20, y: -10 });
+    expect(screenToGame({ x: 3, y: 4 }, vp)).toEqual({ x: 0, y: 0 });
   });
 });
