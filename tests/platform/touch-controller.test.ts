@@ -44,7 +44,7 @@ describe('touch controller: playing a Run', () => {
 
   it('moves with a floating stick on the left half, wherever the thumb lands', () => {
     const touch = controllerOn(view);
-    const start = { x: 120, y: 180 };
+    const start = { x: 160, y: 240 };
     touch.down(1, start);
     expect(touch.sample(view).move).toBe(0);
     touch.move(1, offset(start, R, 0));
@@ -59,8 +59,8 @@ describe('touch controller: playing a Run', () => {
 
   it('drops through platforms when the move stick is pulled down', () => {
     const touch = controllerOn(view);
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 100, y: 150 + R });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 133, y: 200 + R });
     const frame = touch.sample(view);
     expect(frame.drop).toBe(true);
     expect(frame.move).toBe(0);
@@ -69,7 +69,7 @@ describe('touch controller: playing a Run', () => {
 
   it('aims along the right stick and fires while it is pushed', () => {
     const touch = controllerOn(view);
-    const start = { x: 400, y: 150 };
+    const start = { x: 533, y: 200 };
     touch.down(2, start);
     expect(touch.sample(view).fire).toBe(false); // resting inside the dead zone
     touch.move(2, offset(start, 0, -R));
@@ -86,17 +86,17 @@ describe('touch controller: playing a Run', () => {
 
   it('faces where Rexi walks while the aim stick is idle', () => {
     const touch = controllerOn(view);
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 100 - R, y: 150 });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 133 - R, y: 200 });
     expect(touch.sample(view).aim).toEqual({ x: shoulder.x - AIM_DISTANCE, y: shoulder.y });
   });
 
   it('handles move, aim and jump fingers at the same time (multi-touch)', () => {
     const touch = controllerOn(view);
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 100 + R, y: 150 });
-    touch.down(2, { x: 420, y: 120 });
-    touch.move(2, { x: 420 + R, y: 120 });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 133 + R, y: 200 });
+    touch.down(2, { x: 560, y: 160 });
+    touch.move(2, { x: 560 + R, y: 160 });
     touch.down(3, { x: L.jump.x, y: L.jump.y });
     const frame = touch.sample(view);
     expect(frame).toMatchObject({ move: 1, fire: true, jump: true });
@@ -106,10 +106,10 @@ describe('touch controller: playing a Run', () => {
 
   it('ignores a second finger on a half whose stick is already held', () => {
     const touch = controllerOn(view);
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 100 + R, y: 150 });
-    touch.down(4, { x: 60, y: 150 });
-    touch.move(4, { x: 60 - R, y: 150 });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 133 + R, y: 200 });
+    touch.down(4, { x: 80, y: 200 });
+    touch.move(4, { x: 80 - R, y: 200 });
     expect(touch.sample(view).move).toBe(1);
   });
 
@@ -124,7 +124,7 @@ describe('touch controller: playing a Run', () => {
 
   it('cycles Weapons with a tap on the HUD Weapon icon, as a one-tick edge', () => {
     const touch = controllerOn(view);
-    touch.down(5, { x: 10, y: 20 });
+    touch.down(5, { x: 13, y: 27 });
     expect(touch.sample(view).weaponNext).toBe(true);
     expect(touch.sample(view).weaponNext).toBe(false);
     expect(touch.sample(view).fire).toBe(false);
@@ -139,8 +139,8 @@ describe('touch controller: playing a Run', () => {
 
   it('a cancelled pointer (system gesture) releases its control', () => {
     const touch = controllerOn(view);
-    touch.down(2, { x: 400, y: 150 });
-    touch.move(2, { x: 400 + R, y: 150 });
+    touch.down(2, { x: 533, y: 200 });
+    touch.move(2, { x: 533 + R, y: 200 });
     touch.cancel(2);
     expect(touch.sample(view).fire).toBe(false);
   });
@@ -153,12 +153,12 @@ describe('touch controller: playing a Run', () => {
       aimStick: null,
       pressed: [],
     });
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 110, y: 150 });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 147, y: 200 });
     touch.down(3, { x: L.jump.x, y: L.jump.y });
     expect(touch.overlay(view)).toEqual({
       mode: 'play',
-      moveStick: { origin: { x: 100, y: 150 }, knob: { x: 110, y: 150 } },
+      moveStick: { origin: { x: 133, y: 200 }, knob: { x: 147, y: 200 } },
       aimStick: null,
       pressed: ['jump'],
     });
@@ -169,7 +169,7 @@ describe('touch controller: Title and Cómo jugar', () => {
   it('turns any touch into a start input and shows no controls', () => {
     const view = titleView();
     const touch = controllerOn(view);
-    touch.down(1, { x: 300, y: 100 });
+    touch.down(1, { x: 400, y: 133 });
     expect(touch.sample(view).start).toBe(true);
     expect(touch.sample(view).start).toBe(false);
     expect(touch.overlay(view)).toBeNull();
@@ -201,13 +201,13 @@ describe('touch controller: menus (pause menu, initials entry)', () => {
   });
 
   it.each([
-    ['up', 0, -40],
-    ['down', 0, 40],
-    ['left', -40, 5],
-    ['right', 40, -5],
+    ['up', 0, -53],
+    ['down', 0, 53],
+    ['left', -53, 7],
+    ['right', 53, -7],
   ] as const)('a swipe anywhere else navigates %s', (direction, dx, dy) => {
     const touch = controllerOn(view);
-    const start = { x: 240, y: 120 };
+    const start = { x: 320, y: 160 };
     touch.down(1, start);
     touch.move(1, offset(start, dx / 2, dy / 2));
     expect(touch.sample(view).menu[direction]).toBe(false); // fires on release
@@ -217,8 +217,8 @@ describe('touch controller: menus (pause menu, initials entry)', () => {
 
   it('a short tap outside the buttons does nothing', () => {
     const touch = controllerOn(view);
-    touch.down(1, { x: 240, y: 120 });
-    touch.up(1, { x: 243, y: 121 });
+    touch.down(1, { x: 320, y: 160 });
+    touch.up(1, { x: 324, y: 161 });
     const { menu } = touch.sample(view);
     expect(Object.values(menu).some(Boolean)).toBe(false);
   });
@@ -237,8 +237,8 @@ describe('touch controller: menus (pause menu, initials entry)', () => {
   it('does not move Rexi from a stick finger still held while paused', () => {
     const run = runView();
     const touch = controllerOn(run);
-    touch.down(1, { x: 100, y: 150 });
-    touch.move(1, { x: 100 + R, y: 150 });
+    touch.down(1, { x: 133, y: 200 });
+    touch.move(1, { x: 133 + R, y: 200 });
     expect(touch.sample(view).move).toBe(0);
     expect(touch.sample(run).move).toBe(1); // and resumes when the Run does
   });

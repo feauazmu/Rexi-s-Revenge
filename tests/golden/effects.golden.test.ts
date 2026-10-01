@@ -10,8 +10,8 @@ import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
 const maletinTuning = defaultTuning.enemies['maletin-coptero'];
-const maletin: ScriptedSpawn = { kind: 'maletin-coptero', x: 320, y: 70 };
-const atMaletin = { x: 332, y: 79 };
+const maletin: ScriptedSpawn = { kind: 'maletin-coptero', x: 427, y: 93 };
+const atMaletin = { x: 443, y: 105 };
 const oneShotKills: TuningOverrides = holdStill({
   weapons: { 'mazo-automatico': { damage: maletinTuning.health } },
 });

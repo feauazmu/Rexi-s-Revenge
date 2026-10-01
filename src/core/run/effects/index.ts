@@ -173,7 +173,7 @@ function spawnDebris(ctx: RunContext, enemy: Readonly<EnemyState>, pieces: numbe
   const t = tuning.debris;
   const { rng } = effects;
   const mid = center(enemy);
-  const size = Math.max(4, Math.round(Math.min(enemy.w, enemy.h) / 2));
+  const size = Math.max(5, Math.round(Math.min(enemy.w, enemy.h) / 2));
 
   for (let piece = 0; piece < pieces; piece++) {
     // Chunks start spread across the Enemy and fly away from its middle.

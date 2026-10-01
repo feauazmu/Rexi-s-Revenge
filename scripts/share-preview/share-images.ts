@@ -62,7 +62,7 @@ export async function decodeIllustration(png: Buffer | string): Promise<Canvas> 
   return canvas;
 }
 
-/** The share card at game resolution, then scaled 2.5× to 1200×630. */
+/** The share card at game resolution, then scaled 2× (nearest-neighbor) to 1200×630. */
 export function ogImage(illustration: Canvas): RgbaImage {
   const canvas = createCanvas(SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
   const ctx = canvas.getContext('2d');

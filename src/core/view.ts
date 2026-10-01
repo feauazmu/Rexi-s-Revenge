@@ -17,7 +17,7 @@ import type { TimedPowerUpId } from './tuning';
  * Read-only snapshot of everything needed to draw one frame. The renderer is a pure function
  * of this view; it must never need the Game core's internals or a clock.
  *
- * All positions are game coordinates (480×270). Boxes use their top-left corner.
+ * All positions are game coordinates (640×360). Boxes use their top-left corner.
  */
 export interface GameView {
   /** Ticks since the Game was created. Drives animation phase for every screen. */

@@ -27,7 +27,7 @@ export function createRexi(tuning: Tuning): RexiState {
     health: rexi.maxHealth,
     maxHealth: rexi.maxHealth,
     facing: 1,
-    aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
+    aim: { x: rexi.spawnX + 133, y: arena.groundY - rexi.height },
     shotAge: SHOT_AGE_CAP,
     invulnerableTicks: 0,
     hurtTicks: 0,

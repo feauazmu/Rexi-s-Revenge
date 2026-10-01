@@ -60,9 +60,9 @@ describe('Screen goldens', () => {
   it('pause-menu: music muted, Silenciar música selected, over the frozen Run', async () => {
     const game = drive({
       seed: 1,
-      overrides: { spawns: [{ kind: 'maletin-coptero', x: 320, y: 70 }], tuning: holdStill() },
+      overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
     });
-    game.seconds(0.5, { aim: { x: 332, y: 79 } });
+    game.seconds(0.5, { aim: { x: 443, y: 105 } });
     game.ticks(1, { pause: true });
     game.ticks(1, { menu: { down: true } });
     game.ticks(1, { menu: { confirm: true } });

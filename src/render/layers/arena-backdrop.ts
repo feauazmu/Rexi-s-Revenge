@@ -7,17 +7,20 @@
  * SpriteBank rasterizes on first use. Animated details (clouds, billboard bulbs) and the
  * platforms are drawn per frame by `arena.ts`.
  *
- * Layout notes: the top ~24 px stay a calm dark sky for the HUD, and everything below the
- * ground line is low-contrast pavement so the Dialogue Box reads on top of it.
+ * Layout notes (640×360): the top ~32 px stay a calm dark sky for the HUD, and everything below
+ * the ground line is low-contrast pavement so the Dialogue Box reads on top of it. Details stay
+ * at 1:1 pixel density: the wider, taller frame gets more windows, columns, panes and tiles, never
+ * bigger pixels.
  */
+import { defaultTuning } from '../../core';
 import { createPixelGrid, type PixelGrid } from '../pixel-grid';
 import type { SpriteDef } from '../sprite';
 import type { Color } from '../surface';
 
-export const ARENA_WIDTH = 480;
-export const ARENA_HEIGHT = 270;
-/** Must match the default tuning's ground line; the pavement below it is backdrop. */
-const GROUND_Y = 238;
+export const ARENA_WIDTH = 640;
+export const ARENA_HEIGHT = 360;
+/** The default tuning's ground line; the pavement below it is backdrop. */
+const GROUND_Y = defaultTuning.arena.groundY;
 
 // ---------------------------------------------------------------------------------------------
 // Sky
@@ -26,21 +29,21 @@ const GROUND_Y = 238;
 /** Sunset bands, top to bottom: [first row, color]. */
 const SKY_BANDS: readonly (readonly [number, Color])[] = [
   [0, '#33205e'],
-  [26, '#432773'],
-  [48, '#582c86'],
-  [68, '#72308d'],
-  [86, '#8e358b'],
-  [102, '#ab3d83'],
-  [117, '#c84a77'],
-  [131, '#df5e67'],
-  [144, '#ec7957'],
-  [156, '#f5954b'],
-  [167, '#f9b04c'],
-  [178, '#fbc85c'],
-  [189, '#fddc7c'],
+  [35, '#432773'],
+  [64, '#582c86'],
+  [91, '#72308d'],
+  [115, '#8e358b'],
+  [136, '#ab3d83'],
+  [156, '#c84a77'],
+  [175, '#df5e67'],
+  [192, '#ec7957'],
+  [208, '#f5954b'],
+  [223, '#f9b04c'],
+  [237, '#fbc85c'],
+  [252, '#fddc7c'],
 ];
 
-const SKY_HEIGHT = 216;
+const SKY_HEIGHT = 288;
 
 const SKY_COLORS = {
   ...Object.fromEntries(SKY_BANDS.map(([, color], i) => [`band${i}`, color])),
@@ -54,24 +57,31 @@ const band = (i: number): SkyColor => `band${Math.max(0, Math.min(SKY_BANDS.leng
 
 /** Long thin horizontal streaks of the next band's color: [band, y, x, length]. */
 const SKY_STREAKS: readonly (readonly [number, number, number, number])[] = [
-  [1, 38, 0, 150],
-  [1, 41, 210, 120],
-  [2, 60, 40, 220],
-  [2, 63, 330, 150],
-  [3, 79, 0, 90],
-  [3, 80, 260, 140],
-  [4, 95, 120, 200],
-  [5, 110, 0, 160],
-  [5, 112, 300, 180],
-  [6, 125, 80, 240],
-  [7, 139, 0, 120],
-  [7, 140, 330, 150],
-  [8, 151, 150, 200],
-  [9, 162, 20, 140],
-  [10, 173, 260, 160],
+  [1, 51, 0, 200],
+  [1, 55, 280, 160],
+  [1, 58, 500, 140],
+  [2, 80, 53, 293],
+  [2, 84, 440, 200],
+  [3, 105, 0, 120],
+  [3, 107, 347, 187],
+  [3, 110, 160, 110],
+  [4, 127, 160, 267],
+  [4, 130, 520, 120],
+  [5, 147, 0, 213],
+  [5, 149, 400, 240],
+  [6, 167, 107, 320],
+  [6, 170, 530, 110],
+  [7, 185, 0, 160],
+  [7, 187, 440, 200],
+  [8, 201, 200, 267],
+  [8, 204, 560, 80],
+  [9, 216, 27, 187],
+  [9, 219, 420, 150],
+  [10, 231, 347, 213],
+  [11, 245, 230, 240],
 ];
 
-const SUN = { cx: 262, cy: 192, r: 21 };
+const SUN = { cx: 349, cy: 256, r: 28 };
 
 function paintSky(): SpriteDef {
   const g = createPixelGrid<SkyColor>(ARENA_WIDTH, SKY_HEIGHT, SKY_COLORS);
@@ -160,47 +170,58 @@ export interface CloudDef {
 function paintClouds(): CloudDef[] {
   return [
     {
-      sprite: paintCloud(78, 17, [
-        [14, 13, 12, 5],
-        [28, 9, 12, 8],
-        [44, 7, 13, 8],
-        [58, 11, 11, 6],
-        [70, 14, 8, 3],
+      sprite: paintCloud(104, 22, [
+        [18, 17, 16, 6],
+        [36, 12, 15, 10],
+        [56, 9, 17, 10],
+        [76, 14, 14, 8],
+        [93, 18, 10, 4],
       ]),
-      x: 20,
-      y: 34,
+      x: 26,
+      y: 44,
       speed: 2,
     },
     {
-      sprite: paintCloud(40, 9, [
-        [10, 7, 9, 3],
-        [20, 5, 9, 5],
-        [31, 7, 8, 3],
+      sprite: paintCloud(54, 12, [
+        [13, 9, 12, 4],
+        [27, 6, 12, 7],
+        [42, 9, 11, 4],
       ]),
-      x: 150,
-      y: 62,
+      x: 200,
+      y: 82,
       speed: 3.5,
     },
     {
-      sprite: paintCloud(62, 14, [
-        [12, 11, 10, 4],
-        [26, 7, 11, 7],
-        [40, 8, 9, 6],
-        [52, 11, 9, 4],
+      sprite: paintCloud(84, 18, [
+        [16, 14, 14, 5],
+        [34, 9, 15, 9],
+        [53, 10, 12, 8],
+        [70, 14, 12, 5],
       ]),
-      x: 300,
-      y: 98,
+      x: 400,
+      y: 128,
       speed: 2.75,
     },
     {
-      sprite: paintCloud(34, 6, [
-        [9, 5, 8, 2],
-        [19, 4, 9, 3],
-        [28, 5, 6, 2],
+      sprite: paintCloud(46, 8, [
+        [12, 6, 11, 3],
+        [25, 5, 12, 4],
+        [37, 6, 8, 3],
       ]),
-      x: 60,
-      y: 122,
+      x: 80,
+      y: 162,
       speed: 4.5,
+    },
+    {
+      sprite: paintCloud(66, 14, [
+        [14, 11, 12, 4],
+        [30, 7, 13, 7],
+        [48, 9, 12, 5],
+        [59, 11, 6, 3],
+      ]),
+      x: 560,
+      y: 60,
+      speed: 2.25,
     },
   ];
 }
@@ -310,184 +331,229 @@ function hash(x: number, y: number): number {
 
 /** Buildings of the far, hazy skyline: [x, width, top]. */
 const FAR_SKYLINE: readonly (readonly [number, number, number])[] = [
-  [150, 16, 150],
-  [164, 12, 164],
-  [174, 20, 140],
-  [192, 14, 158],
-  [204, 18, 170],
-  [220, 12, 178],
-  [230, 22, 186],
-  [286, 18, 180],
-  [302, 12, 160],
-  [312, 22, 146],
-  [332, 14, 164],
-  [344, 20, 132],
-  [362, 16, 154],
+  [200, 21, 200],
+  [219, 16, 219],
+  [232, 27, 187],
+  [256, 19, 211],
+  [272, 24, 227],
+  [293, 16, 237],
+  [307, 29, 248],
+  [381, 24, 240],
+  [403, 16, 213],
+  [416, 29, 195],
+  [443, 19, 219],
+  [459, 27, 176],
+  [483, 21, 205],
 ];
 
 /** Buildings of the near skyline: [x, width, top]. */
 const NEAR_SKYLINE: readonly (readonly [number, number, number])[] = [
-  [158, 22, 176],
-  [178, 14, 188],
-  [190, 20, 166],
-  [208, 16, 184],
-  [222, 22, 194],
-  [242, 12, 200],
-  [278, 14, 198],
-  [290, 22, 186],
-  [310, 16, 172],
-  [324, 20, 190],
-  [342, 18, 162],
-  [358, 18, 180],
-  [460, 20, 132],
+  [211, 29, 235],
+  [237, 19, 251],
+  [253, 27, 221],
+  [277, 21, 245],
+  [296, 29, 259],
+  [323, 16, 267],
+  [371, 19, 264],
+  [387, 29, 248],
+  [413, 21, 229],
+  [432, 27, 253],
+  [456, 24, 216],
+  [477, 24, 240],
+  [613, 27, 176],
 ];
 
-const SKYLINE_BASE = 208;
+const SKYLINE_BASE = 277;
 
 function paintSkyline(g: Grid): void {
   for (const [x, w, top] of FAR_SKYLINE) {
     g.rect(x, top, w, SKYLINE_BASE - top, 'far');
-    g.rect(x + w - 3, top, 3, SKYLINE_BASE - top, 'farShade');
+    g.rect(x + w - 4, top, 4, SKYLINE_BASE - top, 'farShade');
   }
-  // A spire and an antenna break up the far roofline.
-  g.rect(182, 128, 4, 12, 'far');
-  g.rect(183, 120, 2, 8, 'far');
-  g.rect(353, 118, 1, 14, 'far');
-  g.rect(318, 140, 10, 6, 'far');
+  // Spires, antennas and a stepped crown break up the far roofline.
+  g.rect(243, 171, 5, 16, 'far');
+  g.rect(244, 160, 3, 11, 'far');
+  g.rect(245, 153, 1, 7, 'far');
+  g.rect(471, 157, 1, 19, 'far');
+  g.rect(464, 170, 13, 6, 'far');
+  g.rect(424, 187, 13, 8, 'far');
+  g.rect(427, 182, 7, 5, 'far');
+  g.rect(320, 240, 2, 8, 'far');
 
   for (const [x, w, top] of NEAR_SKYLINE) {
     g.rect(x, top, w, SKYLINE_BASE - top, 'near');
-    g.rect(x + w - 4, top, 4, SKYLINE_BASE - top, 'nearShade');
+    g.rect(x + w - 5, top, 5, SKYLINE_BASE - top, 'nearShade');
     g.rect(x, top, w, 1, 'nearRoof');
     // Windows: a grid of 1×2 slots, a few warmly lit.
     for (let wy = top + 4; wy < SKYLINE_BASE - 4; wy += 5) {
-      for (let wx = x + 2; wx < x + w - 5; wx += 4) {
+      for (let wx = x + 2; wx < x + w - 6; wx += 4) {
         const r = hash(wx, wy);
         if (r < 0.16) g.rect(wx, wy, 1, 2, 'winLit');
         else if (r < 0.55) g.rect(wx, wy, 1, 2, 'winDim');
       }
     }
   }
-  g.rect(197, 158, 6, 8, 'near');
-  g.rect(199, 150, 2, 8, 'near');
-  g.rect(349, 154, 4, 8, 'near');
+  // Rooftop clutter: a water tank on legs, a spire, a mast with a red tip.
+  g.rect(262, 211, 8, 10, 'near');
+  g.rect(265, 200, 2, 11, 'near');
+  g.rect(296, 252, 9, 5, 'near');
+  g.rect(297, 257, 1, 2, 'near');
+  g.rect(303, 257, 1, 2, 'near');
+  g.rect(296, 251, 9, 1, 'nearRoof');
+  g.rect(465, 205, 5, 11, 'near');
+  g.rect(467, 196, 1, 9, 'near');
+  g.px(467, 195, 'winLit');
+  g.rect(418, 224, 9, 5, 'near');
+  g.rect(418, 223, 9, 1, 'nearRoof');
 }
 
 // Courthouse ------------------------------------------------------------------------------------
 
 const COURT = {
-  left: 4,
-  right: 144,
-  apexX: 74,
-  apexY: 96,
-  pedimentBase: 122,
-  entablatureBottom: 135,
-  columnTop: 136,
-  columnBottom: 195,
-  stepsTop: 196,
-  plazaY: 214,
-  columns: [12, 34, 56, 82, 104, 126],
+  left: 5,
+  right: 192,
+  apexX: 98,
+  apexY: 126,
+  pedimentBase: 163,
+  columnTop: 181,
+  columnBottom: 260,
+  stepsTop: 261,
+  plazaY: 285,
+  /** Left edge of each column shaft; the middle bay (86..110) frames the great door. */
+  columns: [15, 44, 73, 110, 139, 168],
 };
 
+/** A column shaft, left to right: fluted, lit from the left, warm sun rim on the right. */
+const SHAFT: readonly SceneryColor[] = [
+  'marbleShade',
+  'marbleHi',
+  'marbleHi',
+  'marbleMid',
+  'marble',
+  'marbleHi',
+  'marbleMid',
+  'marble',
+  'marbleHi',
+  'marbleMid',
+  'marble',
+  'marbleShade',
+  'rim',
+];
+
+/** A tall window in the porch wall: dark reveal, lintel, mullion and transom. */
+function paintPorchWindow(g: Grid, x: number, y: number): void {
+  g.rect(x - 2, y - 3, 13, 2, 'marbleShade');
+  g.rect(x - 2, y - 3, 13, 1, 'marbleMid');
+  g.rect(x - 1, y - 1, 11, 36, 'porchDark');
+  g.rect(x, y, 9, 34, 'window');
+  g.rect(x, y, 9, 1, 'windowHi');
+  g.rect(x + 1, y + 2, 1, 10, 'windowHi');
+  g.rect(x + 4, y, 1, 34, 'porchDark');
+  g.rect(x, y + 13, 9, 1, 'porchDark');
+  g.rect(x - 1, y + 34, 11, 1, 'marbleShade');
+}
+
 function paintCourthouse(g: Grid): void {
-  const { left, right, apexX, apexY, pedimentBase } = COURT;
+  const { left, right, apexX, apexY, pedimentBase, columnTop, columnBottom } = COURT;
 
   // Right wing, behind the portico.
-  const wingL = 136;
-  const wingR = 170;
-  g.rect(wingL, 128, wingR - wingL, COURT.stepsTop - 128 + 6, 'marbleMid');
-  g.rect(wingL, 124, wingR - wingL + 2, 4, 'marble');
-  g.rect(wingL, 123, wingR - wingL + 2, 1, 'outline');
-  g.rect(wingL, 128, wingR - wingL + 2, 1, 'marbleShade');
-  g.rect(wingR, 124, 2, 4, 'marbleShade');
-  g.rect(wingR - 1, 129, 1, COURT.stepsTop - 129 + 6, 'rim');
-  g.rect(wingR, 123, 1, COURT.stepsTop - 123 + 6, 'outline');
-  for (const wy of [138, 164]) {
-    for (const wx of [148, 160]) {
-      g.rect(wx - 1, wy - 1, 7, 15, 'marbleShade');
-      g.rect(wx, wy, 5, 13, 'window');
-      g.rect(wx, wy, 5, 1, 'windowHi');
-      g.rect(wx + 2, wy, 1, 13, 'marbleMid');
-      g.rect(wx, wy + 6, 5, 1, 'marbleMid');
-      g.rect(wx - 1, wy + 13, 7, 2, 'marble');
+  const wingL = 181;
+  const wingR = 227;
+  const wingTop = 171;
+  const wingBottom = COURT.stepsTop + 6;
+  g.rect(wingL, wingTop, wingR - wingL, wingBottom - wingTop, 'marbleMid');
+  g.rect(wingL, wingTop - 5, wingR - wingL + 2, 5, 'marble');
+  g.rect(wingL, wingTop - 6, wingR - wingL + 2, 1, 'outline');
+  g.rect(wingL, wingTop - 4, wingR - wingL + 2, 1, 'marbleHi');
+  g.rect(wingL, wingTop, wingR - wingL + 2, 1, 'marbleShade');
+  g.rect(wingR, wingTop - 5, 2, 5, 'marbleShade');
+  g.rect(wingR - 1, wingTop + 1, 1, wingBottom - wingTop - 1, 'rim');
+  g.rect(wingR, wingTop - 6, 1, wingBottom - wingTop + 6, 'outline');
+  // A string course between the floors.
+  g.rect(wingL, 212, wingR - wingL - 1, 1, 'marble');
+  g.rect(wingL, 213, wingR - wingL - 1, 1, 'marbleShade');
+  for (const wy of [180, 222]) {
+    for (const wx of [194, 210]) {
+      g.rect(wx - 1, wy - 1, 9, 21, 'marbleShade');
+      g.rect(wx, wy, 7, 19, 'window');
+      g.rect(wx, wy, 7, 1, 'windowHi');
+      g.rect(wx + 3, wy, 1, 19, 'marbleMid');
+      g.rect(wx, wy + 8, 7, 1, 'marbleMid');
+      g.rect(wx - 1, wy + 19, 9, 2, 'marble');
+      g.rect(wx - 1, wy + 19, 9, 1, 'marbleHi');
     }
   }
 
   // Main hall behind the portico (shows at the left screen edge).
-  g.rect(0, pedimentBase, left + 4, COURT.columnBottom - pedimentBase + 2, 'marbleMid');
+  g.rect(0, pedimentBase, left + 5, columnBottom - pedimentBase + 2, 'marbleMid');
   // Porch wall behind the colonnade.
-  g.rect(
-    left + 2,
-    COURT.columnTop,
-    right - left - 4,
-    COURT.columnBottom - COURT.columnTop,
-    'porch',
-  );
-  g.rect(left + 2, COURT.columnTop, right - left - 4, 5, 'porchDark');
+  g.rect(left + 2, columnTop, right - left - 4, columnBottom - columnTop, 'porch');
+  g.rect(left + 2, columnTop, right - left - 4, 6, 'porchDark');
+  g.checker(left + 2, columnTop + 6, right - left - 4, 1, 'porchDark');
   // Windows between the columns, and the great door in the middle bay.
-  for (const wx of [24, 46, 116]) {
-    g.rect(wx - 1, 150, 8, 26, 'porchDark');
-    g.rect(wx, 151, 6, 24, 'window');
-    g.rect(wx, 151, 6, 1, 'windowHi');
-    g.rect(wx + 3, 151, 1, 24, 'porchDark');
-    g.rect(wx, 162, 6, 1, 'porchDark');
+  for (const wx of [32, 61, 127, 156]) paintPorchWindow(g, wx, 200);
+  const doorL = 89;
+  const doorW = 18;
+  const doorTop = 206;
+  g.rect(doorL - 3, doorTop - 6, doorW + 6, 2, 'marbleShade');
+  g.rect(doorL - 3, doorTop - 6, doorW + 6, 1, 'marbleMid');
+  g.rect(doorL - 2, doorTop - 4, doorW + 4, columnBottom - doorTop + 4, 'porchDark');
+  g.rect(doorL, doorTop - 3, doorW, 2, 'windowHi');
+  g.rect(doorL, doorTop - 3, doorW, 1, 'window');
+  g.rect(doorL, doorTop, doorW, columnBottom - doorTop, 'door');
+  g.rect(apexX, doorTop, 1, columnBottom - doorTop, 'outline');
+  for (const lx of [doorL + 1, apexX + 2]) {
+    g.rect(lx, doorTop + 1, 7, 1, 'doorHi');
+    // Raised panels on each leaf.
+    for (const py of [doorTop + 4, doorTop + 27]) {
+      g.rect(lx + 1, py, 5, 18, 'doorHi');
+      g.rect(lx + 2, py + 1, 4, 17, 'door');
+    }
   }
-  g.rect(94, 150, 8, 26, 'porchDark');
-  g.rect(95, 151, 6, 24, 'window');
-  g.rect(95, 151, 6, 1, 'windowHi');
-  g.rect(66, 152, 16, COURT.columnBottom - 152, 'porchDark');
-  g.rect(68, 155, 12, COURT.columnBottom - 155, 'door');
-  g.rect(73, 155, 1, COURT.columnBottom - 155, 'outline');
-  g.rect(69, 156, 3, 1, 'doorHi');
-  g.rect(75, 156, 3, 1, 'doorHi');
-  g.rect(71, 172, 1, 2, 'boardHi');
-  g.rect(76, 172, 1, 2, 'boardHi');
+  g.rect(apexX - 2, 229, 1, 3, 'boardHi');
+  g.rect(apexX + 2, 229, 1, 3, 'boardHi');
 
   // Columns: capital, fluted shaft lit from the left with a warm rim on the right, base.
   for (const cx of COURT.columns) {
-    const top = COURT.columnTop;
-    const bottom = COURT.columnBottom;
-    g.rect(cx - 2, top, 14, 2, 'marbleHi');
-    g.rect(cx - 2, top + 2, 14, 1, 'marbleShade');
-    g.rect(cx - 1, top + 3, 12, 1, 'marble');
-    const shaft: SceneryColor[] = [
-      'marbleShade',
-      'marbleHi',
-      'marbleHi',
-      'marbleMid',
-      'marble',
-      'marbleHi',
-      'marbleMid',
-      'marble',
-      'marbleShade',
-      'rim',
-    ];
-    shaft.forEach((color, i) => {
-      g.rect(cx + i, top + 4, 1, bottom - top - 7, color);
+    const top = columnTop;
+    const bottom = columnBottom;
+    g.rect(cx - 3, top, 19, 2, 'marbleHi');
+    g.rect(cx - 3, top + 2, 19, 1, 'marbleShade');
+    g.rect(cx - 2, top + 3, 17, 1, 'marble');
+    g.rect(cx - 1, top + 4, 15, 1, 'marbleMid');
+    SHAFT.forEach((color, i) => {
+      g.rect(cx + i, top + 5, 1, bottom - top - 9, color);
     });
-    g.rect(cx - 1, bottom - 3, 12, 1, 'marble');
-    g.rect(cx - 2, bottom - 2, 14, 2, 'marbleHi');
-    g.rect(cx - 2, bottom - 1, 14, 1, 'marbleShade');
+    g.rect(cx - 1, bottom - 4, 15, 1, 'marbleMid');
+    g.rect(cx - 2, bottom - 3, 17, 1, 'marble');
+    g.rect(cx - 3, bottom - 2, 19, 2, 'marbleHi');
+    g.rect(cx - 3, bottom - 1, 19, 1, 'marbleShade');
   }
 
   // Entablature: cornice, frieze with dentils, architrave.
   const eTop = pedimentBase;
-  g.rect(left - 4, eTop, right - left + 8, 1, 'outline');
-  g.rect(left - 4, eTop + 1, right - left + 8, 2, 'marbleHi');
-  g.rect(left - 3, eTop + 3, right - left + 6, 1, 'marbleShade');
-  g.rect(left - 1, eTop + 4, right - left + 2, 6, 'marble');
-  for (let x = left; x < right; x += 4) g.rect(x + 1, eTop + 5, 2, 2, 'marbleMid');
-  g.rect(left - 1, eTop + 10, right - left + 2, 2, 'marbleHi');
-  g.rect(left - 1, eTop + 12, right - left + 2, 1, 'marbleDark');
-  g.rect(right + 3, eTop + 1, 1, 3, 'rim');
+  const eW = right - left;
+  g.rect(left - 5, eTop, eW + 10, 1, 'outline');
+  g.rect(left - 5, eTop + 1, eW + 10, 2, 'marbleHi');
+  g.rect(left - 4, eTop + 3, eW + 8, 1, 'marbleShade');
+  g.rect(left - 1, eTop + 4, eW + 2, 9, 'marble');
+  for (let x = left; x < right - 2; x += 5) {
+    g.rect(x + 1, eTop + 6, 3, 3, 'marbleMid');
+    g.rect(x + 1, eTop + 9, 3, 1, 'marbleShade');
+  }
+  g.rect(left - 1, eTop + 13, eW + 2, 2, 'marbleHi');
+  g.rect(left - 1, eTop + 15, eW + 2, 1, 'marble');
+  g.rect(left - 1, eTop + 16, eW + 2, 1, 'marbleHi');
+  g.rect(left - 1, eTop + 17, eW + 2, 1, 'marbleDark');
+  g.rect(right + 4, eTop + 1, 1, 3, 'rim');
 
   // Pediment: raking cornice around a shaded tympanum with the court's seal.
   const halfWidth = (y: number) =>
-    Math.round(((y - apexY) * (apexX - left + 6)) / (pedimentBase - apexY));
+    Math.round(((y - apexY) * (apexX - left + 7)) / (pedimentBase - apexY));
   for (let y = apexY; y < pedimentBase; y++) {
     const hw = halfWidth(y);
     g.rect(apexX - hw, y, hw * 2 + 1, 1, 'marble');
-    g.rect(apexX - hw + 4, y, Math.max(0, hw * 2 - 7), 1, y > apexY + 3 ? 'marbleMid' : 'marble');
+    g.rect(apexX - hw + 5, y, Math.max(0, hw * 2 - 9), 1, y > apexY + 4 ? 'marbleMid' : 'marble');
     // Continuous outline along the slope: fill the run since the previous row.
     const run = Math.max(1, hw - halfWidth(y - 1));
     g.rect(apexX - hw, y, run, 1, 'outline');
@@ -496,25 +562,34 @@ function paintCourthouse(g: Grid): void {
     g.rect(apexX + hw - run - 1, y, 2, 1, 'rim');
   }
   g.rect(apexX - 2, apexY - 1, 5, 1, 'outline');
-  g.rect(left + 6, pedimentBase - 3, right - left - 12, 2, 'marbleShade');
-  g.rect(left + 4, pedimentBase - 1, right - left - 8, 1, 'marbleHi');
-  for (let y = -5; y <= 5; y++) {
-    for (let x = -5; x <= 5; x++) {
+  g.rect(left + 8, pedimentBase - 4, right - left - 16, 3, 'marbleShade');
+  g.rect(left + 5, pedimentBase - 1, right - left - 10, 1, 'marbleHi');
+  // The seal: a ringed medallion with the scales of justice.
+  const sealY = 148;
+  for (let y = -8; y <= 8; y++) {
+    for (let x = -8; x <= 8; x++) {
       const d = Math.hypot(x, y);
-      if (d <= 5.4 && d > 4.2) g.px(apexX + x, 111 + y, 'marbleDark');
-      else if (d <= 4.2 && d > 3) g.px(apexX + x, 111 + y, 'marbleHi');
-      else if (d <= 3) g.px(apexX + x, 111 + y, 'marble');
+      if (d <= 7.4 && d > 6) g.px(apexX + x, sealY + y, 'marbleDark');
+      else if (d <= 6 && d > 4.6) g.px(apexX + x, sealY + y, 'marbleHi');
+      else if (d <= 4.6) g.px(apexX + x, sealY + y, 'marble');
     }
   }
-  g.rect(apexX - 1, 109, 3, 4, 'marbleShade');
-  g.px(apexX, 108, 'marbleShade');
+  g.rect(apexX, sealY - 3, 1, 6, 'marbleShade');
+  g.rect(apexX - 3, sealY - 2, 7, 1, 'marbleShade');
+  g.rect(apexX - 4, sealY, 3, 1, 'marbleShade');
+  g.rect(apexX + 2, sealY, 3, 1, 'marbleShade');
+  g.rect(apexX - 1, sealY + 3, 3, 1, 'marbleShade');
+  // Acroterion on the apex.
+  g.rect(apexX - 1, apexY - 4, 3, 3, 'marble');
+  g.rect(apexX - 1, apexY - 4, 3, 1, 'marbleHi');
+  g.rect(apexX - 2, apexY - 2, 5, 1, 'outline');
 
   // Steps down to the plaza, widening as they descend.
-  const steps = 6;
+  const steps = 8;
   const stepH = (COURT.plazaY - COURT.stepsTop) / steps;
   for (let i = 0; i < steps; i++) {
     const y = COURT.stepsTop + Math.round(i * stepH);
-    const inset = 2 - i * 2;
+    const inset = 3 - i * 2;
     g.rect(left + inset - 2, y, right - left - 2 * inset + 4, 1, 'marbleHi');
     g.rect(
       left + inset - 2,
@@ -525,27 +600,37 @@ function paintCourthouse(g: Grid): void {
     );
     g.rect(right - inset + 1, y, 1, Math.ceil(stepH), 'rim');
   }
-  g.rect(0, COURT.plazaY - 1, right + 14, 1, 'marbleShade');
+  g.rect(0, COURT.plazaY - 1, right + 18, 1, 'marbleShade');
 }
 
 // Tower ------------------------------------------------------------------------------------------
 
 const TOWER = {
-  left: 372,
-  front: 444,
-  right: 464,
-  roof: 70,
-  base: 208,
-  door: { x: 396, w: 24, top: 182 },
+  left: 497,
+  front: 588,
+  right: 617,
+  roof: 93,
+  base: 277,
+  door: { x: 527, w: 32, top: 243 },
 };
 
-/** X of each billboard lamp; `arena.ts` lights their bulbs. */
-export const BILLBOARD_LAMPS: readonly number[] = [374, 400, 428, 454];
-/** Y of the billboard bulbs (3×1 px each, under the lamp arms). */
-export const BILLBOARD_BULB_Y = 23;
+/** The rooftop billboard's frame. */
+const BILLBOARD = { x: 480, y: 36, w: 144, h: 44 };
 
-/** Glyphs for "BUFETE & PESAS S.A." and the Boissons chalkboard's "JUEVES 2×1". */
+/** X of each billboard lamp; `arena.ts` lights their bulbs. */
+export const BILLBOARD_LAMPS: readonly number[] = [496, 524, 552, 580, 608];
+/** Y of the billboard bulbs (3×1 px each, under the lamp arms). */
+export const BILLBOARD_BULB_Y = BILLBOARD.y - 3;
+
+/**
+ * Glyphs for "BUFETE & PESAS S.A.", the billboard's "PESAS Y PLEITOS" and the Boissons
+ * chalkboard's "JUEVES 2×1".
+ */
 const SMALL_FONT: Readonly<Record<string, readonly string[]>> = {
+  Y: ['#.#', '#.#', '.#.', '.#.', '.#.'],
+  L: ['#..', '#..', '#..', '#..', '###'],
+  I: ['###', '.#.', '.#.', '.#.', '###'],
+  O: ['.#.', '#.#', '#.#', '#.#', '.#.'],
   J: ['..#', '..#', '..#', '#.#', '.#.'],
   V: ['#.#', '#.#', '#.#', '#.#', '.#.'],
   '2': ['##.', '..#', '.#.', '#..', '###'],
@@ -624,25 +709,27 @@ function paintTower(g: Grid): void {
     const py = roof + 3 + row * 10;
     for (let col = 0; col < cols; col++) {
       const px = left + 1 + col * 9;
-      const base: SceneryColor = row < 3 ? 'glassTop' : row < 7 ? 'glass' : 'glassLow';
+      const base: SceneryColor = row < 4 ? 'glassTop' : row < 10 ? 'glass' : 'glassLow';
       g.rect(px, py, 8, 9, base);
       // Warm sun reflection on the edge facing the sun, dithered into the blue.
       if (col === 0) g.rect(px, py, 8, 9, 'glassWarm');
       if (col === 1) g.checker(px, py, 4, 9, 'glassWarm');
-      // A diagonal sheen sweeping across the facade.
+      // Two diagonal sheens sweeping across the facade.
       const diag = col * 2 - row;
-      if (diag === 3 || diag === 4) {
+      if (diag === 3 || diag === 4 || diag === 11) {
         for (let i = 0; i < 9; i++) g.rect(px + Math.max(0, 7 - i), py + i, 2, 1, 'glassHi');
       }
       if (diag === 4) g.rect(px, py, 8, 1, 'glassShine');
       g.px(px, py, 'glassHi');
     }
+    // A steel spandrel band every fifth floor.
+    if (row % 5 === 4) g.rect(left, py + 9, front - left, 1, 'steelHi');
   }
   // Side face, in shadow.
   for (let row = 0; row * 10 + roof + 3 < base - 4; row++) {
     const py = roof + 3 + row * 10;
     g.rect(front, py - 3, right - front, 1, 'sideMullion');
-    for (const px of [front + 1, front + 10]) {
+    for (const px of [front + 1, front + 10, front + 19]) {
       g.rect(px, py, 8, 9, 'sideGlass');
       g.rect(px, py, 1, 9, 'sideGlassHi');
     }
@@ -655,55 +742,55 @@ function paintTower(g: Grid): void {
   g.rect(left - 4, roof - 5, right - left + 8, 5, 'steel');
   g.rect(left - 4, roof - 5, right - left + 8, 1, 'steelHi');
   g.rect(left - 4, roof - 1, right - left + 8, 1, 'outline');
-  for (const lx of [380, 414, 448]) {
-    g.rect(lx, 58, 2, roof - 63, 'ink');
+  const { x: bx, y: by, w: bw, h: bh } = BILLBOARD;
+  for (const lx of [506, 551, 596]) {
+    g.rect(lx, by + bh - 1, 2, roof - 5 - (by + bh - 1), 'ink');
   }
-  g.rect(378, 61, 74, 1, 'ink');
-  for (let i = 0; i < 6; i++) g.px(382 + i * 12, 60 - (i % 2), 'ink');
+  g.rect(504, by + bh + 3, 96, 1, 'ink');
+  for (let i = 0; i < 8; i++) g.px(508 + i * 12, by + bh + 2 - (i % 2), 'ink');
 
-  const bx = 360;
-  const by = 26;
-  const bw = 108;
-  const bh = 33;
   g.rect(bx, by, bw, bh, 'ink');
   g.rect(bx + 2, by + 2, bw - 4, bh - 4, 'board');
   g.rect(bx + 2, by + 2, bw - 4, 2, 'boardHi');
   g.rect(bx + 2, by + bh - 5, bw - 4, 3, 'boardShade');
   g.checker(bx + 2, by + bh - 6, bw - 4, 1, 'boardShade');
-  // Gym ad: a dumbbell over a gavel, "¡INSCRÍBETE!" and the firm's name.
-  const dx = bx + 7;
-  const dy = by + 3;
-  g.rect(dx + 6, dy + 6, 18, 3, 'iron');
-  g.rect(dx + 6, dy + 6, 18, 1, 'boardHi');
+  // Gym ad: a dumbbell over a gavel, "¡INSCRÍBETE!", the firm's name and its motto.
+  const dx = bx + 8;
+  const dy = by + 5;
+  g.rect(dx + 9, dy + 7, 24, 4, 'iron');
+  g.rect(dx + 9, dy + 7, 24, 1, 'boardHi');
+  g.rect(dx + 9, dy + 10, 24, 1, 'plateLight');
   for (const [px, h] of [
-    [dx, 13],
-    [dx + 4, 9],
-    [dx + 22, 9],
-    [dx + 26, 13],
+    [dx, 17],
+    [dx + 5, 12],
+    [dx + 32, 12],
+    [dx + 37, 17],
   ] as const) {
-    const top = dy + 7 - Math.floor(h / 2);
-    g.rect(px, top, 4, h, 'plateDark');
+    const top = dy + 9 - Math.floor(h / 2);
+    g.rect(px, top, 5, h, 'plateDark');
     g.rect(px + 1, top + 1, 1, h - 3, 'plateLight');
+    g.rect(px + 1, top + 1, 3, 1, 'plateLight');
   }
   // Gavel lying under the dumbbell: banded head on the left, handle to the right.
-  const gx = bx + 8;
-  const gy = by + 18;
-  g.rect(gx, gy, 9, 7, 'ink');
-  g.rect(gx + 1, gy + 1, 7, 5, 'woodDark');
-  g.rect(gx + 1, gy + 1, 7, 1, 'wood');
-  g.rect(gx + 2, gy + 1, 1, 5, 'boardShade');
-  g.rect(gx + 6, gy + 1, 1, 5, 'boardShade');
-  g.rect(gx + 9, gy + 2, 19, 3, 'ink');
-  g.rect(gx + 9, gy + 3, 18, 1, 'wood');
-  const textX = bx + 44;
-  const textW = bw - 48;
+  const gx = bx + 9;
+  const gy = by + 25;
+  g.rect(gx, gy, 12, 9, 'ink');
+  g.rect(gx + 1, gy + 1, 10, 7, 'woodDark');
+  g.rect(gx + 1, gy + 1, 10, 2, 'wood');
+  g.rect(gx + 3, gy + 1, 1, 7, 'boardShade');
+  g.rect(gx + 8, gy + 1, 1, 7, 'boardShade');
+  g.rect(gx + 12, gy + 3, 26, 4, 'ink');
+  g.rect(gx + 12, gy + 4, 25, 1, 'wood');
+  g.rect(gx + 12, gy + 5, 25, 1, 'woodDark');
+  const textX = bx + 54;
+  const textW = bw - 58;
   const cta = '¡INSCRÍBETE!';
   paintText(
     g,
     BIG_FONT,
     cta,
     textX + Math.floor((textW - textWidth(BIG_FONT, cta)) / 2),
-    by + 7,
+    by + 9,
     'ink',
   );
   const firm = 'BUFETE & PESAS';
@@ -712,15 +799,24 @@ function paintTower(g: Grid): void {
     SMALL_FONT,
     firm,
     textX + Math.floor((textW - textWidth(SMALL_FONT, firm)) / 2),
-    by + 19,
+    by + 21,
     'ink',
+  );
+  const motto = 'PESAS Y PLEITOS';
+  paintText(
+    g,
+    SMALL_FONT,
+    motto,
+    textX + Math.floor((textW - textWidth(SMALL_FONT, motto)) / 2),
+    by + 29,
+    'awningRed',
   );
 
   // Lamp arms over the billboard (the bulbs themselves blink, drawn per frame).
   for (const lx of BILLBOARD_LAMPS) {
-    g.rect(lx - 3, 21, 7, 2, 'steel');
-    g.rect(lx - 3, 21, 7, 1, 'steelHi');
-    g.rect(lx, 23, 1, 3, 'ink');
+    g.rect(lx - 3, by - 5, 7, 2, 'steel');
+    g.rect(lx - 3, by - 5, 7, 1, 'steelHi');
+    g.rect(lx, by - 3, 1, 3, 'ink');
   }
 
   // Company sign, overhanging the facade.
@@ -728,12 +824,12 @@ function paintTower(g: Grid): void {
   const nameW = textWidth(SMALL_FONT, name);
   const sx = left - 6;
   const sw = front - left + 12;
-  const sy = 150;
-  g.rect(sx, sy, sw, 11, 'plate');
+  const sy = 200;
+  g.rect(sx, sy, sw, 13, 'plate');
   g.rect(sx, sy, sw, 1, 'plateEdge');
-  g.rect(sx, sy + 10, sw, 1, 'outline');
-  g.rect(sx, sy, 1, 11, 'plateEdge');
-  paintText(g, SMALL_FONT, name, sx + Math.floor((sw - nameW) / 2), sy + 3, 'plateText');
+  g.rect(sx, sy + 12, sw, 1, 'outline');
+  g.rect(sx, sy, 1, 13, 'plateEdge');
+  paintText(g, SMALL_FONT, name, sx + Math.floor((sw - nameW) / 2), sy + 4, 'plateText');
 
   // Entrance: canopy, glass doors, steel jambs.
   g.rect(door.x - 6, door.top - 4, door.w + 12, 3, 'steel');
@@ -742,8 +838,10 @@ function paintTower(g: Grid): void {
   g.rect(door.x, door.top, door.w, base - door.top, 'glassHi');
   g.rect(door.x, door.top, door.w, 3, 'glassShine');
   g.rect(door.x + door.w / 2 - 1, door.top, 2, base - door.top, 'steel');
-  g.rect(door.x + 3, door.top + 10, 6, 1, 'glass');
-  g.rect(door.x + 15, door.top + 10, 6, 1, 'glass');
+  g.rect(door.x + 4, door.top + 13, 8, 1, 'glass');
+  g.rect(door.x + 20, door.top + 13, 8, 1, 'glass');
+  g.rect(door.x + 2, door.top + 5, 1, 6, 'glassShine');
+  g.rect(door.x + 18, door.top + 5, 1, 6, 'glassShine');
   g.rect(left, base - 2, right - left, 2, 'steel');
   // Entrance landing, stepping down to the plaza.
   g.rect(door.x - 8, base, door.w + 16, 6, 'wallCap');
@@ -755,7 +853,7 @@ function paintTower(g: Grid): void {
 // Boissons ----------------------------------------------------------------------------------------
 
 /** Boissons, the cocktail bar on the plaza (its Thursday 2×1 cocktails are a running joke). */
-const BAR = { left: 280, right: 350, top: 166 };
+const BAR = { left: 373, right: 467, top: 221 };
 
 /** Paints `text` as neon tubing: a dim halo around every lit pixel, then the bright tube. */
 function paintNeon(
@@ -778,20 +876,25 @@ function paintNeon(
   paintText(g, font, text, x, y, tube);
 }
 
-/** A warm bar window with a shelf of bottles, framed in dark wood. */
+/** A warm bar window with shelves of bottles, framed in dark wood. */
 function paintBarWindow(g: Grid, x: number, y: number, w: number, h: number): void {
   g.rect(x - 1, y - 1, w + 2, h + 2, 'woodDark');
   g.rect(x, y, w, h, 'barWarm');
   g.rect(x + 2, y + 1, w - 4, h - 4, 'barGlow');
   g.checker(x + 1, y + h - 3, w - 2, 2, 'barGlow');
-  // Shelf with bottles.
-  g.rect(x, y + 8, w, 1, 'doorHi');
-  for (let bx = x + 2; bx < x + w - 2; bx += 3) {
-    const tall = hash(bx, y) < 0.5;
-    g.rect(bx, y + (tall ? 3 : 5), 1, tall ? 5 : 3, 'bottle');
-    g.px(bx, y + (tall ? 2 : 4), 'bottle');
-    if (hash(y, bx) < 0.4) g.px(bx, y + 6, 'olive');
+  // Shelves with bottles (and the odd olive).
+  for (const shelf of [8, 15]) {
+    if (shelf > h - 4) continue;
+    g.rect(x, y + shelf, w, 1, 'doorHi');
+    for (let bx = x + 2; bx < x + w - 2; bx += 3) {
+      const tall = hash(bx, y + shelf) < 0.5;
+      g.rect(bx, y + shelf - (tall ? 5 : 3), 1, tall ? 5 : 3, 'bottle');
+      g.px(bx, y + shelf - (tall ? 6 : 4), 'bottle');
+      if (hash(y + shelf, bx) < 0.4) g.px(bx, y + shelf - 2, 'olive');
+    }
   }
+  // A window cross and the sill.
+  g.rect(x + Math.floor(w / 2), y, 1, h, 'woodDark');
   g.rect(x - 2, y + h + 1, w + 4, 1, 'wallTop');
 }
 
@@ -805,63 +908,76 @@ function paintBar(g: Grid): void {
     g.rect(left, y, w, 1, 'mortar');
     for (let x = left + ((y / 3) % 2 === 0 ? 2 : 5); x < right; x += 6) g.px(x, y + 1, 'mortar');
   }
-  g.rect(right - 3, top, 3, PLAZA_Y - top, 'brickShade');
+  g.rect(right - 4, top, 4, PLAZA_Y - top, 'brickShade');
   g.rect(left, top, 1, PLAZA_Y - top, 'rim');
   g.rect(left - 1, top, 1, PLAZA_Y - top, 'outline');
   g.rect(right, top, 1, PLAZA_Y - top, 'outline');
   // Cornice.
-  g.rect(left - 2, top - 3, w + 4, 1, 'outline');
-  g.rect(left - 2, top - 2, w + 4, 2, 'wallTop');
+  g.rect(left - 3, top - 4, w + 6, 1, 'outline');
+  g.rect(left - 3, top - 3, w + 6, 2, 'wallTop');
+  g.rect(left - 2, top - 1, w + 4, 1, 'wallCap');
   g.rect(left - 2, top, w + 4, 1, 'wallShadow');
 
   // Neon sign: a cocktail glass and "BOISSONS" on a dark backing board.
-  const sx = left + 2;
-  const sy = top + 3;
-  const sw = w - 4;
-  g.rect(sx, sy, sw, 13, 'outline');
-  g.rect(sx + 1, sy + 1, sw - 2, 11, 'neonBack');
+  const sx = left + 3;
+  const sy = top + 4;
+  const sw = w - 6;
+  const sh = 15;
+  g.rect(sx, sy, sw, sh, 'outline');
+  g.rect(sx + 1, sy + 1, sw - 2, sh - 2, 'neonBack');
   const name = 'BOISSONS';
   const glassW = 7;
-  const contentW = glassW + 3 + textWidth(BIG_FONT, name);
+  const contentW = glassW + 4 + textWidth(BIG_FONT, name);
   const cx = sx + Math.floor((sw - contentW) / 2);
   const glass = ['#######', '.#...#.', '..#.#..', '...#...', '...#...', '...#...', '..###..'];
   const glassFont = { Y: glass };
-  paintNeon(g, glassFont, 'Y', cx, sy + 3, 'neonCyanGlow', 'neonCyan');
-  g.px(cx + 3, sy + 4, 'olive');
-  paintNeon(g, BIG_FONT, name, cx + glassW + 3, sy + 3, 'neonGlow', 'neonPink');
+  paintNeon(g, glassFont, 'Y', cx, sy + 4, 'neonCyanGlow', 'neonCyan');
+  g.px(cx + 3, sy + 5, 'olive');
+  paintNeon(g, BIG_FONT, name, cx + glassW + 4, sy + 4, 'neonGlow', 'neonPink');
   // A brighter core on the tube's top row gives the neon some sheen.
-  g.checker(cx + glassW + 3, sy + 3, textWidth(BIG_FONT, name), 1, 'lampCore');
+  g.checker(cx + glassW + 4, sy + 4, textWidth(BIG_FONT, name), 1, 'lampCore');
+  // Mounting bolts at the board's corners.
+  for (const [bx, by] of [
+    [sx + 2, sy + 2],
+    [sx + sw - 3, sy + 2],
+    [sx + 2, sy + sh - 3],
+    [sx + sw - 3, sy + sh - 3],
+  ] as const) {
+    g.px(bx, by, 'iron');
+  }
 
   // Striped awning with a scalloped edge and its shadow on the bricks.
-  const ay = top + 18;
-  g.rect(left - 3, ay - 1, w + 6, 1, 'outline');
-  for (let x = left - 3; x < right + 3; x++) {
-    const red = Math.floor((x - left + 3) / 4) % 2 === 0;
-    g.rect(x, ay, 1, 5, red ? 'awningRed' : 'awningCream');
-    g.px(x, ay + 4, red ? 'brick' : 'wallTop');
-    if ((x - left + 3) % 4 === 1 || (x - left + 3) % 4 === 2) {
-      g.px(x, ay + 5, red ? 'brick' : 'wallTop');
-    }
+  const ay = top + 23;
+  g.rect(left - 4, ay - 1, w + 8, 1, 'outline');
+  for (let x = left - 4; x < right + 4; x++) {
+    const stripe = (x - left + 4) % 5;
+    const red = Math.floor((x - left + 4) / 5) % 2 === 0;
+    g.rect(x, ay, 1, 6, red ? 'awningRed' : 'awningCream');
+    g.px(x, ay + 1, red ? 'brick' : 'wallTop');
+    g.px(x, ay + 5, red ? 'brick' : 'wallTop');
+    if (stripe >= 1 && stripe <= 3) g.px(x, ay + 6, red ? 'brick' : 'wallTop');
   }
-  g.rect(left, ay + 6, w, 1, 'mortar');
-  g.checker(left, ay + 7, w, 1, 'mortar');
+  g.rect(left, ay + 7, w, 1, 'mortar');
+  g.checker(left, ay + 8, w, 1, 'mortar');
 
   // Two warm windows and a door with a glowing pane.
-  const wy = ay + 9;
-  paintBarWindow(g, left + 4, wy, 20, 16);
-  paintBarWindow(g, right - 24, wy, 20, 16);
-  const doorX = left + w / 2 - 6;
-  g.rect(doorX - 1, wy - 2, 14, PLAZA_Y - wy + 2, 'woodDark');
-  g.rect(doorX, wy - 1, 12, PLAZA_Y - wy + 1, 'door');
-  g.rect(doorX + 2, wy + 1, 8, 9, 'barGlow');
-  g.rect(doorX + 2, wy + 1, 8, 1, 'barWarm');
-  g.rect(doorX + 9, wy + 13, 1, 2, 'boardHi');
+  const wy = ay + 11;
+  paintBarWindow(g, left + 5, wy, 26, 20);
+  paintBarWindow(g, right - 31, wy, 26, 20);
+  const doorX = left + w / 2 - 8;
+  g.rect(doorX - 1, wy - 2, 18, PLAZA_Y - wy + 2, 'woodDark');
+  g.rect(doorX, wy - 1, 16, PLAZA_Y - wy + 1, 'door');
+  g.rect(doorX + 2, wy + 1, 12, 12, 'barGlow');
+  g.rect(doorX + 2, wy + 1, 12, 1, 'barWarm');
+  g.rect(doorX + 7, wy + 1, 1, 12, 'barWarm');
+  g.rect(doorX + 2, wy + 16, 12, 1, 'doorHi');
+  g.rect(doorX + 12, wy + 19, 1, 2, 'boardHi');
 
   // Warm light spilling onto the plaza tiles in front of the bar.
   for (const [x0, x1] of [
-    [left + 2, left + 26],
-    [doorX, doorX + 12],
-    [right - 26, right - 2],
+    [left + 3, left + 33],
+    [doorX, doorX + 16],
+    [right - 33, right - 3],
   ] as const) {
     g.checker(x0, PLAZA_Y, x1 - x0, 1, 'floorSheen');
     for (let x = x0 + 1; x < x1 - 1; x += 2) {
@@ -870,10 +986,10 @@ function paintBar(g: Grid): void {
   }
 
   // Chalkboard A-frame on the plaza: "JUEVES 2×1" (cocktails, of course).
-  const bw = 27;
-  const bh = 17;
-  const bx = left + 3;
-  const by = PLAZA_Y - 13;
+  const bw = 31;
+  const bh = 19;
+  const bx = left + 4;
+  const by = PLAZA_Y - 14;
   g.rect(bx + 2, by + bh, 1, 3, 'woodDark');
   g.rect(bx + bw - 3, by + bh, 1, 3, 'woodDark');
   g.rect(bx, by, bw, bh, 'woodDark');
@@ -886,13 +1002,13 @@ function paintBar(g: Grid): void {
     SMALL_FONT,
     day,
     bx + Math.floor((bw - textWidth(SMALL_FONT, day)) / 2),
-    by + 2,
+    by + 3,
     'chalk',
   );
-  paintText(g, SMALL_FONT, deal, bx + 3, by + 9, 'chalk');
+  paintText(g, SMALL_FONT, deal, bx + 5, by + 11, 'chalk');
   // A tiny chalk cocktail next to the deal.
-  const tx = bx + 17;
-  const ty = by + 9;
+  const tx = bx + 20;
+  const ty = by + 11;
   g.rect(tx, ty, 5, 1, 'chalk');
   g.rect(tx + 1, ty + 1, 3, 1, 'chalk');
   g.rect(tx + 2, ty + 2, 1, 2, 'chalk');
@@ -901,31 +1017,31 @@ function paintBar(g: Grid): void {
 
 // Plaza -------------------------------------------------------------------------------------------
 
-const WALL_TOP = 206;
-const PLAZA_Y = 214;
+const WALL_TOP = 275;
+const PLAZA_Y = 285;
 
 function paintPlaza(g: Grid): void {
   // Low stone wall along the back of the plaza; the steps and tower entrance sit in front.
-  const x0 = 140;
+  const x0 = 187;
   const wallW = ARENA_WIDTH - x0;
   g.rect(x0, WALL_TOP, wallW, 1, 'wallTop');
   g.rect(x0, WALL_TOP + 1, wallW, 1, 'wallCap');
   g.rect(x0, WALL_TOP + 2, wallW, PLAZA_Y - WALL_TOP - 3, 'wall');
   g.rect(x0, PLAZA_Y - 1, wallW, 1, 'wallShadow');
-  g.rect(x0, WALL_TOP + 4, wallW, 1, 'wallSeam');
-  for (let x = x0; x < ARENA_WIDTH; x += 10) {
+  g.rect(x0, WALL_TOP + 5, wallW, 1, 'wallSeam');
+  for (let x = x0; x < ARENA_WIDTH; x += 12) {
     g.rect(x, WALL_TOP + 2, 1, 3, 'wallSeam');
-    g.rect(x + 5, WALL_TOP + 5, 1, 3, 'wallSeam');
+    g.rect(x + 6, WALL_TOP + 6, 1, 3, 'wallSeam');
   }
 
   // Benches and street lamps, lit for the evening.
-  for (const bx of [206, 246, 440]) paintBench(g, bx, PLAZA_Y - 1);
-  for (const lx of [184, 356]) paintLamp(g, lx, PLAZA_Y);
+  for (const bx of [272, 326, 588]) paintBench(g, bx, PLAZA_Y - 1);
+  for (const lx of [245, 478]) paintLamp(g, lx, PLAZA_Y);
 
   // Floor tiles receding toward a vanishing point behind the skyline.
-  const vanishX = 240;
-  const vanishY = 120;
-  const tileRows = [PLAZA_Y, 217, 221, 226, 232, GROUND_Y];
+  const vanishX = 320;
+  const vanishY = 160;
+  const tileRows = [PLAZA_Y, 289, 294, 301, 309, GROUND_Y];
   for (let r = 0; r < tileRows.length - 1; r++) {
     const top = tileRows[r] ?? PLAZA_Y;
     const bottom = tileRows[r + 1] ?? GROUND_Y;
@@ -934,8 +1050,8 @@ function paintPlaza(g: Grid): void {
     if (r > 0) g.rect(0, top, ARENA_WIDTH, 1, 'grout');
     for (let y = top + 1; y < bottom; y++) {
       const t = (y - vanishY) / (GROUND_Y - vanishY);
-      for (let k = -14; k <= 14; k++) {
-        const x = Math.round(vanishX + (k + (r % 2) * 0.5) * 38 * t);
+      for (let k = -18; k <= 18; k++) {
+        const x = Math.round(vanishX + (k + (r % 2) * 0.5) * 51 * t);
         g.px(x, y, 'grout');
       }
     }
@@ -943,35 +1059,38 @@ function paintPlaza(g: Grid): void {
   // Curb at the ground line, then calm front pavement under the Dialogue Box.
   g.rect(0, GROUND_Y, ARENA_WIDTH, 1, 'curbTop');
   g.rect(0, GROUND_Y + 1, ARENA_WIDTH, 1, 'curbHi');
-  g.rect(0, GROUND_Y + 2, ARENA_WIDTH, 3, 'curb');
-  g.rect(0, GROUND_Y + 5, ARENA_WIDTH, 1, 'curbShadow');
-  for (let x = 14; x < ARENA_WIDTH; x += 48) g.rect(x, GROUND_Y + 1, 1, 4, 'curbShadow');
-  g.rect(0, GROUND_Y + 6, ARENA_WIDTH, ARENA_HEIGHT - GROUND_Y - 6, 'pave');
-  g.checker(0, 258, ARENA_WIDTH, 1, 'paveDark');
-  g.rect(0, 259, ARENA_WIDTH, ARENA_HEIGHT - 259, 'paveDark');
+  g.rect(0, GROUND_Y + 2, ARENA_WIDTH, 4, 'curb');
+  g.rect(0, GROUND_Y + 6, ARENA_WIDTH, 1, 'curbShadow');
+  for (let x = 18; x < ARENA_WIDTH; x += 64) g.rect(x, GROUND_Y + 1, 1, 5, 'curbShadow');
+  const paveTop = GROUND_Y + 7;
+  g.rect(0, paveTop, ARENA_WIDTH, ARENA_HEIGHT - paveTop, 'pave');
+  g.checker(0, 344, ARENA_WIDTH, 1, 'paveDark');
+  g.rect(0, 345, ARENA_WIDTH, ARENA_HEIGHT - 345, 'paveDark');
   for (const [y, offset] of [
-    [252, 0],
-    [264, 30],
+    [336, 0],
+    [353, 40],
   ] as const) {
     g.rect(0, y, ARENA_WIDTH, 1, 'paveSeam');
-    for (let x = offset; x < ARENA_WIDTH; x += 60) g.rect(x, y - 8, 1, 8, 'paveSeam');
+    for (let x = offset; x < ARENA_WIDTH; x += 80) g.rect(x, y - 8, 1, 8, 'paveSeam');
   }
-  for (let x = 24; x < ARENA_WIDTH; x += 60) g.rect(x, GROUND_Y + 6, 1, 6, 'paveSeam');
+  for (let x = 32; x < ARENA_WIDTH; x += 80) g.rect(x, paveTop, 1, 6, 'paveSeam');
 }
 
 function paintBench(g: Grid, x: number, groundY: number): void {
-  g.rect(x, groundY - 8, 16, 2, 'wood');
-  g.rect(x, groundY - 8, 16, 1, 'wallTop');
-  g.rect(x, groundY - 6, 16, 1, 'woodDark');
-  g.rect(x - 1, groundY - 4, 18, 2, 'wood');
-  g.rect(x - 1, groundY - 2, 18, 1, 'woodDark');
-  for (const lx of [x + 1, x + 13]) g.rect(lx, groundY - 6, 2, 7, 'lampPost');
+  g.rect(x, groundY - 10, 20, 2, 'wood');
+  g.rect(x, groundY - 10, 20, 1, 'wallTop');
+  g.rect(x, groundY - 8, 20, 1, 'woodDark');
+  g.rect(x - 1, groundY - 5, 22, 2, 'wood');
+  g.rect(x - 1, groundY - 5, 22, 1, 'wallTop');
+  g.rect(x - 1, groundY - 3, 22, 1, 'woodDark');
+  for (const lx of [x + 1, x + 17]) g.rect(lx, groundY - 8, 2, 9, 'lampPost');
 }
 
 function paintLamp(g: Grid, x: number, groundY: number): void {
-  const top = groundY - 40;
-  g.rect(x - 2, groundY - 3, 5, 3, 'lampPost');
-  g.rect(x, top + 6, 1, 34, 'lampPost');
+  const top = groundY - 53;
+  g.rect(x - 2, groundY - 4, 5, 4, 'lampPost');
+  g.rect(x - 1, groundY - 6, 3, 2, 'lampPost');
+  g.rect(x, top + 6, 1, 47, 'lampPost');
   g.rect(x - 1, top + 6, 3, 1, 'lampPost');
   g.rect(x - 3, top - 1, 7, 1, 'lampPost');
   g.rect(x - 2, top, 5, 5, 'lampGlow');

@@ -126,7 +126,7 @@ describe('Mancuernas', () => {
     if (!ledge) throw new Error('Expected the low left ledge');
     const game = armed();
     // Turn left, then lob steeply (75° up) so it comes down on the low left ledge.
-    game.ticks(1, { aim: { x: 0, y: 100 } });
+    game.ticks(1, { aim: { x: 0, y: 133 } });
     const { shoulder } = runOf(game.view).rexi;
     const angle = (75 * Math.PI) / 180;
     const aim = { x: shoulder.x - Math.cos(angle) * 100, y: shoulder.y - Math.sin(angle) * 100 };

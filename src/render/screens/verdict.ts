@@ -46,7 +46,7 @@ const DIM_LIGHT_AT = 20;
 const DIM_HALF_AT = 50;
 const BANNER_AT = 8;
 const BANNER_DROP_TICKS = 10;
-const BANNER = { y: 96, h: 32 } as const;
+const BANNER = { y: 128, h: 40 } as const;
 
 /** Dims the frozen Run by `age`, the ticks since the Run ended. */
 export function dimDefeat(dc: DrawContext, age: number): void {
@@ -61,9 +61,9 @@ export function drawDefeatBanner(dc: DrawContext, age: number): void {
   const drop = Math.max(0, BANNER_AT + BANNER_DROP_TICKS - age);
   const y = BANNER.y - Math.round((drop * drop * (BANNER.y + BANNER.h)) / BANNER_DROP_TICKS ** 2);
   surface.fillRect(0, y, SCREEN_WIDTH, BANNER.h, ui.ink);
-  surface.fillRect(0, y + 2, SCREEN_WIDTH, 1, doc.red);
-  surface.fillRect(0, y + BANNER.h - 3, SCREEN_WIDTH, 1, doc.red);
-  drawOutlinedText(dc, fonts.large, strings.defeat, SCREEN_WIDTH / 2, y + 9 - LARGE_CAP, ui.gold, {
+  surface.fillRect(0, y + 3, SCREEN_WIDTH, 1, doc.red);
+  surface.fillRect(0, y + BANNER.h - 4, SCREEN_WIDTH, 1, doc.red);
+  drawOutlinedText(dc, fonts.large, strings.defeat, SCREEN_WIDTH / 2, y + 13 - LARGE_CAP, ui.gold, {
     align: 'center',
   });
 }
@@ -71,7 +71,7 @@ export function drawDefeatBanner(dc: DrawContext, age: number): void {
 // ---------------------------------------------------------------------------------------------
 // Veredicto
 
-const PANEL = { x: 84, y: 12, w: 312, h: 246 } as const;
+const PANEL = { x: 132, y: 15, w: 376, h: 330 } as const;
 const PANEL_DROP_TICKS = 12;
 const STATS_AT = 16;
 const STAT_EVERY = 10;
@@ -118,9 +118,9 @@ export function drawVerdict(dc: DrawContext, verdict: VerdictView): void {
 
   drawPaper(dc, x, y);
   drawHeading(dc, x, y);
-  drawStats(dc, verdict, x, y + 58, age);
-  if (age >= STAMP_AT) drawStamp(dc, verdict, x + PANEL.w / 2, y + 118, age - STAMP_AT);
-  if (age >= RULING_AT) drawRuling(dc, verdict, x, y + 138);
+  drawStats(dc, verdict, x, y + 82, age);
+  if (age >= STAMP_AT) drawStamp(dc, verdict, x + PANEL.w / 2, y + 160, age - STAMP_AT);
+  if (age >= RULING_AT) drawRuling(dc, verdict, x, y + 190);
   if (age >= SIGNATURE_AT) drawFooter(dc, verdict, x, y);
 }
 
@@ -147,20 +147,20 @@ function strokeRect(dc: DrawContext, x: number, y: number, w: number, h: number,
 function drawHeading(dc: DrawContext, x: number, y: number): void {
   const center = x + PANEL.w / 2;
   const title = t.title.toUpperCase();
-  drawText(dc, fonts.large, title, center, y + 14 - LARGE_CAP, {
+  drawText(dc, fonts.large, title, center, y + 20 - LARGE_CAP, {
     color: doc.ink,
     shadow: doc.rule,
     align: 'center',
   });
   const half = Math.ceil(fonts.large.measure(title) / 2);
-  dc.surface.drawBitmap(dc.sprites.get(GAVEL_MIRRORED), center - half - 22, y + 15);
-  dc.surface.drawBitmap(dc.sprites.get(GAVEL), center + half + 10, y + 15);
-  drawText(dc, fonts.regular, t.caseName, center, y + 36 - CAP, {
+  dc.surface.drawBitmap(dc.sprites.get(GAVEL_MIRRORED), center - half - 22, y + 21);
+  dc.surface.drawBitmap(dc.sprites.get(GAVEL), center + half + 10, y + 21);
+  drawText(dc, fonts.regular, t.caseName, center, y + 46 - CAP, {
     color: doc.inkSoft,
     align: 'center',
   });
-  dc.surface.fillRect(x + 16, y + 49, PANEL.w - 32, 1, doc.ink);
-  dc.surface.fillRect(x + 16, y + 51, PANEL.w - 32, 1, doc.rule);
+  dc.surface.fillRect(x + 20, y + 62, PANEL.w - 40, 1, doc.ink);
+  dc.surface.fillRect(x + 20, y + 64, PANEL.w - 40, 1, doc.rule);
 }
 
 /** Stat rows appear one after another, their numbers counting up from zero. */
@@ -172,14 +172,14 @@ function drawStats(dc: DrawContext, verdict: VerdictView, x: number, top: number
     [t.timeSurvived, stats.ticksSurvived, formatElapsed],
   ];
   const font = fonts.regular;
-  const left = x + 24;
-  const right = x + PANEL.w - 24;
+  const left = x + 32;
+  const right = x + PANEL.w - 32;
   rows.forEach(([label, value, format], i) => {
     const shownFor = age - STATS_AT - i * STAT_EVERY;
     if (shownFor < 0) return;
     const progress = Math.min(1, shownFor / STAT_COUNT_TICKS);
     const text = format(Math.round(value * progress));
-    const rowTop = top + i * 14;
+    const rowTop = top + i * 18;
     drawText(dc, font, label, left, rowTop - CAP, { color: doc.ink });
     drawText(dc, font, text, right, rowTop - CAP, { color: doc.ink, align: 'right' });
     // Dotted leader on the baseline between label and value.
@@ -219,7 +219,7 @@ function drawStamp(dc: DrawContext, verdict: VerdictView, cx: number, cy: number
 }
 
 function drawRuling(dc: DrawContext, verdict: VerdictView, x: number, top: number): void {
-  const lines = fonts.regular.wrap(t.ruling[outcomeOf(verdict)], PANEL.w - 48);
+  const lines = fonts.regular.wrap(t.ruling[outcomeOf(verdict)], PANEL.w - 64);
   drawText(dc, fonts.regular, lines.join('\n'), x + PANEL.w / 2, top - CAP, {
     color: doc.ink,
     align: 'center',
@@ -237,7 +237,7 @@ function drawFooter(dc: DrawContext, verdict: VerdictView, x: number, y: number)
   const entry = verdict.initials;
   if (entry) {
     if (!verdict.recorded) {
-      drawText(dc, fonts.regular, t.sign, center, y + 168 - CAP, {
+      drawText(dc, fonts.regular, t.sign, center, y + 232 - CAP, {
         color: doc.inkSoft,
         align: 'center',
       });
@@ -247,17 +247,17 @@ function drawFooter(dc: DrawContext, verdict: VerdictView, x: number, y: number)
       entry.letters,
       verdict.recorded ? null : entry.cursor,
       center,
-      y + (verdict.recorded ? 178 : 192),
+      y + (verdict.recorded ? 244 : 258),
     );
     if (verdict.recorded) {
-      drawText(dc, fonts.regular, `${t.signed} ${verdict.rank ?? ''}`, center, y + 204 - CAP, {
+      drawText(dc, fonts.regular, `${t.signed} ${verdict.rank ?? ''}`, center, y + 272 - CAP, {
         color: doc.inkSoft,
         align: 'center',
       });
     } else if (view.device === 'desktop') {
-      drawHints(dc, center, y + 220);
+      drawHints(dc, center, y + 292);
     } else {
-      drawText(dc, fonts.regular, t.hints.touch, center, y + 224 - CAP, {
+      drawText(dc, fonts.regular, t.hints.touch, center, y + 296 - CAP, {
         color: doc.ink,
         align: 'center',
       });
@@ -267,14 +267,14 @@ function drawFooter(dc: DrawContext, verdict: VerdictView, x: number, y: number)
   if (!entry && best) {
     // Nothing to sign: remind the player of the record to beat.
     const line = `${t.recordToBeat} ${best.initials} — ${String(best.score)}`;
-    drawText(dc, fonts.regular, line, center, y + 180 - CAP, {
+    drawText(dc, fonts.regular, line, center, y + 244 - CAP, {
       color: doc.inkSoft,
       align: 'center',
     });
   }
   if (view.startReady && blinkOn(view.tick)) {
     const prompt = view.device === 'touch' ? t.continueTouch : t.continueDesktop;
-    drawText(dc, fonts.regular, prompt, center, y + 228 - CAP, { color: doc.ink, align: 'center' });
+    drawText(dc, fonts.regular, prompt, center, y + 304 - CAP, { color: doc.ink, align: 'center' });
   }
 }
 

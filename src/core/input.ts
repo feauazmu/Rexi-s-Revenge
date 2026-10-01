@@ -1,3 +1,4 @@
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from './constants';
 import type { Vec2 } from './math';
 
 /** Menu navigation, edge-triggered (true only on the tick the press happened). */
@@ -23,7 +24,7 @@ export interface InputFrame {
   readonly jump: boolean;
   /** Drop-down button held: fall through the one-way platform Rexi stands on. */
   readonly drop: boolean;
-  /** Aim target in game coordinates (480×270 space). */
+  /** Aim target in game coordinates (640×360 space). */
   readonly aim: Vec2;
   /** Fire button held. */
   readonly fire: boolean;
@@ -55,7 +56,7 @@ export const NEUTRAL_INPUT: InputFrame = {
   move: 0,
   jump: false,
   drop: false,
-  aim: { x: 240, y: 135 },
+  aim: { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2 },
   fire: false,
   weaponNext: false,
   weaponPrevious: false,

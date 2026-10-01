@@ -21,7 +21,7 @@ const angleOf = (v: Vec2) => degrees(Math.atan2(v.y, v.x));
 describe('Lluvia de Sellos', () => {
   it('fires a fan of stamps from the muzzle, centered on the aim point', () => {
     const game = armed();
-    const aim = { x: 400, y: 100 };
+    const aim = { x: 533, y: 133 };
     const events = game.ticks(1, { aim, fire: true });
     expect(eventsOf(events, 'weapon-fired')).toEqual([
       { type: 'weapon-fired', weapon: 'lluvia-de-sellos' },
@@ -45,7 +45,7 @@ describe('Lluvia de Sellos', () => {
 
   it('has a short range: stamps vanish after their lifetime', () => {
     const game = armed();
-    game.ticks(1, { aim: { x: 400, y: 100 }, fire: true });
+    game.ticks(1, { aim: { x: 533, y: 133 }, fire: true });
     game.seconds(sellos.projectileLifetime - 2 / 60);
     expect(runOf(game.view).projectiles.length).toBe(sellos.pellets);
     game.seconds(3 / 60);
@@ -54,7 +54,7 @@ describe('Lluvia de Sellos', () => {
 
   it('respects its fire interval while the trigger is held', () => {
     const game = armed();
-    const shots = eventsOf(game.holdFireToward({ x: 400, y: 100 }, 3), 'weapon-fired');
+    const shots = eventsOf(game.holdFireToward({ x: 533, y: 133 }, 3), 'weapon-fired');
     expect(shots.length).toBe(Math.ceil((3 * 60) / secondsToTicks(sellos.fireInterval)));
   });
 
@@ -74,12 +74,12 @@ describe('Lluvia de Sellos', () => {
       },
     );
     const rad = (aimAngle * Math.PI) / 180;
-    const aim = { x: muzzle.x + Math.cos(rad) * 100, y: muzzle.y + Math.sin(rad) * 100 };
+    const aim = { x: muzzle.x + Math.cos(rad) * 133, y: muzzle.y + Math.sin(rad) * 133 };
     return { spawns, aim };
   }
 
   it('hits several close Enemies with one shot', () => {
-    const { spawns, aim } = fanOfEnemies(70);
+    const { spawns, aim } = fanOfEnemies(110);
     const game = armed(spawns);
     const events = [...game.ticks(1, { aim, fire: true }), ...game.seconds(1, { aim })];
     expect(eventsOf(events, 'weapon-fired')).toHaveLength(1);
@@ -89,7 +89,7 @@ describe('Lluvia de Sellos', () => {
   });
 
   it('does not reach Enemies far away', () => {
-    const { spawns, aim } = fanOfEnemies(sellos.projectileSpeed * sellos.projectileLifetime + 40);
+    const { spawns, aim } = fanOfEnemies(sellos.projectileSpeed * sellos.projectileLifetime + 53);
     const game = armed(spawns);
     const events = [...game.ticks(1, { aim, fire: true }), ...game.seconds(1, { aim })];
     expect(eventsOf(events, 'enemy-hit')).toHaveLength(0);

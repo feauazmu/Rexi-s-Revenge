@@ -18,7 +18,7 @@ describe('Explosive Weapon goldens', () => {
       seed: 1,
       overrides: { spawns: [weaponCrate('mancuernas', ON_REXI.x, onRexi)] },
     });
-    const aim = { x: 230, y: 120 };
+    const aim = { x: 307, y: 160 };
     game.ticks(1, { aim });
     game.holdFireToward(aim, 1.2);
     game.ticks(8, { aim });
@@ -36,7 +36,7 @@ describe('Explosive Weapon goldens', () => {
       seed: 1,
       overrides: { spawns: [weaponCrate('mancuernas', ON_REXI.x, onRexi)] },
     });
-    const aim = { x: 230, y: 120 };
+    const aim = { x: 307, y: 160 };
     game.ticks(1, { aim });
     const events = game.ticks(1, { aim, fire: true });
     for (let i = 0; i < 240 && eventsOf(events, 'explosion').length === 0; i++) {
@@ -47,8 +47,8 @@ describe('Explosive Weapon goldens', () => {
     await expectGolden('run-mancuernas-blast', renderView(game.view));
   });
 
-  const target: ScriptedSpawn = { kind: 'maletin-coptero', x: 360, y: 120 };
-  const atTarget = { x: 372, y: 129 };
+  const target: ScriptedSpawn = { kind: 'maletin-coptero', x: 480, y: 160 };
+  const atTarget = { x: 496, y: 172 };
 
   it('run-codigo-penal: a law book rocket trailing smoke toward a Maletín-cóptero', async () => {
     const game = drive({
@@ -96,7 +96,7 @@ describe('Explosive Weapon goldens', () => {
         ],
       },
     });
-    game.seconds(1, { aim: { x: 300, y: 150 } });
+    game.seconds(1, { aim: { x: 400, y: 200 } });
     expect(runOf(game.view).crates.every((c) => c.landed)).toBe(true);
     await expectGolden('crates-explosive-weapons', renderView(game.view));
   });

@@ -49,17 +49,20 @@ const LEDGE = {
 } as const satisfies Record<string, Color>;
 
 /** Depth of a platform's stone slab below its walkable top, in pixels (art only). */
-const LEDGE_DEPTH = 8;
+const LEDGE_DEPTH = 10;
+/** Spacing of the block seams along a ledge, px. */
+const LEDGE_BLOCK = 18;
 
 /** A stone ledge: sunlit top edge, block seams, dark underside and corbels at both ends. */
 function drawPlatform(surface: Surface, { x, y, w }: PlatformView): void {
   surface.fillRect(x, y - 1, w, LEDGE_DEPTH + 1, LEDGE.outline);
   surface.fillRect(x + 1, y, w - 2, 1, LEDGE.top);
   surface.fillRect(x + 1, y + 1, w - 2, 1, LEDGE.lip);
-  surface.fillRect(x + 1, y + 2, w - 2, 4, LEDGE.stone);
-  surface.fillRect(x + 1, y + 6, w - 2, 1, LEDGE.under);
-  for (let sx = x + 10; sx < x + w - 4; sx += 14) {
-    surface.fillRect(sx, y + 2, 1, 4, LEDGE.seam);
+  surface.fillRect(x + 1, y + 2, w - 2, 6, LEDGE.stone);
+  surface.fillRect(x + 1, y + 7, w - 2, 1, LEDGE.seam);
+  surface.fillRect(x + 1, y + 8, w - 2, 1, LEDGE.under);
+  for (let sx = x + 12; sx < x + w - 5; sx += LEDGE_BLOCK) {
+    surface.fillRect(sx, y + 2, 1, 5, LEDGE.seam);
     surface.fillRect(sx + 1, y + 2, 1, 1, LEDGE.lip);
   }
   // Rounded top corners.
@@ -68,11 +71,11 @@ function drawPlatform(surface: Surface, { x, y, w }: PlatformView): void {
 
   // Corbels: stepped brackets under each end.
   for (const [cx, dir] of [
-    [x + 5, 1],
-    [x + w - 6, -1],
+    [x + 6, 1],
+    [x + w - 7, -1],
   ] as const) {
-    for (let i = 0; i < 4; i++) {
-      const width = 5 - i;
+    for (let i = 0; i < 5; i++) {
+      const width = 6 - i;
       const left = dir === 1 ? cx : cx - width + 1;
       surface.fillRect(left - 1, y + LEDGE_DEPTH + i, width + 2, 1, LEDGE.outline);
       surface.fillRect(left, y + LEDGE_DEPTH + i, width, 1, i === 0 ? LEDGE.stone : LEDGE.under);

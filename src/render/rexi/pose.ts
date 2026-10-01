@@ -18,7 +18,7 @@ export interface RexiPose {
   readonly flash: boolean;
 }
 
-/** Ticks per frame of the six-frame run cycle (a full stride in 24 ticks ≈ 48 px at run speed). */
+/** Ticks per frame of the six-frame run cycle (a full stride in 24 ticks ≈ 64 px at run speed). */
 export const RUN_FRAME_TICKS = 4;
 /** Length of one idle breath, ticks. */
 export const BREATH_TICKS = 72;

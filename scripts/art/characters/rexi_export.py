@@ -112,8 +112,8 @@ def contact_sheet(anims, rig, path, K=4):
 
 
 def ingame(rig, arena_png, arena_json, path):
-    """An Arena frame (a 640x360 game screenshot; an older 480x270 one is scaled up by an exact
-    nearest resample), Rexi at his true 64 px on the ground where the game spawned him (ARENA_JSON:
+    """An Arena frame (a 640x360 game screenshot; an older 480x270 one is resampled nearest-neighbour for
+    review only), Rexi at his true 64 px on the ground where the game spawned him (ARENA_JSON:
     his hitbox {x, y, w, h} in that frame's coordinates), aiming at a Maletin-coptero, then 2x."""
     a = Image.open(arena_png).convert("RGBA")
     k = 640 / a.width

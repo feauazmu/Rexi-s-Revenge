@@ -50,7 +50,7 @@ function onTheLine(aim: Vec2, distances: readonly number[]): ScriptedSpawn[] {
 }
 
 describe('Sentencia Firme', () => {
-  const aim = { x: 420, y: 60 };
+  const aim = { x: 560, y: 80 };
 
   it('damages every Enemy on its line in the tick it fires', () => {
     const game = armed(onTheLine(aim, [60, 160, 300]));
@@ -69,7 +69,7 @@ describe('Sentencia Firme', () => {
 
   it('spares Enemies off its line', () => {
     const [onLine] = onTheLine(aim, [120]);
-    const offLine: ScriptedSpawn = { kind: 'maletin-coptero', x: 300, y: 180 };
+    const offLine: ScriptedSpawn = { kind: 'maletin-coptero', x: 400, y: 240 };
     const game = armed([onLine ?? expect.unreachable(), offLine]);
     const offId = eventsOf(game.log, 'enemy-spawned')[1]?.enemyId;
     game.ticks(1, { aim });
@@ -80,8 +80,8 @@ describe('Sentencia Firme', () => {
 
   it('leaves a beam from the muzzle to the edge of the screen that fades out', () => {
     const game = armed();
-    game.ticks(1, { aim: { x: 400, y: 150 } });
-    game.ticks(1, { aim: { x: 400, y: 150 }, fire: true });
+    game.ticks(1, { aim: { x: 533, y: 200 } });
+    game.ticks(1, { aim: { x: 533, y: 200 }, fire: true });
     const run = runOf(game.view);
     const [beam, ...rest] = run.effects.beams;
     expect(rest).toHaveLength(0);
@@ -99,8 +99,8 @@ describe('Sentencia Firme', () => {
   });
 
   it('hits a drifting Enemy where it is when the beam fires', () => {
-    const game = armed([{ kind: 'maletin-coptero', x: 380, y: 40 }], {});
-    const spawnedAt = { x: 380, y: 40 };
+    const game = armed([{ kind: 'maletin-coptero', x: 507, y: 53 }], {});
+    const spawnedAt = { x: 507, y: 53 };
     game.seconds(1);
     const enemy = runOf(game.view).enemies[0] ?? expect.unreachable('no Enemy');
     expect(Math.hypot(enemy.x - spawnedAt.x, enemy.y - spawnedAt.y)).toBeGreaterThan(maletin.width);
@@ -140,7 +140,7 @@ describe('Sentencia Firme', () => {
 
   it('stops at the ground', () => {
     const game = armed();
-    const down = { x: 300, y: 250 };
+    const down = { x: 400, y: 333 };
     game.ticks(1, { aim: down });
     game.ticks(1, { aim: down, fire: true });
     expect(runOf(game.view).effects.beams[0]?.to.y).toBeCloseTo(groundY, 6);

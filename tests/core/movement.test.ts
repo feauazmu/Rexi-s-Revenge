@@ -116,9 +116,9 @@ describe('Rexi movement', () => {
 
   it('faces the side it aims at', () => {
     const game = driveEmptyArena();
-    game.ticks(1, { aim: { x: 0, y: 100 } });
+    game.ticks(1, { aim: { x: 0, y: 133 } });
     expect(runOf(game.view).rexi.facing).toBe(-1);
-    game.ticks(1, { aim: { x: 479, y: 100 } });
+    game.ticks(1, { aim: { x: 639, y: 133 } });
     expect(runOf(game.view).rexi.facing).toBe(1);
   });
 });

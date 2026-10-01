@@ -9,7 +9,7 @@ import {
   nearestPaletteColor,
 } from '../../src/render/palette-audit';
 import { defineSprite } from '../../src/render/sprite';
-import { expectOnPalette, loadGoldens } from '../support/palette';
+import { expectOnPalette, loadGoldens, SWATCH_LABEL_WIDTH } from '../support/palette';
 
 function luma(color: string): number {
   const value = Number.parseInt(color.slice(1), 16);
@@ -39,7 +39,7 @@ describe('master palette', () => {
 
   it('keeps every color name short enough for its swatch label', () => {
     for (const name of Object.keys(masterPalette)) {
-      expect(fonts.regular.measure(name), name).toBeLessThanOrEqual(56);
+      expect(fonts.regular.measure(name), name).toBeLessThanOrEqual(SWATCH_LABEL_WIDTH);
     }
   });
 });

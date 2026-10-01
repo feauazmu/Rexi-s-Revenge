@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultTuning } from '../../src/core';
+import { defaultTuning, SCREEN_WIDTH } from '../../src/core';
 import { driveEmptyArena, runOf, type Driver } from '../support/driver';
 
 const { groundY, gravity } = defaultTuning.arena;
@@ -7,8 +7,8 @@ const { jumpSpeed, spawnX, width: rexiWidth } = defaultTuning.rexi;
 /** Height of a full (held) jump, in pixels. */
 const fullJumpHeight = (jumpSpeed * jumpSpeed) / (2 * gravity);
 
-/** A one-way platform 40 px above the ground, right over Rexi's spawn point. */
-const overhead = { x: spawnX - 30, y: groundY - 40, w: 80 };
+/** A one-way platform 53 px above the ground, right over Rexi's spawn point. */
+const overhead = { x: spawnX - 40, y: groundY - 53, w: 107 };
 
 const withPlatforms = (platforms: readonly { x: number; y: number; w: number }[]): Driver =>
   driveEmptyArena({ overrides: { tuning: { arena: { platforms } } } });
@@ -93,8 +93,8 @@ describe('one-way platforms', () => {
   });
 
   it('dropping down only falls through one platform per press when released', () => {
-    const lower = { x: spawnX - 30, y: groundY - 40, w: 80 };
-    const upper = { x: spawnX - 30, y: groundY - 80, w: 80 };
+    const lower = { x: spawnX - 40, y: groundY - 53, w: 107 };
+    const upper = { x: spawnX - 40, y: groundY - 107, w: 107 };
     const game = withPlatforms([lower, upper]);
     game.ticks(1);
     jumpAndSettle(game);
@@ -107,8 +107,8 @@ describe('one-way platforms', () => {
   });
 
   it('holding drop keeps Rexi falling through every platform below', () => {
-    const lower = { x: spawnX - 30, y: groundY - 40, w: 80 };
-    const upper = { x: spawnX - 30, y: groundY - 80, w: 80 };
+    const lower = { x: spawnX - 40, y: groundY - 53, w: 107 };
+    const upper = { x: spawnX - 40, y: groundY - 107, w: 107 };
     const game = withPlatforms([lower, upper]);
     game.ticks(1);
     jumpAndSettle(game);
@@ -152,9 +152,9 @@ describe('default Arena layout', () => {
   it('places every platform inside the Arena, between the HUD strip and the ground', () => {
     for (const p of platforms) {
       expect(p.x).toBeGreaterThanOrEqual(0);
-      expect(p.x + p.w).toBeLessThanOrEqual(480);
+      expect(p.x + p.w).toBeLessThanOrEqual(SCREEN_WIDTH);
       expect(p.w).toBeGreaterThanOrEqual(rexiWidth * 3);
-      expect(p.y).toBeGreaterThan(40);
+      expect(p.y).toBeGreaterThan(53);
       expect(p.y).toBeLessThan(groundY);
     }
   });

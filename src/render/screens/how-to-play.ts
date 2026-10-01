@@ -24,8 +24,12 @@ import {
 const BACKGROUND: Color = '#2e1e4c';
 const STRIPE: Color = '#362456';
 
-const PANEL = { x: 24, y: 62, w: SCREEN_WIDTH - 48, h: 144 } as const;
-const PROMPT_Y = 232;
+/** The controls panel: full width for touch (it mirrors the overlay), narrower for the keys. */
+const PANEL_Y = 98;
+const PANEL_H = 176;
+const PANEL_TOUCH = { x: 40, y: PANEL_Y, w: SCREEN_WIDTH - 80, h: PANEL_H } as const;
+const PANEL_DESKTOP = { x: 80, y: PANEL_Y, w: SCREEN_WIDTH - 160, h: PANEL_H } as const;
+const PROMPT_Y = 306;
 const t = strings.howToPlay;
 
 export function drawHowToPlay(dc: DrawContext): void {
@@ -39,10 +43,11 @@ export function drawHowToPlay(dc: DrawContext): void {
     }
   }
 
-  drawOutlinedText(dc, fonts.large, t.title, SCREEN_WIDTH / 2, 8, ui.gold, { align: 'center' });
-  drawOutlinedText(dc, fonts.regular, t.goal, SCREEN_WIDTH / 2, 40, ui.text, { align: 'center' });
+  drawOutlinedText(dc, fonts.large, t.title, SCREEN_WIDTH / 2, 22, ui.gold, { align: 'center' });
+  drawOutlinedText(dc, fonts.regular, t.goal, SCREEN_WIDTH / 2, 64, ui.text, { align: 'center' });
 
-  drawPanel(surface, PANEL.x, PANEL.y, PANEL.w, PANEL.h);
+  const panel = view.device === 'touch' ? PANEL_TOUCH : PANEL_DESKTOP;
+  drawPanel(surface, panel.x, panel.y, panel.w, panel.h);
   if (view.device === 'touch') drawTouchControls(dc);
   else drawDesktopControls(dc);
 
@@ -85,10 +90,13 @@ const DESKTOP_ENTRIES: readonly Entry[] = [
   { icons: { kind: 'keys', groups: [[t.keys.escape, 'P']] }, label: t.pause },
 ];
 
-const COLUMN_X = [PANEL.x + 18, PANEL.x + 18 + Math.floor((PANEL.w - 18) / 2)] as const;
-const ROW_Y = [PANEL.y + 16, PANEL.y + 60, PANEL.y + 104] as const;
+const COLUMN_X = [
+  PANEL_DESKTOP.x + 36,
+  PANEL_DESKTOP.x + 36 + Math.floor((PANEL_DESKTOP.w - 36) / 2),
+] as const;
+const ROW_Y = [PANEL_DESKTOP.y + 28, PANEL_DESKTOP.y + 76, PANEL_DESKTOP.y + 124] as const;
 /** Width reserved for icons before the label starts. */
-const ICON_AREA = 92;
+const ICON_AREA = 104;
 const KEY_GAP = 2;
 const GROUP_GAP = 5;
 
@@ -202,21 +210,21 @@ function drawTouchControls(dc: DrawContext): void {
   const { surface } = dc;
   const font = fonts.regular;
   const caption = (text: string, x: number, y: number, align: 'left' | 'center' | 'right') => {
-    const lines = font.wrap(text, 130).join('\n');
+    const lines = font.wrap(text, 160).join('\n');
     drawOutlinedText(dc, font, lines, x, y, ui.text, { align });
   };
 
   // Weapon icon (top left) and pause button (top right), as in the HUD.
   const icon = weaponIcons['mazo-automatico'];
-  const iconX = PANEL.x + 16;
-  const iconY = PANEL.y + 14;
+  const iconX = PANEL_TOUCH.x + 24;
+  const iconY = PANEL_TOUCH.y + 20;
   surface.fillRect(iconX - 3, iconY - 3, icon.width + 6, icon.height + 6, ui.gold);
   surface.fillRect(iconX - 2, iconY - 2, icon.width + 4, icon.height + 4, ui.panelLight);
   surface.drawBitmap(dc.sprites.get(icon), iconX, iconY);
   caption(t.touch.switchWeapon, iconX + icon.width + 8, iconY - 2, 'left');
 
   // Pause button: a round button with two bars.
-  const pauseX = PANEL.x + PANEL.w - 26;
+  const pauseX = PANEL_TOUCH.x + PANEL_TOUCH.w - 34;
   const pauseY = iconY + 4;
   fillCircle(surface, pauseX, pauseY, 9, ui.ink);
   fillCircle(surface, pauseX, pauseY, 8, STICK_RING);
@@ -226,22 +234,22 @@ function drawTouchControls(dc: DrawContext): void {
 
   // Left stick (move), right stick (aim + fire) and the jump button between the right stick
   // and the center, as in the Run's overlay.
-  const stickY = PANEL.y + 78;
-  drawStick(dc, PANEL.x + 56, stickY, -1);
-  caption(t.move, PANEL.x + 56, stickY + 28, 'center');
-  caption(t.touch.drop, PANEL.x + 56, stickY + 42, 'center');
+  const stickY = PANEL_TOUCH.y + 94;
+  drawStick(dc, PANEL_TOUCH.x + 80, stickY, -1);
+  caption(t.move, PANEL_TOUCH.x + 80, stickY + 32, 'center');
+  caption(t.touch.drop, PANEL_TOUCH.x + 80, stickY + 48, 'center');
 
-  const jumpX = PANEL.x + PANEL.w / 2 + 76;
+  const jumpX = PANEL_TOUCH.x + PANEL_TOUCH.w / 2 + 100;
   const jumpY = stickY + 8;
   fillCircle(surface, jumpX, jumpY, 13, ui.ink);
   fillCircle(surface, jumpX, jumpY, 12, BUTTON);
   fillCircle(surface, jumpX - 2, jumpY - 3, 6, BUTTON_LIGHT);
   fillCircle(surface, jumpX - 1, jumpY - 2, 5, BUTTON);
   surface.drawBitmap(dc.sprites.get(JUMP_ARROW), jumpX - 3, jumpY - 4);
-  caption(t.jump, jumpX, stickY + 28, 'center');
+  caption(t.jump, jumpX, stickY + 32, 'center');
 
-  drawStick(dc, PANEL.x + PANEL.w - 64, stickY, 1);
-  caption(t.touch.aimFire, PANEL.x + PANEL.w - 64, stickY + 28, 'center');
+  drawStick(dc, PANEL_TOUCH.x + PANEL_TOUCH.w - 86, stickY, 1);
+  caption(t.touch.aimFire, PANEL_TOUCH.x + PANEL_TOUCH.w - 86, stickY + 32, 'center');
 }
 
 function drawStick(dc: DrawContext, cx: number, cy: number, lean: -1 | 1): void {

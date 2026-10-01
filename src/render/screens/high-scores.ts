@@ -11,9 +11,9 @@ import type { Color } from '../surface';
 import { drawText, fonts } from '../text';
 import { drawOutlinedText } from './ui';
 
-export const HIGH_SCORES_WIDTH = 150;
-const HEADER_H = 15;
-const ROW_H = 10;
+export const HIGH_SCORES_WIDTH = 168;
+const HEADER_H = 17;
+const ROW_H = 11;
 const PAD = 4;
 /** Capitals sit 3 px below the cell top (room for accents): shift text up to center them. */
 const CAP_OFFSET = fonts.regular.baseline - 7;
@@ -56,7 +56,7 @@ export function drawHighScores(
   surface.fillRect(x + 1, y + HEADER_H, w - 2, 1, ink.edge);
   surface.fillRect(x + 1, y + HEADER_H + 1, w - 2, h - HEADER_H - 2, ink.body);
 
-  drawText(dc, fonts.regular, strings.titleScreen.highScores, x + w / 2, y + 4 - CAP_OFFSET, {
+  drawText(dc, fonts.regular, strings.titleScreen.highScores, x + w / 2, y + 5 - CAP_OFFSET, {
     color: ink.heading,
     shadow: ink.frame,
     align: 'center',
@@ -82,12 +82,12 @@ export function drawHighScores(
   entries.slice(0, HIGH_SCORE_LIMIT).forEach((entry, i) => {
     const rowTop = top + i * ROW_H;
     const medal = MEDALS[i];
-    drawOutlinedText(dc, fonts.regular, `${i + 1}.`, x + 22, rowTop, medal ?? ink.rank, {
+    drawOutlinedText(dc, fonts.regular, `${i + 1}.`, x + 26, rowTop, medal ?? ink.rank, {
       ...outline,
       align: 'right',
     });
-    drawOutlinedText(dc, fonts.regular, entry.initials, x + 30, rowTop, medal ?? ink.text, outline);
-    drawOutlinedText(dc, fonts.regular, String(entry.score), x + w - 8, rowTop, ink.score, {
+    drawOutlinedText(dc, fonts.regular, entry.initials, x + 36, rowTop, medal ?? ink.text, outline);
+    drawOutlinedText(dc, fonts.regular, String(entry.score), x + w - 10, rowTop, ink.score, {
       ...outline,
       align: 'right',
     });

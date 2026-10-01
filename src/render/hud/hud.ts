@@ -8,16 +8,16 @@ import { drawText, fonts, formatElapsed, type TextAlign } from '../text';
 import { powerUpIcons } from './power-up-icons';
 import { weaponIcons } from './weapon-icons';
 
-const MARGIN = 6;
+const MARGIN = 8;
 /** Top of the first HUD text row: capitals then line up with the health bar. */
-const TEXT_TOP = 3;
+const TEXT_TOP = 5;
 const LABEL_GAP = 4;
 
 const LABEL: Color = '#ffd88a';
 const VALUE: Color = palette.white;
 const SHADOW: Color = palette.outline;
 
-const BAR = { x: MARGIN + 10, y: 6, w: 82, h: 7 } as const;
+const BAR = { x: MARGIN + 10, y: 8, w: 110, h: 7 } as const;
 const BAR_EMPTY: Color = '#4a1426';
 const BAR_FILL: Color = '#e8433a';
 const BAR_SHINE: Color = '#ff9a7a';
@@ -33,8 +33,14 @@ const HEART = defineSprite({ k: palette.outline, r: '#e8433a', R: '#ff9a7a' }, [
 ]);
 
 /** Icon rows in the left column: the current Weapon, then one per active timed Power-up. */
-const WEAPON_ROW_Y = 16;
-const ICON_ROW_PITCH = 15;
+const WEAPON_ROW_Y = 20;
+const ICON_ROW_PITCH = 16;
+
+/**
+ * Where the HUD Weapon icon sits and the Weapon icons' common size (the touch overlay brackets
+ * it as a button).
+ */
+export const HUD_WEAPON_ICON = { x: MARGIN, y: WEAPON_ROW_Y, w: 11, h: 10 } as const;
 /** A Power-up's icon blinks during its last seconds, toggling every few ticks. */
 const EXPIRY_WARNING_TICKS = 2 * TICKS_PER_SECOND;
 const EXPIRY_BLINK_TICKS = 6;

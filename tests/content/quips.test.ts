@@ -44,6 +44,8 @@ describe('Quip catalog', () => {
   });
 
   it('fits every Quip on two Dialogue Box lines', () => {
+    // The Dialogue Box's text column at 640×360; a change here is a deliberate layout change.
+    expect(DIALOGUE_TEXT_WIDTH).toBe(376);
     for (const quip of QUIPS) {
       const lines = fonts.regular.wrap(quip.text, DIALOGUE_TEXT_WIDTH);
       expect(lines.length, `${quip.id}: ${lines.join(' / ')}`).toBeLessThanOrEqual(

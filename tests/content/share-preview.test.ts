@@ -15,7 +15,7 @@ import {
   SHARE_FILES,
   shareImages,
 } from '../../scripts/share-preview/share-images';
-import { FAVICON_SIZES } from '../../src/render';
+import { FAVICON_SIZES, SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '../../src/render';
 import { compareImages, decodePng } from '../golden/golden';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -127,6 +127,12 @@ describe('web manifest', () => {
 });
 
 describe('generated share images', () => {
+  it('scale the share card by a whole factor to the Open Graph size (crisp pixels)', () => {
+    const scale = OG_IMAGE_WIDTH / SHARE_CARD_WIDTH;
+    expect(Number.isInteger(scale)).toBe(true);
+    expect(SHARE_CARD_HEIGHT * scale).toBe(OG_IMAGE_HEIGHT);
+  });
+
   it('match what the renderer draws now (else run: npm run share-preview)', async () => {
     const illustration = await decodeIllustration(join(publicDir, 'title.png'));
     for (const [file, expected] of shareImages(illustration)) {

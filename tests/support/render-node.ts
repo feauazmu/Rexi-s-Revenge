@@ -53,7 +53,7 @@ export interface RenderViewOptions {
   readonly titleIllustration?: Bitmap;
 }
 
-/** Renders one frame of `view` (and the touch overlay, if given) to raw RGBA pixels at 480×270. */
+/** Renders one frame of `view` (and the touch overlay, if given) to raw RGBA pixels at 640×360. */
 export function renderView(
   view: GameView,
   overlay?: TouchOverlayView | null,
@@ -85,7 +85,7 @@ export function renderRotatePrompt(tick: number): RgbaImage {
 
 /**
  * Renders a renderer building block (e.g. text) outside a full frame, on a solid
- * `background`, to raw RGBA pixels (480×270 unless another size is given). For specimens of
+ * `background`, to raw RGBA pixels (640×360 unless another size is given). For specimens of
  * fonts and icons.
  */
 export function renderPart(

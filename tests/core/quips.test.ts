@@ -15,7 +15,7 @@ import {
 import { drive, eventsOf, runOf, weaponCrate, type Driver } from '../support/driver';
 import { holdStill } from '../support/fixtures';
 
-const SPOT = { x: 300, y: 150 };
+const SPOT = { x: 400, y: 200 };
 /** Aim at the middle of a Maletín-cóptero parked at SPOT. */
 const AIM = { x: SPOT.x + 12, y: SPOT.y + 9 };
 
@@ -135,7 +135,7 @@ describe('Quip triggering', () => {
   });
 
   it('does not change gameplay randomness: talking or not, Enemies behave the same', () => {
-    const spawns = [maletin(), { kind: 'maletin-coptero', x: 100, y: 40 } as const];
+    const spawns = [maletin(), { kind: 'maletin-coptero', x: 133, y: 53 } as const];
     const talk = quipGame({ quips: { ...SNAPPY, chance: 1 }, spawns });
     const silent = quipGame({ quips: { ...SNAPPY, chance: 0 }, spawns });
     for (const game of [talk, silent]) game.holdFireToward(AIM, 2);
@@ -263,7 +263,7 @@ describe('Hit-stop and the rest of the Run', () => {
       seed: 7,
       overrides: {
         tuning,
-        spawns: [maletin(), { kind: 'maletin-coptero', x: 60, y: 40, atTick: 1 }],
+        spawns: [maletin(), { kind: 'maletin-coptero', x: 80, y: 53, atTick: 1 }],
       },
     });
     killOne(game);
@@ -330,7 +330,7 @@ describe('Dialogue Box', () => {
     killOne(game);
     game.seconds(0.6);
     const x = runOf(game.view).rexi.x;
-    const events = game.seconds(0.5, { move: -1, aim: { x: 40, y: 40 }, fire: true });
+    const events = game.seconds(0.5, { move: -1, aim: { x: 53, y: 53 }, fire: true });
     expect(dialogueOf(game)).not.toBeNull();
     expect(runOf(game.view).rexi.x).toBeLessThan(x);
     expect(eventsOf(events, 'weapon-fired').length).toBeGreaterThan(0);
