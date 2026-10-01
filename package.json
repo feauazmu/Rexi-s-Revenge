@@ -1,0 +1,47 @@
+{
+  "name": "rexis-revenge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Rexi's Revenge: a comedic pixel-art arena shooter in the style of Heli Attack 3.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.headless.json",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "golden:update": "UPDATE_GOLDENS=1 vitest run tests/golden",
+    "smoke": "playwright test",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run smoke",
+    "share-preview": "node scripts/share-preview/make-share-preview.ts",
+    "balance": "node scripts/balance/simulate.ts",
+    "art": "uv run -q --with pillow --with numpy python scripts/art/art.py",
+    "art:budget": "npm run art -- budget",
+    "art:build": "npm run art -- build",
+    "art:audit": "npm run art -- audit",
+    "art:preview": "npm run art -- preview",
+    "art:test": "uv run -q --with pillow --with numpy --with pytest python -m pytest -q scripts/art/tests"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@napi-rs/canvas": "^1.0.9",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.0",
+    "audio-decode": "^3.12.0",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.3",
+    "wasm-media-encoders": "^0.7.0"
+  }
+}

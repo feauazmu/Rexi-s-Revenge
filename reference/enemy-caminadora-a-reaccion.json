@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art enemy concept reference, 16-bit SNES-era arcade shooter style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Enemy \"Caminadora a Reacción\": a gym treadmill turned into a flying jet aircraft, with its running belt and handrails and console display, two jet engines with orange exhaust flames on the back, and a machine gun mounted under the console. Neon gym colors (red, black, chrome). Show it from the side (flying left) large in the center, plus a smaller front view and an inset of its muzzle flash and bullets. Comedic, readable silhouette, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.067269,
+  "created_at": "2026-10-01T07:52:43.493Z",
+  "asset": {
+    "file": "enemy-caminadora-a-reaccion.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}

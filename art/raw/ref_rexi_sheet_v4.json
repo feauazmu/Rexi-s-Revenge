@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Edit the attached pixel-art character reference sheet of \"Rexi\" and keep everything identical: the same layout, the three full-body views, the face-portrait inset, the background, the 16-bit pixel-art style, the colours, and the tattoo on the same arm (his RIGHT arm: the viewer's left arm in the front view, the near arm in the side view, the viewer's right arm in the back view). His other arm stays bare.\n\nTwo fixes only:\n\n1) The sleeve must END AT THE ELBOW in all three views. Keep the lion head high on the shoulder and its mane flowing down into the courthouse, but make the whole design shorter: the courthouse's triangular pediment sits in the middle of the upper arm, its fluted columns fill the lower upper arm, and the courthouse steps end exactly at the elbow crease. The forearm, from the elbow to the wrist, and the hand are completely bare skin with no ink at all.\n\n2) Redraw the tattoo close-up inset (the box with the small arrow, left of the face portrait) as a close-up of that same upper arm seen from the side, filling the box: shoulder at the top, elbow at the bottom, the whole upper arm covered by the one continuous sleeve (the lion's head at the shoulder, the mane streaming down and turning into the pediment and columns, the steps at the elbow). Only the upper arm is shown in the inset: no forearm, no fist, no separate building, no blank skin between the lion and the courthouse.\n\nNo text, no letters, no labels.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/art/raw/ref_rexi_sheet_v3.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.0681785,
+  "created_at": "2026-10-01T11:20:42.578Z",
+  "asset": {
+    "file": "ref_rexi_sheet_v4.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_rexi_sheet_v4.txt",
+    "style": false,
+    "references": ["art/raw/ref_rexi_sheet_v3.png"],
+    "note": "Rexi character sheet: sleeve ends at the elbow, inset redrawn (Refs #26)",
+    "spent_after_usd": 1.949562
+  }
+}

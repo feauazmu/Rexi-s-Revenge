@@ -1,0 +1,653 @@
+{
+  "_doc": "The production art root (ADR 0002). Fields: scripts/art/README.md. Sections: templates (reference images built in code), sheets (raw render -> sprites), parts (RotSprite bakes), exports (TypeScript modules), audit (extra globs to lint). Entries starting with _ are ignored.",
+  "templates": {
+    "rexi_x4": {
+      "type": "editsheet",
+      "sprite": "sprites/rexi/master.png",
+      "n": 4
+    },
+    "enemy_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "n": 3,
+      "box": [48, 36],
+      "ground": null
+    },
+    "icon_cells": {
+      "type": "icongrid",
+      "n": 12,
+      "cell": 16,
+      "cols": 6,
+      "anchor": "hand/icon_anchor.png"
+    },
+    "record_cells": {
+      "type": "icongrid",
+      "n": 4,
+      "cell": 32,
+      "cols": 4,
+      "anchor": "sprites/icons/inmunidad-judicial.png"
+    },
+    "arena_draft": {
+      "type": "draft",
+      "image": "drafts/arena.png",
+      "size": [640, 360],
+      "palette": "scene"
+    },
+    "arena_tiles": {
+      "type": "scene_tiles",
+      "draft": "templates/arena_draft_1x.png",
+      "step": [200, 113]
+    },
+    "maletin_draft": {
+      "type": "draft",
+      "image": "drafts/maletin_480.png",
+      "size": [43, 21],
+      "palette": "enemy"
+    },
+    "maletin_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-maletin-coptero.png",
+      "box": [340, 150, 960, 560],
+      "flip": true
+    },
+    "maletin_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [48, 30],
+      "ground": null,
+      "draft": "templates/maletin_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "archivador_draft": {
+      "type": "draft",
+      "image": "drafts/archivador_480.png",
+      "size": [59, 43],
+      "palette": "enemy"
+    },
+    "archivador_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-archivador-artillado.png",
+      "box": [900, 35, 1360, 340]
+    },
+    "archivador_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [62, 46],
+      "ground": null,
+      "draft": "templates/archivador_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "caminadora_draft": {
+      "type": "draft",
+      "image": "drafts/caminadora_480.png",
+      "size": [51, 27],
+      "palette": "enemy"
+    },
+    "caminadora_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-caminadora-a-reaccion.png",
+      "box": [20, 170, 945, 590]
+    },
+    "caminadora_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [56, 30],
+      "ground": null,
+      "draft": "templates/caminadora_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "banca_draft": {
+      "type": "draft",
+      "image": "drafts/banca_480.png",
+      "size": [101, 47],
+      "palette": "enemy"
+    },
+    "banca_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-banca-artillada.png",
+      "box": [20, 50, 1070, 690],
+      "flip": true
+    },
+    "banca_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [104, 50],
+      "ground": null,
+      "draft": "templates/banca_draft_1x.png",
+      "slots": [
+        [150, 34],
+        [62, 101],
+        [178, 101]
+      ],
+      "anchor_at": [18, 68]
+    },
+    "projectile_cells": {
+      "type": "icongrid",
+      "n": 10,
+      "cell": 16,
+      "cols": 5
+    },
+    "banca_front": {
+      "type": "crop",
+      "image": "../reference/enemy-banca-artillada.png",
+      "box": [860, 290, 1355, 630]
+    },
+    "banca_slot1": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [104, 50],
+      "ground": null,
+      "draft": "templates/banca_draft_1x.png",
+      "slots": [[150, 67]],
+      "anchor_at": [40, 103]
+    },
+    "projectile_cells_x2": {
+      "type": "icongrid",
+      "n": 10,
+      "cell": 30,
+      "cols": 5
+    },
+    "arena_fix_center": {
+      "type": "scene_tiles",
+      "draft": "drafts/arena_fix_center.png"
+    },
+    "arena_props": {
+      "type": "scene_tiles",
+      "draft": "drafts/arena_props.png"
+    },
+    "pose_run_c": {
+      "type": "poseguide",
+      "_doc": "Rexi's missing run keys (#26), slot order up A, passing B, up B, passing B (second try). Grid rows: head top 36, neck 47, hip 70, knee 84, soles 99. Near leg dark.",
+      "poses": [
+        {
+          "head": [3, 39],
+          "neck": [2, 45],
+          "hip": [0, 67],
+          "kneeN": [-3, 82],
+          "footN": [-10, 96],
+          "kneeF": [8, 78],
+          "footF": [9, 90],
+          "twotone": true
+        },
+        {
+          "head": [3, 41],
+          "neck": [2, 46],
+          "hip": [0, 69],
+          "kneeF": [0, 84],
+          "footF": [0, 99],
+          "kneeN": [7, 79],
+          "footN": [0, 91],
+          "twotone": true
+        },
+        {
+          "head": [3, 39],
+          "neck": [2, 45],
+          "hip": [0, 67],
+          "kneeF": [-3, 82],
+          "footF": [-10, 96],
+          "kneeN": [8, 78],
+          "footN": [9, 90],
+          "twotone": true
+        },
+        {
+          "head": [3, 41],
+          "neck": [2, 46],
+          "hip": [0, 69],
+          "kneeF": [0, 84],
+          "footF": [0, 99],
+          "kneeN": [8, 77],
+          "footN": [2, 89],
+          "twotone": true
+        }
+      ]
+    },
+    "portrait_x3": {
+      "type": "editsheet",
+      "sprite": "sprites/rexi/portrait_draft.png",
+      "n": 3
+    }
+  },
+  "sheets": {
+    "icons": {
+      "kind": "icon",
+      "prompt": "prompts/icons.txt",
+      "style": true,
+      "refs": ["templates/icon_cells.png"],
+      "palette": "icon",
+      "canvas": [40, 40],
+      "out": "sprites/icons-clean",
+      "_names": "The model drew the icons at 2x (about 32 px) and repeated the bottom row: the large icons are cleaned here, then scripts/art/ui/icons.py picks a copy, reduces it 2:1 to 16x16 and applies the hand pass.",
+      "names": [
+        null,
+        "mazo-automatico",
+        "lluvia-de-sellos",
+        "mancuernas",
+        "codigo-penal",
+        "citaciones-teledirigidas",
+        "sentencia-firme",
+        "pre-entreno",
+        "receso",
+        "inmunidad-judicial",
+        "dia-de-pierna",
+        "creatina",
+        "sentencia-firme_b",
+        "pre-entreno_b",
+        "receso_b",
+        "inmunidad-judicial_b",
+        "dia-de-pierna_b",
+        "creatina_b"
+      ]
+    },
+    "record": {
+      "kind": "sprite",
+      "prompt": "prompts/record.txt",
+      "style": true,
+      "refs": ["templates/record_cells.png"],
+      "palette": "icon",
+      "out": "sprites/record-clean",
+      "names": [null, "seal", "gavel", "wax"]
+    },
+    "enemy_maletin": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_maletin.txt",
+      "style": true,
+      "refs": ["templates/maletin_slots.png", "templates/maletin_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": ["enemies/maletin_a", "enemies/maletin_b", "enemies/maletin_c", null]
+    },
+    "enemy_archivador": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_archivador.txt",
+      "style": true,
+      "refs": ["templates/archivador_slots.png", "templates/archivador_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": ["enemies/archivador_a", "enemies/archivador_b", "enemies/archivador_c", null]
+    },
+    "enemy_caminadora": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_caminadora.txt",
+      "style": true,
+      "refs": ["templates/caminadora_slots.png", "templates/caminadora_concept.png"],
+      "palette": "enemy",
+      "keep_white": false,
+      "names": ["enemies/caminadora_a", "enemies/caminadora_b", "enemies/caminadora_c", null]
+    },
+    "enemy_banca": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca.txt",
+      "style": true,
+      "refs": ["templates/banca_slots.png", "templates/banca_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": [null, null, null, null, null],
+      "_note": "rejected: drawn off the 240-cell grid (2x pixels) and in 3/4 view; see enemy_banca_v2"
+    },
+    "projectiles": {
+      "kind": "sprite",
+      "prompt": "prompts/projectiles.txt",
+      "style": true,
+      "refs": ["templates/projectile_cells.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "min_px": 6,
+      "names": [null, null, null, null, null, null, null, null, null, null],
+      "_note": "rejected: drawn about 2.5x too large and off the grid; see projectiles_v2"
+    },
+    "enemy_banca_v2": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca_v2.txt",
+      "style": true,
+      "refs": ["templates/banca_slot1.png", "templates/banca_front.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": [null, null],
+      "_note": "rejected: drawn 152 px wide (the box enlarged 1.5x and filled grey); see enemy_banca_v3"
+    },
+    "enemy_banca_v3": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca_v3.txt",
+      "style": true,
+      "refs": ["templates/banca_slot1.png", "templates/banca_front.png"],
+      "palette": "enemy",
+      "keep_white": false,
+      "names": ["enemies/banca_v3", null]
+    },
+    "projectiles_v2": {
+      "kind": "sprite",
+      "prompt": "prompts/projectiles_v2.txt",
+      "style": true,
+      "refs": ["templates/projectile_cells_x2.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "min_px": 6,
+      "_doc": "drawn at twice the game size; scripts/art/enemies.py reduces them exactly 2:1 (reduce.py)",
+      "names": [
+        "projectiles/x2/gavel",
+        "projectiles/x2/stamp",
+        "projectiles/x2/dumbbell",
+        "projectiles/x2/law_book",
+        "projectiles/x2/subpoena",
+        "projectiles/x2/paper",
+        "projectiles/x2/bullet",
+        "projectiles/x2/rocket",
+        "projectiles/x2/drawer",
+        "projectiles/x2/paper_tilt"
+      ]
+    },
+    "arena": {
+      "kind": "scene",
+      "background": "none",
+      "tiles": [
+        ["arena_r0c0", "arena_r0c1", "arena_r0c2"],
+        ["arena_r1c0", "arena_r1c1", "arena_r1c2"],
+        ["arena_r2c0", "arena_r2c1", "arena_r2c2"]
+      ],
+      "tile_step": [200, 113],
+      "out": "sprites/arena",
+      "name": "scene",
+      "register": "drafts/arena.png",
+      "patches": [
+        {
+          "name": "arena_fix_center",
+          "guide": "drafts/arena_fix_center.png",
+          "at": [160, 160]
+        }
+      ]
+    },
+    "arena_props": {
+      "kind": "sprite",
+      "prompt": "prompts/arena_props.txt",
+      "style": true,
+      "refs": ["templates/arena_props_r0c0.png"],
+      "background": "green",
+      "palette": {
+        "ramps": ["stone", "sky", "fire"]
+      },
+      "out": "sprites/arena",
+      "names": ["ledge_144", "cloud_a", "ledge_102", "cloud_b", "cloud_c", "cloud_d", "cloud_e"],
+      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky).",
+      "post": {
+        "cloud_a": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_b": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_c": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_d": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_e": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        }
+      }
+    },
+    "_rexi_doc": "Rexi (#26). The first five entries re-snap the version C prototype's committed grids (copied from reference/manu-pipeline/grid, prompts and sidecars there) to the full character class, so the 56-colour palette's robeMid, skinWarm and skin5 steps reach him. The rig is scripts/art/characters/rexi.py.",
+    "master_34_v5": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/master_34_v5.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["m34_a", "m34_b", "m34_c"]
+    },
+    "keys_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_v1.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_contact", "key_passing", "key_jump", "key_hurt"]
+    },
+    "keys_run_b": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_run_b.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_downA", "key_contactB", "key_downB", null]
+    },
+    "keys_air": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_air.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_rise", "key_fall", "key_land", "key_hurt2"]
+    },
+    "arm_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/arm_v1.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["arm_forward_a", "arm_forward_b"]
+    },
+    "rexi_sleeve_v1": {
+      "_doc": "Its rexi_x4 was built from master.png before the SLEEVE patch existed (the prototype hand pass on the re-snapped m34_b): a rebuild of rexi_x4 now includes the sleeve.",
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_sleeve_v1.txt",
+      "style": true,
+      "refs": ["templates/rexi_x4.png", "templates/ref_sheet_side.png"],
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["sleeve_a", "sleeve_b", "sleeve_c", "sleeve_d"]
+    },
+    "rexi_run_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_run_v1.txt",
+      "style": true,
+      "refs": [
+        "templates/rexi_x4.png",
+        "templates/pose_run_c.png",
+        "../reference/manu-pipeline/raw/keys_run_b.png"
+      ],
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_upA", "key_passingB", "key_upB", "key_passingB2"]
+    },
+    "rexi_portrait_v1": {
+      "kind": "icon",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_portrait_v1.txt",
+      "keep_white": true,
+      "fill_holes": true,
+      "refs": ["templates/portrait_x3.png", "templates/ref_sheet_front.png"],
+      "canvas": [40, 40],
+      "palette": "icon",
+      "names": ["portrait_a", "portrait_b", "portrait_c"]
+    }
+  },
+  "parts": {
+    "gavel": {
+      "src": "projectiles/gavel.png",
+      "pivot": [6, 5],
+      "angles": {
+        "from": -135,
+        "to": 180,
+        "step": 45
+      },
+      "out": "projectiles/turn/gavel"
+    },
+    "stamp": {
+      "src": "projectiles/stamp.png",
+      "pivot": [4, 6],
+      "angles": {
+        "from": -135,
+        "to": 180,
+        "step": 45
+      },
+      "out": "projectiles/turn/stamp"
+    },
+    "dumbbell": {
+      "src": "projectiles/dumbbell.png",
+      "pivot": [6, 4],
+      "angles": {
+        "from": 0,
+        "to": 157.5,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/dumbbell"
+    },
+    "law_book": {
+      "src": "projectiles/law_book.png",
+      "pivot": [7, 5],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/law_book"
+    },
+    "rocket": {
+      "src": "projectiles/rocket.png",
+      "pivot": [7, 4],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/rocket"
+    },
+    "bullet": {
+      "src": "projectiles/bullet.png",
+      "pivot": [3, 2],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/bullet"
+    }
+  },
+  "exports": {
+    "icons": {
+      "sprites": ["sprites/icons/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
+    },
+    "record": {
+      "sprites": ["sprites/record/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
+    },
+    "enemies": {
+      "sprites": ["enemies/**/*.png"],
+      "format": "rle",
+      "out": "src/render/art/generated",
+      "data": {
+        "layout": "enemies/layout.json"
+      }
+    },
+    "projectiles": {
+      "sprites": ["projectiles/**/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated",
+      "data": {
+        "gavelPivots": "projectiles/turn/gavel/pivots.json",
+        "stampPivots": "projectiles/turn/stamp/pivots.json",
+        "dumbbellPivots": "projectiles/turn/dumbbell/pivots.json",
+        "lawBookPivots": "projectiles/turn/law_book/pivots.json",
+        "rocketPivots": "projectiles/turn/rocket/pivots.json",
+        "bulletPivots": "projectiles/turn/bullet/pivots.json"
+      }
+    },
+    "arena": {
+      "sprites": [
+        "sprites/arena/layers/*.png",
+        "sprites/arena/ledge_*.png",
+        "sprites/arena/cloud_*.png"
+      ],
+      "format": "rle",
+      "out": "src/render/art/generated"
+    },
+    "rexi": {
+      "_doc": "Rexi's body frames (both facings), lapel cap and aiming arms, written by scripts/art/characters/rexi.py build.",
+      "sprites": ["frames/rexi/**/*.png"],
+      "format": "rle",
+      "out": "src/render/art/generated",
+      "data": {
+        "rexiArt": "frames/rexi/rexi.json"
+      }
+    },
+    "rexi-portrait": {
+      "_doc": "The Dialogue Box portrait, written by scripts/art/characters/rexi.py portrait.",
+      "sprites": ["sprites/rexi/portrait.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
+    }
+  },
+  "audit": {
+    "sprites/icons/*.png": "icon",
+    "sprites/record/*.png": "icon",
+    "enemies/**/*.png": "enemy",
+    "projectiles/*.png": "enemy",
+    "sprites/arena/layers/*.png": "scene",
+    "frames/rexi/**/*.png": "character",
+    "sprites/rexi/portrait*.png": "icon",
+    "sprites/rexi/*.png": "character"
+  }
+}

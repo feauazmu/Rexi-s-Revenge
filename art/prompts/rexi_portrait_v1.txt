@@ -1,0 +1,7 @@
+Edit image 1. It shows 3 identical copies of a small square pixel-art portrait (40x40 art pixels, for a game's dialogue box) of Rexi, a very muscular judge: light-brown hair, a big confident toothy grin, a black judge's robe with torn-off sleeves over a white tank top, and one arm flexed beside his head on the LEFT of the portrait, fist up, on a flat purple backdrop. Image 2 is a concept drawing of the same man for reference: his face, hair and the sleeve tattoo design; do not copy its size.
+
+Redraw each copy as a polished, professional 16-bit pixel-art portrait at EXACTLY the same size, framing and pixel size: the same composition (head on the right, the flexed arm on the left, the robe and tank top at the bottom), the same backdrop colour filling the whole square. Improve the face (both eyes, brows, the grin with a row of teeth, a strong jaw) and the shading (3-4 tones per material, light from the upper left, shadows leaning purple).
+
+The flexed arm is his RIGHT arm, and it wears his sleeve tattoo: the whole upper arm, from the shoulder to the elbow (the horizontal part of the bent arm at the bottom left, under the fist), is one fully inked sleeve of dark brown ink with continuous linework covering it entirely, not separate small pictures: a lion's face whose mane flows along the arm into the columns of a classical courthouse at the elbow end. The forearm and the fist stay bare skin.
+
+Chunky pixel art, crisp hard pixels, a dark 1-pixel outline, no anti-aliasing, no gradients, flat pure white background around the 3 squares, no text.

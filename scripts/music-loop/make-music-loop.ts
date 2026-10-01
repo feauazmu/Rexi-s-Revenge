@@ -1,0 +1,202 @@
+/**
+ * Turns a generated music clip into the game's seamless loop (ticket #22).
+ *
+ *   node scripts/music-loop/make-music-loop.ts reference/audio/music-candidate-2.mp3 --bpm 140
+ *   node scripts/music-loop/make-music-loop.ts <clip> --analyze      # compare candidates, write nothing
+ *
+ * 1. Decodes the clip (pure JS/WASM, no ffmpeg) and reports loudness and tempo.
+ * 2. Finds a bar-aligned loop (`findLoop`): the longest of `--bars` whose seam repeats.
+ * 3. Crossfades the seam (equal power), lays out `[pad][body][pad]`, normalizes the peak.
+ * 4. Encodes `public/music/<name>.mp3` (LAME in WASM) and writes the loop points to
+ *    `src/platform/audio/music-track.ts`.
+ * 5. Re-decodes the MP3 and checks that the audio around loopStart and loopEnd matches, and
+ *    writes `<scratch>/<name>.seam.wav` (4 s before loopEnd + 4 s after loopStart, exactly
+ *    what the player plays across the seam) for a listening check.
+ */
+import decode from 'audio-decode';
+import { createMp3Encoder } from 'wasm-media-encoders';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { parseArgs } from 'node:util';
+import {
+  crossfadeSeam,
+  estimateBpm,
+  findLoop,
+  layoutLoop,
+  normalizedCrossCorrelation,
+  peakGainFor,
+  rmsDb,
+} from './loop-math.ts';
+
+const root = resolve(import.meta.dirname, '../..');
+const { positionals, values: o } = parseArgs({
+  allowPositionals: true,
+  options: {
+    bpm: { type: 'string', default: '140' },
+    bars: { type: 'string', default: '16,12,8' },
+    from: { type: 'string', default: '0.1' },
+    to: { type: 'string', default: '4' },
+    window: { type: 'string', default: '0.1' },
+    xfade: { type: 'string', default: '30' },
+    pad: { type: 'string', default: '0.5' },
+    peak: { type: 'string', default: '-1' },
+    quality: { type: 'string', default: '4' },
+    name: { type: 'string', default: 'theme' },
+    scratch: { type: 'string', default: join(root, 'node_modules/.cache/music-loop') },
+    analyze: { type: 'boolean', default: false },
+  },
+});
+const [input] = positionals;
+if (!input) throw new Error('Usage: make-music-loop.ts <clip> [--bpm 140] [--analyze]');
+
+const toMono = (channels: readonly Float32Array[]) => {
+  const length = channels[0]?.length ?? 0;
+  const mono = new Float32Array(length);
+  for (let i = 0; i < length; i++) {
+    let sum = 0;
+    for (const channel of channels) sum += channel[i] ?? 0;
+    mono[i] = sum / channels.length;
+  }
+  return mono;
+};
+
+const { channelData, sampleRate } = await decode(readFileSync(input));
+const channels = channelData.map((c) => Float32Array.from(c));
+const mono = toMono(channels);
+const bpm = Number(o.bpm);
+let peak = 0;
+for (const c of channels) for (const v of c) peak = Math.max(peak, Math.abs(v));
+console.log(
+  `${input}: ${channels.length} ch, ${sampleRate} Hz, ${(mono.length / sampleRate).toFixed(2)} s, ` +
+    `RMS ${rmsDb(channels).toFixed(1)} dBFS, peak ${peak.toFixed(3)}, ` +
+    `estimated tempo ${estimateBpm(mono, sampleRate, 90, 180).toFixed(2)} BPM`,
+);
+// Loudness per second: a fade, breakdown or ending shows up as a dip.
+const perSecond: string[] = [];
+for (let s = 0; s + sampleRate <= mono.length; s += sampleRate) {
+  perSecond.push(rmsDb([mono.subarray(s, s + sampleRate)]).toFixed(0));
+}
+console.log(`  RMS per second: ${perSecond.join(' ')}`);
+
+const bars = o.bars.split(',').map(Number);
+const search = {
+  bpm,
+  searchFrom: Number(o.from),
+  searchTo: Number(o.to),
+  window: Number(o.window),
+};
+for (const count of bars) {
+  try {
+    const loop = findLoop(mono, sampleRate, { ...search, bars: [count] });
+    console.log(
+      `  ${count} bars: start ${(loop.start / sampleRate).toFixed(3)} s, ` +
+        `length ${(loop.length / sampleRate).toFixed(4)} s, seam score ${loop.score.toFixed(3)}`,
+    );
+  } catch {
+    console.log(`  ${count} bars: does not fit`);
+  }
+}
+if (o.analyze) process.exit(0);
+
+const loop = findLoop(mono, sampleRate, { ...search, bars });
+const fade = Math.round((Number(o.xfade) / 1000) * sampleRate);
+const pad = Math.round(Number(o.pad) * sampleRate);
+const laidOut = channels.map((c) =>
+  layoutLoop(crossfadeSeam(c, loop.start, loop.length, fade), pad),
+);
+const gain = peakGainFor(
+  laidOut.map((l) => l.samples),
+  10 ** (Number(o.peak) / 20),
+);
+const samples = laidOut.map((l) => l.samples.map((v) => v * gain));
+
+const encoder = await createMp3Encoder();
+encoder.configure({
+  sampleRate,
+  channels: samples.length === 1 ? 1 : 2,
+  vbrQuality: Number(o.quality),
+});
+const mp3 = Buffer.concat([
+  Buffer.from(encoder.encode(samples.slice(0, 2))),
+  Buffer.from(encoder.finalize()),
+]);
+const mp3Path = join(root, 'public/music', `${o.name}.mp3`);
+mkdirSync(dirname(mp3Path), { recursive: true });
+writeFileSync(mp3Path, mp3);
+
+const loopStart = pad / sampleRate;
+const loopEnd = (pad + loop.length) / sampleRate;
+const trackPath = join(root, 'src/platform/audio/music-track.ts');
+writeFileSync(
+  trackPath,
+  `// Generated by scripts/music-loop/make-music-loop.ts from ${input.replace(`${root}/`, '')}. Do not edit.
+import type { MusicTrack } from './music';
+
+/** The soundtrack: a ${loop.bars}-bar loop at ${bpm} BPM, padded for a seamless buffer-source loop. */
+export const MUSIC_TRACK: MusicTrack = {
+  file: 'music/${o.name}.mp3',
+  loopStart: ${Number(loopStart.toFixed(6))},
+  loopEnd: ${Number(loopEnd.toFixed(6))},
+};
+`,
+);
+
+// Verify the encoded file: the audio around both loop points must match (the padding absorbs
+// the decoder's constant offset), and write what plays across the seam for a listening check.
+const decoded = await decode(mp3);
+const check = toMono(decoded.channelData);
+const offset = Math.round(0.25 * sampleRate);
+const similarity = normalizedCrossCorrelation(
+  check,
+  pad - offset,
+  pad + loop.length - offset,
+  2 * offset,
+);
+let maxDiff = 0;
+for (let d = -offset; d < offset; d++) {
+  maxDiff = Math.max(
+    maxDiff,
+    Math.abs((check[pad + d] ?? 0) - (check[pad + loop.length + d] ?? 0)),
+  );
+}
+const seconds = 4 * sampleRate;
+const seam = new Float32Array(2 * seconds);
+seam.set(check.subarray(pad + loop.length - seconds, pad + loop.length), 0);
+seam.set(check.subarray(pad, pad + seconds), seconds);
+mkdirSync(o.scratch, { recursive: true });
+const seamPath = join(o.scratch, `${o.name}.seam.wav`);
+writeFileSync(seamPath, wav16(seam, sampleRate));
+
+console.log(
+  `\nLoop: ${loop.bars} bars from ${(loop.start / sampleRate).toFixed(3)} s of the clip, ` +
+    `${(loop.length / sampleRate).toFixed(4)} s (${loop.length} samples), seam score ${loop.score.toFixed(3)}`,
+);
+console.log(`Gain ${(20 * Math.log10(gain)).toFixed(2)} dB to peak ${o.peak} dBFS`);
+console.log(`Wrote ${mp3Path} (${(mp3.length / 1024).toFixed(0)} KiB), ${trackPath}`);
+console.log(`loopStart ${loopStart.toFixed(6)} s, loopEnd ${loopEnd.toFixed(6)} s`);
+console.log(
+  `Decoded MP3 check: ±0.25 s around the loop points correlate ${similarity.toFixed(5)}, ` +
+    `max sample difference ${maxDiff.toFixed(4)}`,
+);
+console.log(`Seam audition: ${seamPath}`);
+
+/** A mono 16-bit PCM WAV file. */
+function wav16(data: Float32Array, rate: number): Buffer {
+  const out = Buffer.alloc(44 + data.length * 2);
+  out.write('RIFF', 0);
+  out.writeUInt32LE(36 + data.length * 2, 4);
+  out.write('WAVEfmt ', 8);
+  out.writeUInt32LE(16, 16);
+  out.writeUInt16LE(1, 20);
+  out.writeUInt16LE(1, 22);
+  out.writeUInt32LE(rate, 24);
+  out.writeUInt32LE(rate * 2, 28);
+  out.writeUInt16LE(2, 32);
+  out.writeUInt16LE(16, 34);
+  out.write('data', 36);
+  out.writeUInt32LE(data.length * 2, 40);
+  data.forEach((v, i) =>
+    out.writeInt16LE(Math.round(Math.max(-1, Math.min(1, v)) * 32767), 44 + i * 2),
+  );
+  return out;
+}

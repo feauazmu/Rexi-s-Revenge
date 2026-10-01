@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Edit the attached title-screen illustration: remove the muscular man completely, together with his gavel, robe and boots, and paint in what was behind him, so the picture becomes an empty background plate. Continue the sunset sky bands, the setting sun and its glow, the city skyline, the buildings at the right edge, the balustrade and the stone plaza paving lines exactly as they run around him. Keep everything else pixel-identical: the courthouse on the left, the small helicopters, the sky bands, the palette, the framing and the 16-bit pixel-art style with crisp hard pixels. No people, no shadows, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/art/raw/ref_title_v4.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.067826,
+  "created_at": "2026-10-01T11:27:14.764Z",
+  "asset": {
+    "file": "ref_title_plate.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_plate.txt",
+    "style": false,
+    "references": ["art/raw/ref_title_v4.png"],
+    "note": "Title illustration: empty background plate for compositing (Refs #26)",
+    "spent_after_usd": 2.359105
+  }
+}

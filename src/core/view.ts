@@ -1,0 +1,305 @@
+import type { HighScoreEntry } from './high-scores';
+import type {
+  Craft,
+  CrateContents,
+  EnemyKind,
+  ParticleKind,
+  ProjectileKind,
+  ProjectileOwner,
+  WeaponId,
+} from './ids';
+import type { Vec2 } from './math';
+import type { DeviceKind } from './options';
+import type { PauseMenuItem } from './pause-menu';
+import type { RunStats } from './stats';
+import type { QuipTheme } from './quips/catalog';
+import type { TimedPowerUpId } from './tuning';
+
+/**
+ * Read-only snapshot of everything needed to draw one frame. The renderer is a pure function
+ * of this view; it must never need the Game core's internals or a clock.
+ *
+ * All positions are game coordinates (640×360). Boxes use their top-left corner.
+ */
+export interface GameView {
+  /** Ticks since the Game was created. Drives animation phase for every screen. */
+  readonly tick: number;
+  readonly device: DeviceKind;
+  readonly screen: ScreenKind;
+  /** Ticks since the current screen was entered (entry animations, blinking prompts). */
+  readonly screenAge: number;
+  /**
+   * True when a start input would be accepted now: Title and Cómo jugar after a short guard,
+   * the Veredicto once it has been read out and any initials are signed.
+   */
+  readonly startReady: boolean;
+  /**
+   * The current Run, or null when no Run exists (Title, Cómo jugar). While paused it is the
+   * frozen Run under the pause menu; on the Veredicto, the ended Run.
+   */
+  readonly run: RunView | null;
+  /**
+   * Ticks since the Run ended, during the defeat beat that precedes the Veredicto (the `run`
+   * screen with an ended Run); null otherwise.
+   */
+  readonly defeatAge: number | null;
+  /** The Veredicto, only on the `verdict` screen. */
+  readonly verdict: VerdictView | null;
+  /** The local top 10, highest score first (shown on the Title). */
+  readonly highScores: readonly HighScoreEntry[];
+  /** The pause menu, only on the `paused` screen. */
+  readonly pauseMenu: PauseMenuView | null;
+  /** The persisted "Silenciar música" choice. */
+  readonly musicMuted: boolean;
+}
+
+/**
+ * Screens of the flow state machine:
+ * Title → Cómo jugar (first time only) → Run ⇄ Paused → Title (Salir);
+ * Run (ended, after the defeat beat) → Veredicto (initials if top 10) → Title.
+ */
+export type ScreenKind = 'title' | 'how-to-play' | 'run' | 'paused' | 'verdict';
+
+/** The Veredicto: how the Run went and, if it made the top 10, the initials entry. */
+export interface VerdictView {
+  readonly stats: RunStats;
+  /** The 1-based place this Run takes in the top 10, or null if it did not make it. */
+  readonly rank: number | null;
+  /** The initials entry, present exactly when `rank` is not null (also once signed). */
+  readonly initials: InitialsEntryView | null;
+  /** True once the initials are signed and the entry is in the table. */
+  readonly recorded: boolean;
+}
+
+export interface InitialsEntryView {
+  /** The three letters as currently chosen, A–Z. */
+  readonly letters: string;
+  /** Index of the letter being chosen, 0..2. */
+  readonly cursor: number;
+}
+
+export interface PauseMenuView {
+  readonly items: readonly PauseMenuItem[];
+  /** Index into `items` of the highlighted entry. */
+  readonly selected: number;
+}
+
+export interface BoxView {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+export interface RunView {
+  /** Simulated Run ticks (frozen while paused). */
+  readonly tick: number;
+  /**
+   * The ramp clock, in ticks: Run time that counts toward the spawn Director's difficulty
+   * ramp. Excludes pause and Hit-stop.
+   */
+  readonly rampTicks: number;
+  readonly arena: ArenaView;
+  readonly rexi: RexiView;
+  readonly enemies: readonly EnemyView[];
+  readonly projectiles: readonly ProjectileView[];
+  readonly effects: EffectsView;
+  readonly crates: readonly CrateView[];
+  readonly stats: RunStats;
+  /** True once Rexi has been defeated: the Run is over and no longer advances. */
+  readonly ended: boolean;
+  /** Ticks of Hit-stop left: while above 0 the Run is frozen (the Dialogue Box is not). */
+  readonly hitStop: number;
+  /** The Dialogue Box, or null when Rexi is not talking. */
+  readonly dialogue: DialogueView | null;
+}
+
+/** The Dialogue Box showing one Quip with typewriter text. It never blocks play. */
+export interface DialogueView {
+  readonly quipId: string;
+  readonly theme: QuipTheme;
+  /** The whole Quip; draw only its first `revealed` characters. */
+  readonly text: string;
+  /** Characters of `text` revealed so far by the typewriter. */
+  readonly revealed: number;
+  /** True once every character is revealed (the box lingers, then closes). */
+  readonly complete: boolean;
+  /** How far the box has slid in: 0 hidden below the screen, 1 fully open. */
+  readonly openness: number;
+  /** Ticks since the box opened (animation phase, e.g. the blinking cursor). */
+  readonly age: number;
+}
+
+export interface ArenaView {
+  readonly width: number;
+  readonly height: number;
+  /** Y of the top of the ground floor. */
+  readonly groundY: number;
+  /** One-way platforms; only their top surface collides. */
+  readonly platforms: readonly PlatformView[];
+}
+
+export interface PlatformView {
+  readonly x: number;
+  /** Y of the walkable top surface. */
+  readonly y: number;
+  readonly w: number;
+}
+
+export interface RexiView extends BoxView {
+  readonly vx: number;
+  readonly vy: number;
+  readonly grounded: boolean;
+  /** Día de Pierna's thrust is pushing him up this tick (its jet trail is drawn). */
+  readonly flying: boolean;
+  /** Current health, 0..maxHealth (the HUD health bar). */
+  readonly health: number;
+  readonly maxHealth: number;
+  /** 1 when facing right, -1 when facing left. Rexi faces the side he aims at. */
+  readonly facing: 1 | -1;
+  /** Aim target in game coordinates. */
+  readonly aim: Vec2;
+  /** Pivot of the aiming arm; the arm and held Weapon rotate around it. */
+  readonly shoulder: Vec2;
+  /** Where shots leave from: the tip of the held Weapon. */
+  readonly muzzle: Vec2;
+  /** Unit vector from the shoulder toward the aim target (shots fly along it). */
+  readonly aimDirection: Vec2;
+  /** Ticks since the last shot (capped at a few seconds), for recoil animation. */
+  readonly shotAge: number;
+  /** Ticks since he last landed from the air (capped at a few seconds), for the landing squat. */
+  readonly landedTicks: number;
+  /** Ticks left of the hurt reaction after a hit (0 = not hurt). Drives the hurt animation. */
+  readonly hurtTicks: number;
+  /** Ticks left during which hits are ignored (0 = vulnerable). Drives the flicker. */
+  readonly invulnerableTicks: number;
+  /** The selected Weapon. */
+  readonly weapon: WeaponView;
+  /** Every Weapon Rexi carries, in slot order (the Mazo Automático is always first). */
+  readonly inventory: readonly WeaponView[];
+  /** Active timed Power-ups in pickup order (HUD timers; Inmunidad Judicial's glow). */
+  readonly powerUps: readonly ActivePowerUpView[];
+}
+
+export interface ActivePowerUpView {
+  readonly id: TimedPowerUpId;
+  /** Ticks left, counting the current one (show `ceil(ticksLeft / 60)` seconds). */
+  readonly ticksLeft: number;
+  /** The full duration it started with, ticks. */
+  readonly totalTicks: number;
+}
+
+export interface WeaponView {
+  readonly id: WeaponId;
+  /** Remaining ammo, or null for unlimited (Mazo Automático). */
+  readonly ammo: number | null;
+}
+
+export interface CrateView extends BoxView {
+  readonly id: number;
+  readonly contents: CrateContents;
+  /** False while it falls under its parachute. */
+  readonly landed: boolean;
+  /** Ticks until it expires once landed; null while falling. */
+  readonly ticksLeft: number | null;
+  /** True during the last part of its lifetime (the renderer picks the blink cadence). */
+  readonly blinking: boolean;
+  /** Ticks since it was dropped (animation phase). */
+  readonly age: number;
+}
+
+/**
+ * What an Enemy's behavior shows the renderer beyond its box. Behaviors that do not report a
+ * pose face whichever way their drawer picks and never telegraph. This is the one channel for
+ * attack telegraphs: drawers animate wind-ups from `attack` and `windup`.
+ */
+export interface EnemyPose {
+  /** 1 facing right, -1 facing left; null lets the drawer decide (e.g. face Rexi). */
+  readonly facing: 1 | -1 | null;
+  /** Attack phase: between attacks, telegraphing the next one, or attacking. */
+  readonly attack: 'idle' | 'windup' | 'firing';
+  /**
+   * Progress of the telegraph, 0..1: rising from 0 to 1 over the windup, 0 in the other phases
+   * (e.g. the Archivador Artillado lowering a drawer out of its bomb bay).
+   */
+  readonly windup: number;
+}
+
+export interface EnemyView extends BoxView {
+  readonly id: number;
+  readonly kind: EnemyKind;
+  readonly craft: Craft;
+  readonly health: number;
+  readonly maxHealth: number;
+  /** Ticks since this Enemy spawned (animation phase). */
+  readonly age: number;
+  /** True for the few ticks after a hit: draw the Enemy as a white silhouette. */
+  readonly hitFlash: boolean;
+  readonly pose: EnemyPose;
+}
+
+export interface ProjectileView extends BoxView {
+  readonly id: number;
+  readonly kind: ProjectileKind;
+  readonly owner: ProjectileOwner;
+  readonly vx: number;
+  readonly vy: number;
+  /** Ticks since this projectile was fired (animation phase). */
+  readonly age: number;
+}
+
+/** Combat feedback simulated by the core: particles and the screen-shake offset. */
+export interface EffectsView {
+  /** Live particles, oldest first (draw in this order). */
+  readonly particles: readonly ParticleView[];
+  /**
+   * Whole-pixel offset to draw the world with this frame (screen shake). Screen-fixed layers
+   * (crosshair, HUD, Dialogue Box) ignore it.
+   */
+  readonly shake: Vec2;
+  /** Fading traces of beam shots (Sentencia Firme), oldest first. */
+  readonly beams: readonly BeamView[];
+}
+
+/** The trace of a beam shot, from the muzzle to where it left the screen or met the ground. */
+export interface BeamView {
+  readonly from: Vec2;
+  readonly to: Vec2;
+  /** Ticks since it was fired. */
+  readonly age: number;
+  /** 1 at full strength, falling toward 0 as it fades out. */
+  readonly intensity: number;
+}
+
+export type ParticleView = BurstParticleView | DebrisParticleView;
+
+interface ParticleViewBase {
+  readonly kind: ParticleKind;
+  /** Center, game coordinates. */
+  readonly x: number;
+  readonly y: number;
+  /** Radius for round particles, edge length for sparks and debris, px. */
+  readonly size: number;
+  /** Ticks since spawn, and total ticks it lives: animate on `age / life`. */
+  readonly age: number;
+  readonly life: number;
+  /** Deterministic per-particle number in [0, 1) for look variations (shade, shape). */
+  readonly variant: number;
+}
+
+/** Explosion particles: their look comes from `kind` and their age alone. */
+export interface BurstParticleView extends ParticleViewBase {
+  readonly kind: Exclude<ParticleKind, 'debris'>;
+}
+
+/** A chunk of a destroyed Enemy. */
+export interface DebrisParticleView extends ParticleViewBase {
+  readonly kind: 'debris';
+  readonly enemyKind: EnemyKind;
+  /** Which chunk of that Enemy (0-based). */
+  readonly piece: number;
+  /** Rotation in quarter turns, 0..3. */
+  readonly quarterTurns: number;
+  /** True while it should be hidden by the blink-out at the end of its life. */
+  readonly hidden: boolean;
+}

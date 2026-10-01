@@ -1,0 +1,33 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nImage 1 is the template to edit. On the far left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is. To his right are three light grey boxes, each holding a small rough draft of the same Enemy, the \"Caminadora a Reacción\". Redraw the draft in every box as finished, detailed pixel art that fills its box: about 54 pixels wide and 28 pixels tall, never past the box edges, the three copies identical in design, side by side and not touching. Image 2 is the concept art for this Enemy: follow its design, shapes and materials, but never its size. Keep exactly the template's pixel size.\n\nThe Caminadora a Reacción, facing right and flying nose first: a red gym treadmill strapped to twin jet engines.\n1) At the back (left end), two red jet engines stacked one above the other, with chrome intake rings and dark round nozzles pointing left. NO flames: the afterburners are animated in code.\n2) Along the middle, the long low treadmill deck: a black rubber running belt with diagonal slats on a glossy red frame with a chrome rail, a small yellow badge on the side.\n3) At the front (right end), the upright console frame: a dark screen with red LED digits, a few yellow buttons, and two black foam handlebars sticking forward.\n4) Bolted under the front of the deck, a black six-barrel gatling gun pointing right, its muzzle at the very front of the sprite.\nRed in four tones from a deep maroon shadow to a coral highlight; chrome and steel in three tones. Plain white background, no flames, no smoke, no muzzle flash, no shadow under it.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ada02c143b508a03e/art/templates/caminadora_slots.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ada02c143b508a03e/art/templates/caminadora_concept.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.1022095,
+  "created_at": "2026-10-01T11:23:55.806Z",
+  "asset": {
+    "file": "enemy_caminadora.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/enemy_caminadora.txt",
+    "style": true,
+    "references": ["art/templates/caminadora_slots.png", "art/templates/caminadora_concept.png"],
+    "note": "",
+    "spent_after_usd": 2.120059
+  }
+}

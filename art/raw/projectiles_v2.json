@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nImage 1 is the template to edit: ten light grey cells in two rows of five, each 30 by 30 art pixels, where one art pixel is exactly 1/240 of the image width. Draw one projectile sprite centred in each cell, well inside its frame, keeping exactly that pixel size: chunky, readable 16-bit sprites drawn with hard square pixels, a crisp 2-pixel-thick near-black outline, flat colours with 3 tones per material and light from the upper left. Every sprite points or flies to the right. Top row, left to right:\n1) A judge's gavel lying sideways: a wooden handle on the left and the barrel-shaped wooden head standing upright on the right, with brass bands around the head. About 24 wide and 18 tall.\n2) A rubber stamp seen from the side: a round red knob on top, a short red neck, and a wide wooden block with a blue rubber pad at the bottom. About 18 wide and 22 tall.\n3) A dumbbell lying sideways: two chunky dark iron weight plates joined by a short chrome bar. About 26 wide and 16 tall.\n4) A thick red hardcover law book seen from the side, flying right: dark red spine at the back (left), cream page edges along the bottom, a gold scales-of-justice emblem on the cover. About 26 wide and 18 tall.\n5) A sealed manila envelope seen from the front, flap lines forming a V, a red wax seal in the middle. About 22 wide and 15 tall.\nBottom row, left to right:\n6) A single sheet of legal paper, white with grey text lines, one corner folded. About 16 wide and 22 tall.\n7) A steel filing-cabinet drawer yanked out, seen from the front, stuffed with white files sticking out of its top, a brass label frame and a brass handle on its face, and a short fuse curling out of its top right corner (no flame). About 28 wide and 26 tall.\n8) A small brass bullet slug pointing right with a bright hot tip. About 12 wide and 8 tall.\n9) A small rocket pointing right: dark steel body, red warhead nose on the right, red tail fins on the left. About 28 wide and 13 tall.\n10) A second sheet of legal paper, tilted 45 degrees, white with grey lines. About 20 wide and 20 tall.\nPlain white background, no flames, no sparks, no smoke, no motion lines, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ada02c143b508a03e/art/templates/projectile_cells_x2.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.10175,
+  "created_at": "2026-10-01T11:27:12.485Z",
+  "asset": {
+    "file": "projectiles_v2.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/projectiles_v2.txt",
+    "style": true,
+    "references": ["art/templates/projectile_cells_x2.png"],
+    "note": "",
+    "spent_after_usd": 2.630305
+  }
+}

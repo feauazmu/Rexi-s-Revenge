@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+test-results
+playwright-report
+*.log
+.DS_Store
+
+# Art pipeline: full-size renders and build outputs (scripts/art/README.md)
+art/raw/*.png
+art/build/
+reference/manu-pipeline/build/
+__pycache__/
+.pytest_cache/
+art/templates/

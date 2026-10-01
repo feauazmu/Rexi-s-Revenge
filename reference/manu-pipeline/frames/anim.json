@@ -1,0 +1,41 @@
+{
+  "canvas": [120, 100],
+  "baseline": 89,
+  "anims": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": 8
+    },
+    "run": {
+      "fps": 12,
+      "loop": true,
+      "frames": 6
+    },
+    "run-back": {
+      "fps": 12,
+      "loop": true,
+      "frames": 6
+    },
+    "jump": {
+      "fps": 6,
+      "loop": false,
+      "frames": 4
+    },
+    "hurt": {
+      "fps": 10,
+      "loop": false,
+      "frames": 4
+    },
+    "shoot": {
+      "fps": 15,
+      "loop": false,
+      "frames": 4
+    },
+    "aim": {
+      "fps": 4,
+      "loop": true,
+      "frames": 16
+    }
+  }
+}

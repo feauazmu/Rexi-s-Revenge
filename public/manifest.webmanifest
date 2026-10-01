@@ -1,0 +1,16 @@
+{
+  "name": "Rexi's Revenge",
+  "short_name": "Rexi's Revenge",
+  "description": "Rexi, un juez muy musculoso, sobrevive a oleadas de máquinas voladoras enviadas por Bufete & Pesas S.A. Arcade de disparos en pixel art.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#1e1834",
+  "theme_color": "#1e1834",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

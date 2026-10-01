@@ -1,0 +1,142 @@
+{
+  "arm_forward_a": {
+    "h": 65,
+    "sheet": "arm_v1",
+    "w": 50,
+    "x": 46,
+    "y": 34
+  },
+  "arm_forward_b": {
+    "h": 65,
+    "sheet": "arm_v1",
+    "w": 50,
+    "x": 166,
+    "y": 34
+  },
+  "key_contact": {
+    "h": 65,
+    "sheet": "keys_v1",
+    "w": 45,
+    "x": 8,
+    "y": 34
+  },
+  "key_contactB": {
+    "h": 65,
+    "sheet": "keys_run_b",
+    "w": 47,
+    "x": 66,
+    "y": 34
+  },
+  "key_downA": {
+    "h": 64,
+    "sheet": "keys_run_b",
+    "w": 43,
+    "x": 8,
+    "y": 35
+  },
+  "key_downB": {
+    "h": 63,
+    "sheet": "keys_run_b",
+    "w": 43,
+    "x": 128,
+    "y": 36
+  },
+  "key_fall": {
+    "h": 76,
+    "sheet": "keys_air",
+    "w": 48,
+    "x": 63,
+    "y": 23
+  },
+  "key_hurt": {
+    "h": 65,
+    "sheet": "keys_v1",
+    "w": 36,
+    "x": 192,
+    "y": 34
+  },
+  "key_hurt2": {
+    "h": 65,
+    "sheet": "keys_air",
+    "w": 46,
+    "x": 183,
+    "y": 34
+  },
+  "key_jump": {
+    "h": 67,
+    "sheet": "keys_v1",
+    "w": 46,
+    "x": 126,
+    "y": 27
+  },
+  "key_land": {
+    "h": 61,
+    "sheet": "keys_air",
+    "w": 57,
+    "x": 118,
+    "y": 38
+  },
+  "key_passing": {
+    "h": 65,
+    "sheet": "keys_v1",
+    "w": 30,
+    "x": 76,
+    "y": 34
+  },
+  "key_passingB": {
+    "h": 65,
+    "sheet": "keys_run_b",
+    "w": 29,
+    "x": 194,
+    "y": 34
+  },
+  "key_rise": {
+    "h": 80,
+    "sheet": "keys_air",
+    "w": 35,
+    "x": 9,
+    "y": 15
+  },
+  "m34_a": {
+    "h": 65,
+    "sheet": "master_34_v5",
+    "w": 27,
+    "x": 26,
+    "y": 34
+  },
+  "m34_b": {
+    "h": 65,
+    "sheet": "master_34_v5",
+    "w": 27,
+    "x": 106,
+    "y": 34
+  },
+  "m34_c": {
+    "h": 65,
+    "sheet": "master_34_v5",
+    "w": 27,
+    "x": 186,
+    "y": 34
+  },
+  "master_a": {
+    "h": 65,
+    "sheet": "master_side_v4",
+    "w": 25,
+    "x": 79,
+    "y": 34
+  },
+  "master_b": {
+    "h": 65,
+    "sheet": "master_side_v4",
+    "w": 27,
+    "x": 137,
+    "y": 34
+  },
+  "master_c": {
+    "h": 65,
+    "sheet": "master_side_v4",
+    "w": 26,
+    "x": 197,
+    "y": 34
+  }
+}

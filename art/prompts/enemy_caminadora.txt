@@ -1,0 +1,8 @@
+Image 1 is the template to edit. On the far left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is. To his right are three light grey boxes, each holding a small rough draft of the same Enemy, the "Caminadora a Reacción". Redraw the draft in every box as finished, detailed pixel art that fills its box: about 54 pixels wide and 28 pixels tall, never past the box edges, the three copies identical in design, side by side and not touching. Image 2 is the concept art for this Enemy: follow its design, shapes and materials, but never its size. Keep exactly the template's pixel size.
+
+The Caminadora a Reacción, facing right and flying nose first: a red gym treadmill strapped to twin jet engines.
+1) At the back (left end), two red jet engines stacked one above the other, with chrome intake rings and dark round nozzles pointing left. NO flames: the afterburners are animated in code.
+2) Along the middle, the long low treadmill deck: a black rubber running belt with diagonal slats on a glossy red frame with a chrome rail, a small yellow badge on the side.
+3) At the front (right end), the upright console frame: a dark screen with red LED digits, a few yellow buttons, and two black foam handlebars sticking forward.
+4) Bolted under the front of the deck, a black six-barrel gatling gun pointing right, its muzzle at the very front of the sprite.
+Red in four tones from a deep maroon shadow to a coral highlight; chrome and steel in three tones. Plain white background, no flames, no smoke, no muzzle flash, no shadow under it.

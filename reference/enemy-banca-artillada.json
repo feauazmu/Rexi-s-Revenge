@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art enemy concept reference, 16-bit SNES-era arcade shooter style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Enemy \"Banca Artillada\": a big heavy flying gunship built from a gym bench-press station: padded bench as the fuselage, the barbell rack on top with a loaded barbell and big weight plates, two large helicopter rotors, and rocket pods hanging from both sides firing rockets. Bulky, armored, boss-like, red and black gym colors with chrome. Show it from the side large in the center, plus a smaller front view and an inset of a rocket projectile. Comedic, readable silhouette, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.0672735,
+  "created_at": "2026-10-01T07:52:52.745Z",
+  "asset": {
+    "file": "enemy-banca-artillada.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}

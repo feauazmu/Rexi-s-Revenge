@@ -1,0 +1,13 @@
+Image 1 is the template to edit: ten light grey cells in two rows of five, each 16 by 16 art pixels. Draw one small projectile sprite centred in each cell, never past its frame, keeping exactly the template's pixel size (each cell is only 16 pixels across, so every sprite is tiny and chunky, like 16-bit game bullets). Every sprite points or flies to the right and has a crisp 1-pixel near-black outline. Top row, left to right:
+1) A judge's gavel flying sideways: a short wooden handle on the left and the barrel-shaped wooden head standing upright on the right, with brass bands around the head. About 12 wide, 9 tall.
+2) A rubber stamp seen from the side: a round red handle knob on top, a short neck, and a wide stamp block with a blue rubber pad at the bottom. About 9 wide, 11 tall.
+3) A dumbbell lying sideways: two chunky dark iron weight plates joined by a short chrome bar. About 13 wide, 8 tall.
+4) A thick red hardcover law book seen from the side, flying right: dark red spine at the back (left), cream page edges along the bottom, a gold scales-of-justice emblem on the cover. About 13 wide, 9 tall. No flame.
+5) A sealed manila envelope seen from the front, flap lines forming a V, a red wax seal in the middle. About 11 wide, 8 tall.
+Bottom row, left to right:
+6) A single sheet of legal paper, white with grey text lines, one corner folded. About 8 wide, 11 tall.
+7) A steel filing-cabinet drawer yanked out, seen from the front, stuffed with white files sticking out of its top, a brass label frame and handle on its face, and a short lit fuse curling out of its top right corner. About 15 wide, 14 tall.
+8) A tiny brass bullet slug pointing right with a bright hot tip. About 6 wide, 4 tall.
+9) A small rocket pointing right: dark steel body, red warhead nose on the right, red tail fins on the left. About 14 wide, 7 tall. No flame.
+10) A second sheet of legal paper, tumbling, tilted 45 degrees, white with grey lines. About 10 wide, 10 tall.
+Flat colours with 3 tones per material, light from the upper left. Plain white background, no flames, no smoke, no motion lines, no text.

@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThe attached image is one 240x135 tile of the Arena backdrop, a 640x360 opaque side-view scene, drawn as a flat draft at its exact in-game pixel size. The Arena is a city plaza at sunset between a classical columned courthouse (left) and the glass Bufete & Pesas S.A. tower (right), with the Boissons cocktail bar on the plaza between them.\n\nThis tile: the middle left of the scene: the classical white marble courthouse: a triangular pediment with a round seal of the scales of justice, a frieze with dentils, a row of fluted columns with capitals, tall dark windows and a great wooden double door between the columns, and a lower side wing with windows on the right; sunset sky above and to the right, with the first distant skyline towers at the right edge.\n\nRedraw this tile in place as crisp, finished, professional pixel art (modern commercial 16-bit quality), at exactly the same pixel size and composition. Every shape stays exactly where it is, within one pixel, so this tile joins its neighbours: the same silhouettes, edges, window grids and horizon lines. Keep the colours and the warm sunset light from the left. Add hand-placed detail: marble shading on every column (lit from the left, a warm sunset rim on the right edge), crisp dentils and moulding on the cornice, a detailed medallion with the scales of justice, panelled door leaves with brass handles, glass glints in the windows, and crisp stepped sky streaks. A dark 1-pixel outline only where a building meets the sky. Opaque scene: fill the whole frame edge to edge, no border, no white background, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a3559bb671b5ea28c/art/templates/arena_tiles_r1c0.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.101645,
+  "created_at": "2026-10-01T11:24:11.562Z",
+  "asset": {
+    "file": "arena_r1c0.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/arena_r1c0.txt",
+    "style": true,
+    "references": ["art/templates/arena_tiles_r1c0.png"],
+    "note": "Arena tile r1c0 (#28)",
+    "spent_after_usd": 2.321656
+  }
+}
