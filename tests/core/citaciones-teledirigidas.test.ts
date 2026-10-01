@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultTuning,
+  POWER_UP_IDS,
   SPECIAL_WEAPON_IDS,
   secondsToTicks,
   type ScriptedSpawn,
@@ -119,12 +120,17 @@ describe('Citaciones Teledirigidas', () => {
   });
 
   it('comes in Crates', () => {
+    const noPowerUps = Object.fromEntries(POWER_UP_IDS.map((id) => [id, 0]));
     expect(defaultTuning.crates.weights.weapons['citaciones-teledirigidas']).toBeGreaterThan(0);
     const onlyCitaciones = Object.fromEntries(
       SPECIAL_WEAPON_IDS.map((id) => [id, id === 'citaciones-teledirigidas' ? 1 : 0]),
     );
     const game = drive({
-      overrides: { tuning: { crates: { firstDrop: 0, weights: { weapons: onlyCitaciones } } } },
+      overrides: {
+        tuning: {
+          crates: { firstDrop: 0, weights: { weapons: onlyCitaciones, powerUps: noPowerUps } },
+        },
+      },
     });
     expect(eventsOf(game.ticks(1), 'crate-spawned')[0]?.contents).toEqual({
       kind: 'weapon',

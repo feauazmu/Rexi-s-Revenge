@@ -56,10 +56,7 @@ const PARACHUTE = defineSprite({ k: palette.outline, R: '#e8433a', W: '#f2f2f2',
 const LABEL_INSET = 3;
 
 function iconOf(contents: CrateContents): SpriteDef {
-  if (contents.kind === 'weapon') return weaponIcons[contents.weapon];
-  // Typed explicitly: while there are no Power-ups the lookup's type is `never`.
-  const icon: SpriteDef = powerUpIcons[contents.powerUp];
-  return icon;
+  return contents.kind === 'weapon' ? weaponIcons[contents.weapon] : powerUpIcons[contents.powerUp];
 }
 
 function isFlashing(crate: CrateView): boolean {

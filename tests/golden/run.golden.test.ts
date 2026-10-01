@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { defaultTuning, type ScriptedSpawn } from '../../src/core';
-import { drive, ON_REXI, runOf, weaponCrate } from '../support/driver';
+import { drive, ON_REXI, powerUpCrate, runOf, weaponCrate } from '../support/driver';
 import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
@@ -142,5 +142,48 @@ describe('Crate goldens', () => {
     game.ticks(6, { aim });
     expect(runOf(game.view).rexi.weapon).toEqual({ id: 'lluvia-de-sellos', ammo: 17 });
     await expectGolden('run-hud-sellos', renderView(game.view));
+  });
+});
+
+describe('Power-up goldens', () => {
+  const onRexi = { y: ON_REXI.y };
+
+  it('run-power-ups: Inmunidad Judicial glow, papers passing through, two HUD timers', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [
+          maletin,
+          powerUpCrate('inmunidad-judicial', ON_REXI.x, onRexi),
+          powerUpCrate('creatina', ON_REXI.x, { ...onRexi, atTick: 90 }),
+        ],
+        tuning: {
+          enemies: {
+            'maletin-coptero': { fireIntervalMin: 0.6, fireIntervalMax: 0.6, aimError: 0 },
+          },
+        },
+      },
+    });
+    game.seconds(3.1, { aim: atMaletin });
+    const { rexi } = runOf(game.view);
+    expect(rexi.health).toBe(rexi.maxHealth);
+    expect(rexi.powerUps.map((p) => p.id)).toEqual(['inmunidad-judicial', 'creatina']);
+    expect(runOf(game.view).projectiles.some((p) => p.owner === 'enemy')).toBe(true);
+    await expectGolden('run-power-ups', renderView(game.view));
+  });
+
+  it('crate-power-ups: a Crate for each Power-up, falling', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [
+          powerUpCrate('receso', 200),
+          powerUpCrate('inmunidad-judicial', 270),
+          powerUpCrate('creatina', 340),
+        ],
+      },
+    });
+    game.seconds(2, { aim: { x: 300, y: 200 } });
+    await expectGolden('crate-power-ups', renderView(game.view));
   });
 });

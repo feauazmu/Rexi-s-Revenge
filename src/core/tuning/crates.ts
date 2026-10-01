@@ -23,9 +23,15 @@ export interface CratesTuning {
    */
   readonly weights: {
     readonly weapons: Readonly<Record<SpecialWeaponId, number>>;
-    // Empty until the first Power-up lands; drop this comment then.
-    // eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type
     readonly powerUps: Readonly<Record<PowerUpId, number>>;
+  };
+  /**
+   * Anti-frustration: while Rexi's health is at most `belowHealth` (share of max health),
+   * Receso's weight is multiplied by `weightMultiplier` for new drops.
+   */
+  readonly recesoBoost: {
+    readonly belowHealth: number;
+    readonly weightMultiplier: number;
   };
 }
 
@@ -44,6 +50,13 @@ export const cratesTuning: CratesTuning = {
       'citaciones-teledirigidas': 14,
       'sentencia-firme': 12,
     },
-    powerUps: {},
+    // About 37 % of drops (Weapons about 63 %); Receso the most common. Rebalance when the
+    // explosive Weapons get their weights.
+    powerUps: {
+      receso: 12,
+      'inmunidad-judicial': 6,
+      creatina: 8,
+    },
   },
+  recesoBoost: { belowHealth: 0.4, weightMultiplier: 2 },
 };

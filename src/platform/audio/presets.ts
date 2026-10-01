@@ -542,7 +542,7 @@ export const SOUND_PRESETS = {
     minGap: 0.05,
     ...UI,
   },
-  /** A Power-up kicks in: a rising, stair-stepped "power" slide. (future) */
+  /** A Power-up kicks in: a rising, stair-stepped "power" slide. */
   'power-up-start': {
     patch: {
       peak: 0.32,
@@ -570,7 +570,7 @@ export const SOUND_PRESETS = {
     minGap: 0.2,
     ...UI,
   },
-  /** A Power-up wears off: the same stairs, falling. (future) */
+  /** A Power-up wears off: the same stairs, falling. */
   'power-up-end': {
     patch: {
       peak: 0.28,

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultTuning,
   SCREEN_WIDTH,
+  POWER_UP_IDS,
   SPECIAL_WEAPON_IDS,
   secondsToTicks,
   type ScriptedSpawn,
@@ -153,12 +154,17 @@ describe('Sentencia Firme', () => {
   });
 
   it('comes in Crates', () => {
+    const noPowerUps = Object.fromEntries(POWER_UP_IDS.map((id) => [id, 0]));
     expect(defaultTuning.crates.weights.weapons['sentencia-firme']).toBeGreaterThan(0);
     const onlySentencia = Object.fromEntries(
       SPECIAL_WEAPON_IDS.map((id) => [id, id === 'sentencia-firme' ? 1 : 0]),
     );
     const game = drive({
-      overrides: { tuning: { crates: { firstDrop: 0, weights: { weapons: onlySentencia } } } },
+      overrides: {
+        tuning: {
+          crates: { firstDrop: 0, weights: { weapons: onlySentencia, powerUps: noPowerUps } },
+        },
+      },
     });
     expect(eventsOf(game.ticks(1), 'crate-spawned')[0]?.contents).toEqual({
       kind: 'weapon',

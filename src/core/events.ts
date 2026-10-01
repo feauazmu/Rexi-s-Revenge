@@ -1,5 +1,6 @@
 import type { Craft, CrateContents, EnemyKind, SpecialWeaponId, WeaponId } from './ids';
 import type { QuipTheme } from './quips/catalog';
+import type { TimedPowerUpId } from './tuning';
 import type { ScreenKind } from './view';
 
 /**
@@ -30,7 +31,10 @@ export type GameEvent =
   | CrateExpiredEvent
   | QuipStartedEvent
   | QuipCharacterEvent
-  | DialogueClosedEvent;
+  | DialogueClosedEvent
+  | PowerUpStartedEvent
+  | PowerUpEndedEvent
+  | RexiHealedEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -99,6 +103,34 @@ export interface CratePickedEvent {
 export interface CrateExpiredEvent {
   readonly type: 'crate-expired';
   readonly crateId: number;
+}
+
+/**
+ * A timed Power-up took effect on pickup, or restarted at full duration when picked up again
+ * while active. Instant Power-ups (Receso) emit their own effect event instead.
+ */
+export interface PowerUpStartedEvent {
+  readonly type: 'power-up-started';
+  readonly powerUp: TimedPowerUpId;
+  /** How long it lasts from this tick, ticks. */
+  readonly ticks: number;
+  /** True when it was already active and was restarted. */
+  readonly refreshed: boolean;
+}
+
+/** A timed Power-up ran out. */
+export interface PowerUpEndedEvent {
+  readonly type: 'power-up-ended';
+  readonly powerUp: TimedPowerUpId;
+}
+
+/** Rexi regained health (Receso). */
+export interface RexiHealedEvent {
+  readonly type: 'rexi-healed';
+  /** Health actually restored (0 at full health). */
+  readonly amount: number;
+  /** Rexi's health after healing. */
+  readonly health: number;
 }
 
 export interface EnemySpawnedEvent {

@@ -1,7 +1,12 @@
 import type { PowerUpId } from '../../ids';
-import type { PowerUpDef } from './types';
+import { creatina } from './creatina';
+import { inmunidadJudicial } from './inmunidad-judicial';
+import { receso } from './receso';
+import type { PowerUpDefFor } from './types';
 
 /** Power-up behavior catalog: one file per Power-up, one line per entry here. */
-// Empty until the first Power-up lands; drop this comment then.
-// eslint-disable-next-line @typescript-eslint/no-generated-empty-object-type
-export const powerUpCatalog: Readonly<Record<PowerUpId, PowerUpDef>> = {};
+export const powerUpCatalog: { readonly [Id in PowerUpId]: PowerUpDefFor<Id> } = {
+  receso,
+  'inmunidad-judicial': inmunidadJudicial,
+  creatina,
+};

@@ -80,7 +80,7 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
   `screens` record (the typecheck fails until you do).
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
-effects → spawning → Rexi → Crates → Weapons → Enemies → projectiles, then the Run tick and the ramp
+effects → Power-up timers → spawning → Rexi → Crates → Weapons → Enemies → projectiles, then the Run tick and the ramp
 clock advance. That sequence is the Run's `simulate` step; a Hit-stop (checked first) or pause skips it
 whole. Subsystems share a `RunContext` (`tuning`, `rng`, `state`, `emit`, `nextId`). Crates run before Weapons, so a Weapon picked up this tick
 can fire this tick.
@@ -100,9 +100,10 @@ carried Weapons in that order, wrapping. Cooldowns are per Weapon, so switching 
 parachute speed through `stepBody` (so they land wherever bodies land: the ground or a one-way platform), starts their lifetime on landing,
 marks the last `blinkTime` as `blinking` in the view, and removes them on expiry or when Rexi touches one.
 It never looks inside a Crate: `src/core/run/crates/contents.ts` derives the possible contents from
-`SPECIAL_WEAPON_IDS` and `POWER_UP_IDS`, rolls them with the weights in `tuning.crates.weights`, and on
-pickup hands Weapons to the inventory and Power-ups to their `PowerUpDef.collect`
-(`src/core/run/power-ups/`). The renderer (`src/render/layers/crates.ts`) shows the contents' icon on a
+`SPECIAL_WEAPON_IDS` and `POWER_UP_IDS`, rolls them with the weights in `tuning.crates.weights` (Receso's
+weight is multiplied by `recesoBoost.weightMultiplier` while Rexi's health is at most
+`recesoBoost.belowHealth` of max), and on pickup hands Weapons to the inventory and Power-ups to the
+Power-up system. The renderer (`src/render/layers/crates.ts`) shows the contents' icon on a
 family-colored Crate and picks the blink cadence.
 
 ### Spawn Director and the ramp clock
@@ -126,6 +127,26 @@ The **ramp clock** (`RunState.rampTicks`, exposed as `RunView.rampTicks`) counts
 Hit-stop. It advances only inside the Run's `simulate` step (`advanceRampClock`), so anything that freezes
 the simulation — the pause screen not stepping the Run, Hit-stop skipping `simulate` — leaves the ramp
 where it was. Scripted spawns replace the Director's spawning, but the ramp clock and fire rate still run.
+
+### Power-ups
+
+`src/core/run/power-ups/` holds one file per Power-up plus the system. A `PowerUpDef` is either
+**instant** (`apply(ctx)` runs once on pickup: Receso heals through `healRexi`, emitting `rexi-healed`) or
+**timed**. A Power-up is timed exactly when its tuning entry in `tuning.powerUps` has a `duration`
+(`TimedPowerUpId`); the catalog's type enforces the matching def kind.
+
+- The system (`system.ts`) owns timed Power-ups: on pickup it stores `{ ticksLeft, totalTicks }` in
+  `RexiState.powerUps` and emits `power-up-started` (`refreshed: true` when an active one is picked up
+  again, which restarts it at full duration); each tick it counts them down and emits `power-up-ended`.
+  One collected on Run tick T is active for the rest of T and the next `duration − 1` ticks. Pausing
+  freezes them with the Run.
+- The view lists them in pickup order as `RexiView.powerUps` (`id`, `ticksLeft`, `totalTicks`); the HUD
+  draws one icon + seconds-left row per entry under the Weapon row (the icon blinks in the last 2 s).
+- **Effects live where they apply.** Each timed Power-up's file exports an effect hook built on
+  `isPowerUpActive(rexi, id)` (`active.ts`), and the subsystem it changes calls that hook:
+  `hasInmunidadJudicial` in `canHurtRexi` (all damage blocked; Enemy projectiles fly through) and
+  `rexiDamageMultiplier` in `damageEnemy` (Creatina, applied when a hit lands, so it covers every
+  Weapon and splash). The renderer reads `RexiView.powerUps` for looks such as Inmunidad's glow.
 
 Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's projectiles hurt Enemies;
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
@@ -334,10 +355,19 @@ is code, like the art.
 ### A Power-up
 
 1. Add the id to `POWER_UP_IDS` in `src/core/ids.ts`.
-2. Add its numbers to the tuning catalog and its Crate weight to `tuning.crates.weights.powerUps`.
-3. Implement `src/core/run/power-ups/<id>.ts` exporting a `PowerUpDef` whose `collect(ctx)` applies it, and
-   register it in `src/core/run/power-ups/index.ts`. Crates deliver it with no other change.
-4. Draw its icon (at most 12×12) in `src/render/hud/power-up-icons.ts`.
+2. Add its numbers to `src/core/tuning/power-ups.ts` (give it a `duration` — extend `TimedPowerUpTuning` —
+   to make it timed) and its Crate weight to `tuning.crates.weights.powerUps`.
+3. Implement `src/core/run/power-ups/<id>.ts` exporting its def and register it in
+   `src/core/run/power-ups/index.ts`. Crates deliver it with no other change.
+   - Instant: `{ id, kind: 'instant', apply(ctx) }`.
+   - Timed: `{ id, kind: 'timed' }` — the system already handles the timer, events, view and HUD timer.
+     Export an effect hook from the same file (`isPowerUpActive(ctx.state.rexi, id)` plus its tuning)
+     and call it from the subsystem it changes, e.g. Pre-entreno scaling the `dt` the Enemy and
+     Enemy-projectile steps use, or Día de Pierna changing Rexi's jump in `stepRexi`.
+4. Draw its icon (at most 12×12) in `src/render/hud/power-up-icons.ts` and add its Spanish name to
+   `strings.powerUps`. A visible effect on Rexi reads `run.rexi.powerUps` in the renderer.
+5. Test through a scripted Crate: `powerUpCrate(id, ON_REXI.x, { y: ON_REXI.y })` from
+   `tests/support/driver.ts` hands it to Rexi on the first tick.
 
 `Record<…Id, …>` catalogs (tuning, Crate weights, behavior, icons, names) make the typecheck fail until
 every step is done.

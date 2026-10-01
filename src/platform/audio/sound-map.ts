@@ -83,6 +83,9 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
   // Every second character, so fast typing stays a chatter instead of a buzz.
   'quip-character': ({ index }) => (index % 2 === 0 ? 'dialogue-blip' : null),
   'dialogue-closed': () => null,
+  'power-up-started': () => 'power-up-start',
+  'power-up-ended': () => 'power-up-end',
+  'rexi-healed': () => 'power-up-start', // Receso: the instant Power-up kicks in
 };
 
 /** The sound an event makes, or null when it is silent. */

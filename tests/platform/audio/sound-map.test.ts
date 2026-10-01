@@ -108,6 +108,18 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     [{ type: 'quip-character', quipId: 'legal-x', char: 'b', index: 1 }, null],
     [{ type: 'quip-character', quipId: 'legal-x', char: 'j', index: 2 }, 'dialogue-blip'],
   ],
+  'power-up-started': [
+    [
+      { type: 'power-up-started', powerUp: 'creatina', ticks: 600, refreshed: false },
+      'power-up-start',
+    ],
+    [
+      { type: 'power-up-started', powerUp: 'inmunidad-judicial', ticks: 480, refreshed: true },
+      'power-up-start',
+    ],
+  ],
+  'power-up-ended': [[{ type: 'power-up-ended', powerUp: 'creatina' }, 'power-up-end']],
+  'rexi-healed': [[{ type: 'rexi-healed', amount: 30, health: 80 }, 'power-up-start']],
   'dialogue-closed': [[{ type: 'dialogue-closed', quipId: 'legal-x' }, null]],
 };
 

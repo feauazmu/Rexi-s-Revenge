@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultTuning,
+  POWER_UP_IDS,
   SCREEN_WIDTH,
   SPECIAL_WEAPON_IDS,
   secondsToTicks,
@@ -70,15 +71,31 @@ describe('Automatic Crate drops', () => {
     expect(variants.size).toBe(4);
   });
 
-  it('fills Crates from the content weights (Weapons other than the Mazo)', () => {
+  it('fills Crates from the content weights (Weapons other than the Mazo, Power-ups)', () => {
     const contents = eventsOf(drive({ seed: 9 }).seconds(90), 'crate-spawned').map(
       (e) => e.contents,
     );
     expect(contents.length).toBeGreaterThan(0);
     for (const c of contents) {
-      expect(c.kind).toBe('weapon');
-      if (c.kind === 'weapon') expect(crates.weights.weapons[c.weapon]).toBeGreaterThan(0);
+      const weight =
+        c.kind === 'weapon' ? crates.weights.weapons[c.weapon] : crates.weights.powerUps[c.powerUp];
+      expect(weight).toBeGreaterThan(0);
     }
+  });
+
+  it('never drops contents whose weight is 0', () => {
+    const game = drive({
+      seed: 9,
+      overrides: {
+        tuning: {
+          crates: { weights: { powerUps: { creatina: 0 } } },
+          rexi: { maxHealth: 1_000_000 }, // survives the Director for the whole stretch
+        },
+      },
+    });
+    const contents = eventsOf(game.seconds(300), 'crate-spawned').map((e) => e.contents);
+    expect(contents.length).toBeGreaterThan(15);
+    expect(contents).not.toContainEqual({ kind: 'power-up', powerUp: 'creatina' });
   });
 
   it('refuses a catalog where no content has a positive weight', () => {
@@ -87,7 +104,10 @@ describe('Automatic Crate drops', () => {
         tuning: {
           crates: {
             firstDrop: 0,
-            weights: { weapons: Object.fromEntries(SPECIAL_WEAPON_IDS.map((id) => [id, 0])) },
+            weights: {
+              weapons: Object.fromEntries(SPECIAL_WEAPON_IDS.map((id) => [id, 0])),
+              powerUps: Object.fromEntries(POWER_UP_IDS.map((id) => [id, 0])),
+            },
           },
         },
       },

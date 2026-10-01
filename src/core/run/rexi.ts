@@ -4,6 +4,7 @@ import { clamp, directionTo, type Vec2 } from '../math';
 import type { Tuning } from '../tuning';
 import type { RunContext } from './context';
 import { stepBody, type World } from './physics';
+import { hasInmunidadJudicial } from './power-ups/inmunidad-judicial';
 import type { RexiState } from './state';
 import { createInventory } from './weapons/inventory';
 
@@ -29,6 +30,7 @@ export function createRexi(tuning: Tuning): RexiState {
     invulnerableTicks: 0,
     hurtTicks: 0,
     inventory: createInventory(),
+    powerUps: new Map(),
   };
 }
 
@@ -66,9 +68,20 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
   rexi.facing = input.aim.x < rexi.x + rexi.w / 2 ? -1 : 1;
 }
 
-/** Whether an Enemy projectile touching Rexi now would hurt him. */
+/**
+ * Whether an Enemy projectile touching Rexi now would hurt him: not after defeat, during the
+ * invulnerability window after a hit, or while Inmunidad Judicial blocks all damage.
+ */
 export function canHurtRexi(rexi: Readonly<RexiState>): boolean {
-  return rexi.health > 0 && rexi.invulnerableTicks === 0;
+  return rexi.health > 0 && rexi.invulnerableTicks === 0 && !hasInmunidadJudicial(rexi);
+}
+
+/** Restores up to `amount` health, never above max health (Receso). */
+export function healRexi(ctx: RunContext, amount: number): void {
+  const { rexi } = ctx.state;
+  const health = Math.min(rexi.maxHealth, rexi.health + amount);
+  ctx.emit({ type: 'rexi-healed', amount: health - rexi.health, health });
+  rexi.health = health;
 }
 
 /**

@@ -42,6 +42,7 @@ export {
   type DeepPartial,
   type ExplosionSize,
   type QuipsTuning,
+  type TimedPowerUpId,
   type Tuning,
   type TuningOverrides,
 } from './tuning';

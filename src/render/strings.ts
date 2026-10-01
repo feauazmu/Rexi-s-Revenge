@@ -1,4 +1,4 @@
-import type { WeaponId } from '../core';
+import type { PowerUpId, WeaponId } from '../core';
 
 /**
  * The Spanish UI strings catalog: every player-facing string lives here (neutral Latin
@@ -23,6 +23,12 @@ export const strings = {
     'citaciones-teledirigidas': 'Citaciones Teledirigidas',
     'sentencia-firme': 'Sentencia Firme',
   } satisfies Record<WeaponId, string>,
+
+  powerUps: {
+    receso: 'Receso',
+    'inmunidad-judicial': 'Inmunidad Judicial',
+    creatina: 'Creatina',
+  } satisfies Record<PowerUpId, string>,
 
   titleScreen: {
     pressAnyKey: 'Presiona cualquier tecla',

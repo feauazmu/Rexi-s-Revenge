@@ -1,5 +1,10 @@
 import type { RunView } from '../../core';
-import { drawSpriteCentered, type DrawContext } from '../draw-context';
+import {
+  drawSpriteCentered,
+  silhouetteContext,
+  translatedContext,
+  type DrawContext,
+} from '../draw-context';
 import { armSprite, FIST_REACH, stepDirection } from '../rexi/arm';
 import {
   ARM_PIVOT,
@@ -13,7 +18,9 @@ import {
 import { heldWeapons } from '../rexi/held-weapons';
 import { rexiPalette } from '../rexi/palette';
 import { rexiPose } from '../rexi/pose';
+import { palette } from '../palette';
 import { defineSprite } from '../sprite';
+import type { Color } from '../surface';
 
 // prettier-ignore
 const MUZZLE_FLASH = [
@@ -21,11 +28,40 @@ const MUZZLE_FLASH = [
   defineSprite(rexiPalette, ['..y..', '.yty.', 'yttty', '.yty.', '..y..']),
 ] as const;
 
-/**
- * Rexi: the composed body for his pose, then the aiming arm with his Weapon in one of 16
- * directions, the deltoid cap over the arm's root and the tattoo on his left arm.
- */
+/** Inmunidad Judicial's glow: a 1 px outline alternating gold and white. */
+const IMMUNITY_GLOW: readonly Color[] = ['#ffd84a', '#fff8e0'];
+const IMMUNITY_GLOW_TICKS = 4;
+/** During its last seconds the glow flickers, warning that it is about to end. */
+const IMMUNITY_WARNING_TICKS = 120;
+const OUTLINE_OFFSETS = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+] as const;
+
+/** Rexi, outlined by a glow while Inmunidad Judicial protects him. */
 export function drawRexi(dc: DrawContext, run: RunView): void {
+  const immunity = run.rexi.powerUps.find((p) => p.id === 'inmunidad-judicial');
+  const flickerOff =
+    immunity !== undefined &&
+    immunity.ticksLeft <= IMMUNITY_WARNING_TICKS &&
+    Math.floor(immunity.ticksLeft / IMMUNITY_GLOW_TICKS) % 2 === 1;
+  if (immunity && !flickerOff) {
+    const color =
+      IMMUNITY_GLOW[Math.floor(run.tick / IMMUNITY_GLOW_TICKS) % IMMUNITY_GLOW.length] ??
+      palette.white;
+    const glow = silhouetteContext(dc, color);
+    for (const [dx, dy] of OUTLINE_OFFSETS) drawFigure(translatedContext(glow, dx, dy), run);
+  }
+  drawFigure(dc, run);
+}
+
+/**
+ * Rexi's figure: the composed body for his pose, then the aiming arm with his Weapon in one of
+ * 16 directions, the deltoid cap over the arm's root and the tattoo on his left arm.
+ */
+function drawFigure(dc: DrawContext, run: RunView): void {
   const { surface, sprites } = dc;
   const { rexi } = run;
   const { facing } = rexi;
