@@ -1,5 +1,6 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type GameView, type RunView } from '../core';
-import type { DrawContext } from './draw-context';
+import { translatedContext, type DrawContext } from './draw-context';
+import { drawEffects } from './effects';
 import { drawEnemies } from './enemies';
 import { drawHud } from './hud/hud';
 import { drawArena } from './layers/arena';
@@ -12,15 +13,18 @@ import type { BitmapFactory, Surface } from './surface';
 
 export type RunLayer = (dc: DrawContext, run: RunView) => void;
 
-/** Run layers, back to front. New layers (Crates, effects, Dialogue Box) slot in here. */
-const RUN_LAYERS: readonly RunLayer[] = [
+/**
+ * Run layers, back to front. World layers move with the screen shake; screen layers (HUD,
+ * crosshair, Dialogue Box) stay fixed. New layers (Crates, Dialogue Box) slot in here.
+ */
+const WORLD_LAYERS: readonly RunLayer[] = [
   drawArena,
   drawEnemies,
   drawProjectiles,
   drawRexi,
-  drawHud,
-  drawCrosshair,
+  drawEffects,
 ];
+const SCREEN_LAYERS: readonly RunLayer[] = [drawHud, drawCrosshair];
 
 export interface Renderer {
   /** Draws one complete 480×270 frame of `view`. Pure: same view, same pixels. */
@@ -36,7 +40,9 @@ export function createRenderer(createBitmap: BitmapFactory): Renderer {
       const dc: DrawContext = { surface, sprites, view };
       if (view.run) {
         const run = view.run;
-        for (const layer of RUN_LAYERS) layer(dc, run);
+        const world = translatedContext(dc, run.effects.shake.x, run.effects.shake.y);
+        for (const layer of WORLD_LAYERS) layer(world, run);
+        for (const layer of SCREEN_LAYERS) layer(dc, run);
       }
     },
   };

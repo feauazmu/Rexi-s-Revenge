@@ -1,4 +1,4 @@
-import type { Craft, EnemyKind, ProjectileKind, WeaponId } from './ids';
+import type { Craft, EnemyKind, ParticleKind, ProjectileKind, WeaponId } from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
 
@@ -34,6 +34,7 @@ export interface RunView {
   readonly rexi: RexiView;
   readonly enemies: readonly EnemyView[];
   readonly projectiles: readonly ProjectileView[];
+  readonly effects: EffectsView;
   readonly stats: RunStatsView;
 }
 
@@ -85,6 +86,8 @@ export interface EnemyView extends BoxView {
   readonly maxHealth: number;
   /** Ticks since this Enemy spawned (animation phase). */
   readonly age: number;
+  /** True for the few ticks after a hit: draw the Enemy as a white silhouette. */
+  readonly hitFlash: boolean;
 }
 
 export interface ProjectileView extends BoxView {
@@ -103,4 +106,48 @@ export interface RunStatsView {
   readonly enemiesDestroyed: number;
   /** Run ticks survived. */
   readonly ticksSurvived: number;
+}
+
+/** Combat feedback simulated by the core: particles and the screen-shake offset. */
+export interface EffectsView {
+  /** Live particles, oldest first (draw in this order). */
+  readonly particles: readonly ParticleView[];
+  /**
+   * Whole-pixel offset to draw the world with this frame (screen shake). Screen-fixed layers
+   * (crosshair, HUD, Dialogue Box) ignore it.
+   */
+  readonly shake: Vec2;
+}
+
+export type ParticleView = BurstParticleView | DebrisParticleView;
+
+interface ParticleViewBase {
+  readonly kind: ParticleKind;
+  /** Center, game coordinates. */
+  readonly x: number;
+  readonly y: number;
+  /** Radius for round particles, edge length for sparks and debris, px. */
+  readonly size: number;
+  /** Ticks since spawn, and total ticks it lives: animate on `age / life`. */
+  readonly age: number;
+  readonly life: number;
+  /** Deterministic per-particle number in [0, 1) for look variations (shade, shape). */
+  readonly variant: number;
+}
+
+/** Explosion particles: their look comes from `kind` and their age alone. */
+export interface BurstParticleView extends ParticleViewBase {
+  readonly kind: Exclude<ParticleKind, 'debris'>;
+}
+
+/** A chunk of a destroyed Enemy. */
+export interface DebrisParticleView extends ParticleViewBase {
+  readonly kind: 'debris';
+  readonly enemyKind: EnemyKind;
+  /** Which chunk of that Enemy (0-based). */
+  readonly piece: number;
+  /** Rotation in quarter turns, 0..3. */
+  readonly quarterTurns: number;
+  /** True while it should be hidden by the blink-out at the end of its life. */
+  readonly hidden: boolean;
 }

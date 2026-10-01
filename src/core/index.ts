@@ -17,17 +17,21 @@ export type { DeviceKind, GameOptions, GameOverrides, ScriptedSpawn } from './op
 export { memoryStorage, type StoragePort } from './storage';
 export {
   defaultTuning,
+  EXPLOSION_SIZES,
   resolveTuning,
   type DeepPartial,
+  type ExplosionSize,
   type Tuning,
   type TuningOverrides,
 } from './tuning';
 export {
   ENEMY_KINDS,
+  PARTICLE_KINDS,
   PROJECTILE_KINDS,
   WEAPON_IDS,
   type Craft,
   type EnemyKind,
+  type ParticleKind,
   type ProjectileKind,
   type WeaponId,
 } from './ids';

@@ -6,6 +6,7 @@ import type { Rng } from '../rng';
 import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
 import type { RunContext } from './context';
+import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effects';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
@@ -17,6 +18,8 @@ import { stepWeapons } from './weapons/system';
 export interface RunDeps {
   readonly tuning: Tuning;
   readonly rng: Rng;
+  /** Seed of the cosmetic effects' own random stream (kept apart from `rng`). */
+  readonly effectsSeed: number;
   readonly nextId: () => number;
   /** Scripted spawns, or null for automatic spawning. */
   readonly spawns: readonly ScriptedSpawn[] | null;
@@ -35,6 +38,7 @@ export function createRun(deps: RunDeps): Run {
     rexi: createRexi(deps.tuning),
     enemies: [],
     projectiles: [],
+    effects: createEffects(deps.effectsSeed),
     stats: { score: 0, enemiesDestroyed: 0 },
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
   };
@@ -50,6 +54,7 @@ export function createRun(deps: RunDeps): Run {
   return {
     step(input) {
       events = [];
+      stepEffects(ctx);
       stepSpawning(ctx);
       stepRexi(ctx, input);
       stepWeapons(ctx, input);
@@ -99,6 +104,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       health: e.health,
       maxHealth: e.maxHealth,
       age: e.age,
+      hitFlash: isHitFlashing(e, state.tick, tuning),
     })),
     projectiles: state.projectiles.map((p) => ({
       id: p.id,
@@ -112,6 +118,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       vy: p.vy,
       age: p.age,
     })),
+    effects: viewEffects(state.effects, tuning, state.tick),
     stats: {
       score: state.stats.score,
       enemiesDestroyed: state.stats.enemiesDestroyed,

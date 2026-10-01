@@ -1,9 +1,12 @@
 import { arenaTuning, type ArenaTuning } from './arena';
+import { effectsTuning, type EffectsTuning } from './effects';
 import { enemiesTuning, type EnemiesTuning } from './enemies';
 import { rexiTuning, type RexiTuning } from './rexi';
 import { weaponsTuning, type WeaponsTuning } from './weapons';
 
 export type * from './arena';
+export type * from './effects';
+export { EXPLOSION_SIZES } from './effects';
 export type * from './enemies';
 export type * from './rexi';
 export type * from './weapons';
@@ -17,6 +20,7 @@ export interface Tuning {
   readonly rexi: RexiTuning;
   readonly weapons: WeaponsTuning;
   readonly enemies: EnemiesTuning;
+  readonly effects: EffectsTuning;
 }
 
 export const defaultTuning: Tuning = {
@@ -24,6 +28,7 @@ export const defaultTuning: Tuning = {
   rexi: rexiTuning,
   weapons: weaponsTuning,
   enemies: enemiesTuning,
+  effects: effectsTuning,
 };
 
 /** Recursively optional version of T, used for tuning overrides. Arrays are replaced whole. */

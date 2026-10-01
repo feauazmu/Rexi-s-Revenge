@@ -8,7 +8,7 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
           browser events                                     pixels
  keyboard/mouse/touch ──► InputFrame ──► Game.tick() ──► GameView ──► render() ──► canvas
                           (platform)     (src/core)   │  (src/core)   (src/render)
-                                                      └► GameEvent[] ──► audio, effects (platform)
+                                                      └► GameEvent[] ──► audio (platform)
 ```
 
 ## Modules
@@ -17,7 +17,7 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
 | ------------------- | ------------------------------------------------------------------------------------------- | ------------------ |
 | `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`. | `src/core` only    |
 | `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                |                    |
-| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Enemies, projectiles, spawning).             |                    |
+| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Enemies, projectiles, spawning, effects).    |                    |
 | `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                |                    |
 | `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                | `src/core` (index) |
 | `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, storage, bitmaps.         | core, render       |
@@ -49,8 +49,26 @@ draw(game.view);                       // read-only snapshot, rebuilt lazily aft
   wraps `localStorage` with an in-memory fallback.
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
-spawning → Rexi → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
+effects → spawning → Rexi → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
 (`tuning`, `rng`, `state`, `emit`, `nextId`).
+
+### Combat feedback (effects)
+
+Hit flash, explosions, debris and screen shake are simulated in the core (`src/core/run/effects/`)
+so they are deterministic and testable through the view (`RunView.effects`, `EnemyView.hitFlash`).
+They are cosmetic: they draw from their own `Rng` stream (seeded with `deriveSeed(seed, …)`), never
+from the gameplay `rng`, and gameplay never reads them — tuning effects can't change how a Run plays.
+
+- Verbs for other subsystems: `flashEnemy` (called by `damageEnemy` on every hit), `shatterEnemy`
+  (on destruction: debris + the kind's explosion preset), `explode(ctx, at, 'small' | 'large')` and
+  `addShakeTrauma` for explosive Weapons or Rexi getting hurt.
+- Particles live in a bounded pool (`tuning.effects.maxParticles`, oldest dropped first) and are
+  culled when their life ends or they leave the screen; debris settles on the ground, rests, then blinks out.
+- Screen shake is trauma-based: events add trauma (0..1), it decays linearly, and the view's
+  `effects.shake` is `maxOffset × scale × trauma² × noise(t)` rounded to whole pixels
+  (`tuning.effects.shake.scale = 0` disables it).
+- All numbers live in `src/core/tuning/effects.ts`; per-Enemy `explosion` and `debrisPieces` live in its
+  Enemy tuning.
 
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
 Positions are game coordinates (480×270); boxes use their top-left corner.
@@ -64,8 +82,11 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
   canvas text. That makes output pixel-identical in browsers and in Node.
 - **Sprites are code** (ADR 0001): `defineSprite(palette, rows)` is a palette-indexed pixel grid; the
   `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
-- Layers are listed back to front in `RUN_LAYERS` (`src/render/renderer.ts`). The HUD
-  (`src/render/hud/`) is drawn above Rexi and below the crosshair.
+- Layers are listed back to front in `src/render/renderer.ts`: `WORLD_LAYERS` are drawn offset by the
+  screen shake, `SCREEN_LAYERS` stay fixed: the HUD
+  (`src/render/hud/`), then the crosshair (and later the Dialogue Box).
+- Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
+  rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
 
 ## Text: bitmap fonts, metrics and the strings catalog
@@ -109,11 +130,13 @@ Each tick samples the keyboard/mouse adapter once (edges are consumed by the fir
 ### An Enemy
 
 1. Add the id to `ENEMY_KINDS` in `src/core/ids.ts`.
-2. Add its numbers to `src/core/tuning/enemies.ts` (interface entry extending `EnemyTuningBase` + values).
+2. Add its numbers to `src/core/tuning/enemies.ts` (interface entry extending `EnemyTuningBase` + values,
+   including its death `explosion` preset and `debrisPieces`).
 3. Write its behavior in `src/core/run/enemies/<kind>.ts` with `defineEnemy({ kind, craft, init, update })`.
    Use the `dt` argument for all time-based motion (Pre-entreno scales Enemy time) and `ctx.rng` for randomness.
 4. Register it in `src/core/run/enemies/index.ts` (one line).
-5. Draw it in `src/render/enemies/<kind>.ts` and register the drawer in `src/render/enemies/index.ts`.
+5. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
+   the drawer and chunks in `src/render/enemies/index.ts`.
 6. Test through the public interface: stage it with `overrides.spawns`, drive inputs, assert events/view.
    Add a golden if it has a look.
 

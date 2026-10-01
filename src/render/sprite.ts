@@ -44,6 +44,50 @@ export function mirrorSprite(sprite: SpriteDef): SpriteDef {
   );
 }
 
+const silhouettes = new WeakMap<SpriteDef, Map<Color, SpriteDef>>();
+
+/**
+ * The sprite's shape filled with one color (e.g. a white hit flash). Memoized per sprite and
+ * color, so the SpriteBank rasterizes each silhouette only once.
+ */
+export function silhouetteSprite(sprite: SpriteDef, color: Color): SpriteDef {
+  let byColor = silhouettes.get(sprite);
+  if (!byColor) {
+    byColor = new Map();
+    silhouettes.set(sprite, byColor);
+  }
+  let silhouette = byColor.get(color);
+  if (!silhouette) {
+    const solid = Object.fromEntries(Object.keys(sprite.palette).map((key) => [key, color]));
+    silhouette = defineSprite(solid, sprite.rows);
+    byColor.set(color, silhouette);
+  }
+  return silhouette;
+}
+
+const rotations = new WeakMap<SpriteDef, SpriteDef[]>();
+
+/** The sprite turned clockwise by `quarterTurns` × 90° (any integer). Memoized per sprite. */
+export function rotateSprite(sprite: SpriteDef, quarterTurns: number): SpriteDef {
+  const turns = ((Math.round(quarterTurns) % 4) + 4) % 4;
+  if (turns === 0) return sprite;
+  let cached = rotations.get(sprite);
+  if (!cached) {
+    const quarter = (s: SpriteDef): SpriteDef =>
+      defineSprite(
+        s.palette,
+        Array.from({ length: s.width }, (_, x) =>
+          s.rows.map((_row, y) => s.rows[s.height - 1 - y]?.charAt(x) ?? TRANSPARENT).join(''),
+        ),
+      );
+    const once = quarter(sprite);
+    const twice = quarter(once);
+    cached = [sprite, once, twice, quarter(twice)];
+    rotations.set(sprite, cached);
+  }
+  return cached[turns] ?? sprite;
+}
+
 /** Rasterizes a sprite to straight-alpha RGBA pixels. */
 export function rasterizeSprite(sprite: SpriteDef): Uint8ClampedArray {
   const rgba = new Uint8ClampedArray(sprite.width * sprite.height * 4);
