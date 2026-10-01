@@ -30,6 +30,7 @@ export function worldOf(tuning: Tuning): World {
     groundY: tuning.arena.groundY,
     gravity: tuning.arena.gravity,
     maxFallSpeed: tuning.arena.maxFallSpeed,
+    platforms: tuning.arena.platforms,
   };
 }
 
@@ -47,7 +48,7 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
     if (rexi.vy < 0) rexi.vy *= tuning.rexi.jumpCutFactor;
     rexi.rising = false;
   }
-  stepBody(rexi, worldOf(tuning), DT);
+  stepBody(rexi, worldOf(tuning), DT, { dropThrough: input.drop });
 
   rexi.aim = input.aim;
   rexi.facing = input.aim.x < rexi.x + rexi.w / 2 ? -1 : 1;

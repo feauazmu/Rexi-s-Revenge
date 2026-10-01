@@ -66,7 +66,12 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
   const { rexi } = state;
   return {
     tick: state.tick,
-    arena: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, groundY: tuning.arena.groundY },
+    arena: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+      groundY: tuning.arena.groundY,
+      platforms: tuning.arena.platforms,
+    },
     rexi: {
       x: rexi.x,
       y: rexi.y,

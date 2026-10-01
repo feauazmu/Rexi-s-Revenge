@@ -6,6 +6,7 @@ export const KEY_BINDINGS = {
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
   jump: ['KeyW', 'ArrowUp', 'Space'],
+  drop: ['KeyS', 'ArrowDown'],
   weaponNext: ['KeyE'],
   weaponPrevious: ['KeyQ'],
   weaponSlots: ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'],
@@ -48,6 +49,7 @@ export function toInputFrame(snapshot: KeyboardMouseSnapshot, viewport: Viewport
   return {
     move: (isHeld(KEY_BINDINGS.right) ? 1 : 0) - (isHeld(KEY_BINDINGS.left) ? 1 : 0),
     jump: isHeld(KEY_BINDINGS.jump),
+    drop: isHeld(KEY_BINDINGS.drop),
     aim: snapshot.pointer ? screenToGame(snapshot.pointer, viewport) : NEUTRAL_INPUT.aim,
     fire: snapshot.primaryHeld,
     weaponNext: wasPressed(KEY_BINDINGS.weaponNext) || snapshot.wheel > 0,

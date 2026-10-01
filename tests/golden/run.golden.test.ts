@@ -2,7 +2,7 @@
  * Golden images of the Run. Views come from driving the real Game core with fixed seeds and
  * scripted spawns, never from hand-built view objects.
  */
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { ScriptedSpawn } from '../../src/core';
 import { drive } from '../support/driver';
 import { renderView } from '../support/render-node';
@@ -23,6 +23,18 @@ describe('Run goldens', () => {
     game.seconds(0.3, { move: 1, aim: atMaletin });
     game.holdFireToward(atMaletin, 0.45);
     await expectGolden('run-firing', renderView(game.view));
+  });
+
+  it('arena-platform: the Arena with drifted clouds, Rexi standing on the left ledge', async () => {
+    const game = drive({ seed: 1, overrides: { spawns: [] } });
+    const aim = { x: 300, y: 100 };
+    game.ticks(1, { aim });
+    game.seconds(0.45, { aim, move: -1, jump: true });
+    game.seconds(4, { aim });
+    const { rexi, arena } = game.view.run ?? expect.unreachable('no Run');
+    expect(rexi.grounded).toBe(true);
+    expect(rexi.y + rexi.h).toBe(arena.platforms[0]?.y);
+    await expectGolden('arena-platform', renderView(game.view));
   });
 
   it('run-jump-aim-left: Rexi airborne, aiming up and to the left', async () => {

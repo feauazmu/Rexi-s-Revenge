@@ -42,6 +42,15 @@ export interface ArenaView {
   readonly height: number;
   /** Y of the top of the ground floor. */
   readonly groundY: number;
+  /** One-way platforms; only their top surface collides. */
+  readonly platforms: readonly PlatformView[];
+}
+
+export interface PlatformView {
+  readonly x: number;
+  /** Y of the walkable top surface. */
+  readonly y: number;
+  readonly w: number;
 }
 
 export interface RexiView extends BoxView {
