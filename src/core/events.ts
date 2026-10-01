@@ -23,6 +23,7 @@ export type GameEvent =
   | RunEndedEvent
   | MenuMovedEvent
   | MuteToggledEvent
+  | HighScoreRecordedEvent
   | CrateSpawnedEvent
   | CrateLandedEvent
   | CratePickedEvent
@@ -148,11 +149,23 @@ export interface RunEndedEvent {
   readonly ticksSurvived: number;
 }
 
-/** The selection of an on-screen menu moved (pause menu). */
+/**
+ * The selection of an on-screen menu moved: the pause menu, or the Veredicto initials entry
+ * (a letter changed or the cursor moved).
+ */
 export interface MenuMovedEvent {
   readonly type: 'menu-moved';
-  /** Index of the newly selected entry. */
+  /** Index of the newly selected entry (for initials: the cursor's position). */
   readonly selected: number;
+}
+
+/** The player signed a top-10 entry on the Veredicto. The table is already persisted. */
+export interface HighScoreRecordedEvent {
+  readonly type: 'high-score-recorded';
+  readonly initials: string;
+  readonly score: number;
+  /** 1-based place in the top 10. */
+  readonly rank: number;
 }
 
 /** "Silenciar música" was chosen in the pause menu. The choice is already persisted. */

@@ -1,3 +1,4 @@
+import type { HighScoreEntry } from './high-scores';
 import type {
   Craft,
   CrateContents,
@@ -24,13 +25,25 @@ export interface GameView {
   readonly screen: ScreenKind;
   /** Ticks since the current screen was entered (entry animations, blinking prompts). */
   readonly screenAge: number;
-  /** True when a start input would be accepted now (Title and Cómo jugar, after a short guard). */
+  /**
+   * True when a start input would be accepted now: Title and Cómo jugar after a short guard,
+   * the Veredicto once it has been read out and any initials are signed.
+   */
   readonly startReady: boolean;
   /**
    * The current Run, or null when no Run exists (Title, Cómo jugar). While paused it is the
-   * frozen Run under the pause menu.
+   * frozen Run under the pause menu; on the Veredicto, the ended Run.
    */
   readonly run: RunView | null;
+  /**
+   * Ticks since the Run ended, during the defeat beat that precedes the Veredicto (the `run`
+   * screen with an ended Run); null otherwise.
+   */
+  readonly defeatAge: number | null;
+  /** The Veredicto, only on the `verdict` screen. */
+  readonly verdict: VerdictView | null;
+  /** The local top 10, highest score first (shown on the Title). */
+  readonly highScores: readonly HighScoreEntry[];
   /** The pause menu, only on the `paused` screen. */
   readonly pauseMenu: PauseMenuView | null;
   /** The persisted "Silenciar música" choice. */
@@ -39,10 +52,28 @@ export interface GameView {
 
 /**
  * Screens of the flow state machine:
- * Title → Cómo jugar (first time only) → Run ⇄ Paused → Title (Salir).
- * Veredicto arrives with the Run-end ticket.
+ * Title → Cómo jugar (first time only) → Run ⇄ Paused → Title (Salir);
+ * Run (ended, after the defeat beat) → Veredicto (initials if top 10) → Title.
  */
-export type ScreenKind = 'title' | 'how-to-play' | 'run' | 'paused';
+export type ScreenKind = 'title' | 'how-to-play' | 'run' | 'paused' | 'verdict';
+
+/** The Veredicto: how the Run went and, if it made the top 10, the initials entry. */
+export interface VerdictView {
+  readonly stats: RunStatsView;
+  /** The 1-based place this Run takes in the top 10, or null if it did not make it. */
+  readonly rank: number | null;
+  /** The initials entry, present exactly when `rank` is not null (also once signed). */
+  readonly initials: InitialsEntryView | null;
+  /** True once the initials are signed and the entry is in the table. */
+  readonly recorded: boolean;
+}
+
+export interface InitialsEntryView {
+  /** The three letters as currently chosen, A–Z. */
+  readonly letters: string;
+  /** Index of the letter being chosen, 0..2. */
+  readonly cursor: number;
+}
 
 export interface PauseMenuView {
   readonly items: readonly PauseMenuItem[];

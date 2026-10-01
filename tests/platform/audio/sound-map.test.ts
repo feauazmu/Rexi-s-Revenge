@@ -30,6 +30,8 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     [{ type: 'screen-changed', from: 'paused', to: 'run' }, 'resume'],
     [{ type: 'screen-changed', from: 'paused', to: 'title' }, 'menu-back'],
     [{ type: 'screen-changed', from: 'run', to: 'title' }, null],
+    [{ type: 'screen-changed', from: 'run', to: 'verdict' }, null], // the defeat beat sounded
+    [{ type: 'screen-changed', from: 'verdict', to: 'title' }, 'menu-confirm'],
   ],
   'run-started': [[{ type: 'run-started' }, 'order-in-court']],
   'weapon-fired': [
@@ -69,6 +71,9 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     [{ type: 'run-ended', score: 0, enemiesDestroyed: 0, ticksSurvived: 60 }, 'sad-trombone'],
   ],
   'menu-moved': [[{ type: 'menu-moved', selected: 1 }, 'menu-move']],
+  'high-score-recorded': [
+    [{ type: 'high-score-recorded', initials: 'REX', score: 1200, rank: 1 }, 'crate-pickup'],
+  ],
   'mute-toggled': [
     [{ type: 'mute-toggled', muted: true }, 'menu-confirm'],
     [{ type: 'mute-toggled', muted: false }, 'menu-confirm'],

@@ -49,19 +49,31 @@ game.pause();                          // shell: tab hidden / focus lost (no-op 
   scenarios. A spawn is an Enemy (`{ kind: 'maletin-coptero', x, y }`) or a Crate
   (`{ kind: 'crate', contents, x, y? }`, `y` defaulting to just above the screen).
 - **Storage**: `StoragePort` (string get/set). The core owns keys and formats (`src/core/preferences.ts`:
-  "Cómo jugar" seen, music muted) and wraps the port with `resilientStorage`, so even a throwing port
-  only loses persistence. `src/platform/storage.ts` wraps `localStorage` with an in-memory fallback.
+  "Cómo jugar" seen, music muted; `src/core/high-scores.ts`: the top 10) and wraps the port with
+  `resilientStorage`, so even a throwing port only loses persistence.
+- **High scores** (`src/core/high-scores.ts`, public through the index): the top 10 of
+  `{ initials, score, enemiesDestroyed, ticksSurvived }`, highest score first, ties keep the earlier entry
+  above, a Run that scored nothing never qualifies (`highScoreRank`, `insertHighScore`). Stored as JSON
+  `{ version: 1, entries }` under `high-scores`; anything malformed or of another version loads as an
+  empty table. `view.highScores` always holds the current table. `src/platform/storage.ts` wraps `localStorage` with an in-memory fallback.
 
 ### Screen flow
 
 `src/core/game.ts` owns the state machine over `ScreenKind` (`src/core/view.ts`):
-`title` → `how-to-play` (only until the persisted flag is set) → `run` ⇄ `paused` → `title` (Salir).
+`title` → `how-to-play` (only until the persisted flag is set) → `run` ⇄ `paused` → `title` (Salir);
+`run` (ended) → `verdict` → `title`.
 Each tick runs exactly one screen's logic, so the tick that changes screens does not also step the Run.
 
 - Title and Cómo jugar accept `start` once `view.startReady` (a 0.5 s guard against double presses).
 - Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
   The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
   `view.musicMuted`, persists it and emits `mute-toggled`.
+- **Run end**: the ended Run stays on the `run` screen for a 1.5 s defeat beat (`view.defeatAge` counts it),
+  then the Veredicto (`view.verdict`, `src/core/verdict.ts`) shows its stats over the frozen Run. It ignores
+  input for 1 s while the stats are read out. A top-10 Run (`verdict.rank`) signs 3 initials with menu
+  navigation only (up/down: letter, wrapping A–Z; left/right/back: move; confirm: next letter, then sign), so
+  keyboard and touch share it. Signing saves the table and emits `high-score-recorded`; then, after 0.5 s,
+  `start` returns to the Title (`view.startReady`). Entries start from the initials signed last this session.
 - `view.screenAge` counts ticks on the current screen (entry animations); `view.tick` keeps running while
   paused so menus can animate.
 - A new screen: add it to `ScreenKind`, handle it in `stepScreen`, and add its drawer to the renderer's
@@ -125,7 +137,7 @@ keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits
 spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
 every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
-advancing (it can no longer be paused). Until the Veredicto screen exists, the Game returns to the Title 2 s later.
+advancing (it can no longer be paused); the Game then plays the defeat beat and opens the Veredicto (see Screen flow).
 
 ### Combat feedback (effects)
 
@@ -177,7 +189,10 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
 `createRenderer(bitmapFactory, { titleIllustration? }).render(surface, view)` draws one full frame.
 It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; menu screens live in
 `src/render/screens/` (shared panel, keycap, outlined-text and dimmer helpers in `ui.ts`). The Title draws
-`titleIllustration` (a decoded 480×270 bitmap from the platform) when given, else a code-drawn backdrop.
+`titleIllustration` (a decoded 480×270 bitmap from the platform) when given, else a code-drawn backdrop,
+and the top 10 under the logo (`high-scores.ts`). `verdict.ts` draws the defeat beat (the frozen Run dims
+in two dither steps under the HUD, with a banner) and the Veredicto (a court record over the dimmed Run:
+stats counting up, a stamp with the outcome, the ruling and the signature line).
 
 - **Determinism rule**: the renderer only uses `Surface.fillRect` (integer-snapped solid rectangles) and
   `Surface.drawBitmap` (unscaled pre-rasterized bitmaps at integer positions). No paths, arcs, gradients or

@@ -22,6 +22,18 @@ export type {
   ScriptedSpawn,
 } from './options';
 export { memoryStorage, type StoragePort } from './storage';
+export {
+  HIGH_SCORE_LIMIT,
+  HIGH_SCORES_STORAGE_KEY,
+  highScoreRank,
+  INITIALS_ALPHABET,
+  INITIALS_LENGTH,
+  insertHighScore,
+  loadHighScores,
+  saveHighScores,
+  type HighScoreEntry,
+  type HighScoreTable,
+} from './high-scores';
 export { PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
 export {
   defaultTuning,

@@ -117,6 +117,7 @@ const ARROW_UP = ARROW_ROWS;
 const ARROW_LEFT = rotate(ARROW_UP);
 export const arrows = {
   up: defineSprite({ '#': ui.keyText }, ARROW_UP),
+  down: defineSprite({ '#': ui.keyText }, [...ARROW_UP].reverse()),
   left: defineSprite({ '#': ui.keyText }, ARROW_LEFT),
   right: defineSprite(
     { '#': ui.keyText },
@@ -124,14 +125,22 @@ export const arrows = {
   ),
 };
 
-/** 50% checkerboard rows; the dimmer tiles them over the whole screen. */
-const DITHER = defineSprite({ k: ui.dim }, [
-  'k.'.repeat(SCREEN_WIDTH / 2),
-  '.k'.repeat(SCREEN_WIDTH / 2),
-]);
+/** Dither rows the dimmer tiles over the whole screen: a 50% checkerboard, or 25% dots. */
+const DITHERS = {
+  half: defineSprite({ k: ui.dim }, ['k.'.repeat(SCREEN_WIDTH / 2), '.k'.repeat(SCREEN_WIDTH / 2)]),
+  light: defineSprite({ k: ui.dim }, [
+    'k...'.repeat(SCREEN_WIDTH / 4),
+    '....'.repeat(SCREEN_WIDTH / 4),
+    '..k.'.repeat(SCREEN_WIDTH / 4),
+    '....'.repeat(SCREEN_WIDTH / 4),
+  ]),
+} as const;
 
-/** Dims everything drawn so far with a pixel-art checkerboard (no alpha blending). */
-export function dimScreen(dc: DrawContext): void {
-  const bitmap = dc.sprites.get(DITHER);
-  for (let y = 0; y < SCREEN_HEIGHT; y += DITHER.height) dc.surface.drawBitmap(bitmap, 0, y);
+export type DimStrength = keyof typeof DITHERS;
+
+/** Dims everything drawn so far with a pixel-art dither pattern (no alpha blending). */
+export function dimScreen(dc: DrawContext, strength: DimStrength = 'half'): void {
+  const dither = DITHERS[strength];
+  const bitmap = dc.sprites.get(dither);
+  for (let y = 0; y < SCREEN_HEIGHT; y += dither.height) dc.surface.drawBitmap(bitmap, 0, y);
 }

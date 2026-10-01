@@ -253,7 +253,7 @@ describe('Hit-stop and the rest of the Run', () => {
     expect(runOf(paused.view)).toEqual(runOf(straight.view));
   });
 
-  it('a Run that ends while the Dialogue Box shows still ends and returns to the Title', () => {
+  it('a Run that ends while the Dialogue Box shows still ends and moves on to the Veredicto', () => {
     const tuning: TuningOverrides = {
       quips: { chance: 1, hitStop: 0, revealRate: 1 },
       enemies: { 'maletin-coptero': { health: 1 } },
@@ -273,7 +273,7 @@ describe('Hit-stop and the rest of the Run', () => {
     const [ended] = eventsOf(events, 'run-ended');
     expect(ended).toBeDefined();
     expect(eventsOf(events, 'run-ended')).toHaveLength(1);
-    expect(game.view.screen).toBe('title');
+    expect(game.view.screen).toBe('verdict');
   });
 });
 

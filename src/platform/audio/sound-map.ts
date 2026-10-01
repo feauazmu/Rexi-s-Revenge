@@ -55,7 +55,8 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
     if (to === 'paused') return 'pause';
     if (from === 'paused') return to === 'run' ? 'resume' : 'menu-back';
     if (to === 'how-to-play') return 'menu-confirm';
-    return null; // Title appearing, and Runs starting (run-started has its own sound)
+    if (from === 'verdict') return 'menu-confirm'; // the player left the Veredicto
+    return null; // Title and Veredicto appearing, and Runs starting (run-started has its own)
   },
   'run-started': () => 'order-in-court',
   'weapon-fired': ({ weapon }) => WEAPON_SOUNDS[weapon],
@@ -73,6 +74,7 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
   'run-ended': () => 'sad-trombone',
   'menu-moved': () => 'menu-move',
   'mute-toggled': () => 'menu-confirm',
+  'high-score-recorded': () => 'crate-pickup', // the coin arpeggio: a reward for signing
   'crate-spawned': () => null,
   'crate-landed': () => null,
   'crate-picked': () => 'crate-pickup',

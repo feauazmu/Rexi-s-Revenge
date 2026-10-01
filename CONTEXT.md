@@ -16,6 +16,10 @@ _Avoid_: Level, stage, map
 One endless survival attempt, from spawning until Rexi is defeated, scored by points.
 _Avoid_: Game, match, round
 
+**Veredicto**:
+The screen after a Run ends, shown as a court record: score, demandas desestimadas and time survived. A Run that makes the local top 10 is signed there with 3 initials.
+_Avoid_: Game over, results screen
+
 **Bufete & Pesas S.A.**:
 The antagonist faction: crooked lawyers Rexi once sentenced, allied with a rival gym. Every enemy is sent by them.
 _Avoid_: The Syndicate, villains, bad guys
