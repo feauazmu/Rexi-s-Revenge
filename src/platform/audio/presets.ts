@@ -334,6 +334,35 @@ export const SOUND_PRESETS = {
     pitchJitter: 0.1,
     variants: 2,
   },
+  /** Caminadora a Reacción's gatling: a short, dry "tat" per bullet of the burst. */
+  'gatling-tat': {
+    patch: {
+      peak: 0.18,
+      layers: [
+        {
+          wave: 'square',
+          duty: 0.3,
+          freq: 520,
+          freqEnd: 180,
+          env: { decay: 0.04 },
+          filter: { type: 'lowpass', cutoff: 2600, cutoffEnd: 700 },
+          gain: 0.6,
+        },
+        {
+          wave: 'noise',
+          freq: WHITE,
+          env: { decay: 0.035 },
+          filter: { type: 'bandpass', cutoff: 2200, q: 1.2 },
+          gain: 0.7,
+        },
+      ],
+    },
+    maxVoices: 3,
+    priority: 1,
+    minGap: 0.04,
+    pitchJitter: 0.1,
+    variants: 2,
+  },
   /** Heavier Enemy guns: a stubby "pomp" (Archivador Artillado; future: Banca Artillada). */
   'cannon-pomp': {
     patch: {

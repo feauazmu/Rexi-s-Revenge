@@ -162,7 +162,7 @@ describe('Archivador Artillado drawer bombs', () => {
     let dropped = false;
     for (let t = 0; t < 600 && !dropped; t++) {
       dropped = eventsOf(game.ticks(1), 'enemy-fired').length > 0;
-      if (!dropped) windups.push(enemyOf(game)?.attackWindup ?? 0);
+      if (!dropped) windups.push(enemyOf(game)?.pose.windup ?? 0);
     }
     expect(dropped).toBe(true);
     const winding = windups.filter((w) => w > 0);
@@ -171,7 +171,7 @@ describe('Archivador Artillado drawer bombs', () => {
       expect(w).toBeGreaterThan(winding[i] ?? 0);
     });
     expect(Math.max(...winding)).toBeLessThanOrEqual(1);
-    expect(enemyOf(game)?.attackWindup).toBe(0);
+    expect(enemyOf(game)?.pose.windup).toBe(0);
   });
 
   it('stops patrolling during the windup', () => {
@@ -183,7 +183,7 @@ describe('Archivador Artillado drawer bombs', () => {
     for (let t = 0; t < 600; t++) {
       game.ticks(1);
       const enemy = enemyOf(game) ?? expect.unreachable();
-      if (enemy.attackWindup > 0) xs.push(enemy.x);
+      if (enemy.pose.attack === 'windup') xs.push(enemy.x);
       else if (xs.length) break;
     }
     expect(xs.length).toBeGreaterThan(5);

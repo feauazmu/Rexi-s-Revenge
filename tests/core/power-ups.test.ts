@@ -315,6 +315,10 @@ function driveFrom(tuning: TuningOverrides): Driver {
       tuning: {
         ...tuning,
         enemies: { 'maletin-coptero': { fireIntervalMin: 999, fireIntervalMax: 999 } },
+        // Only harmless Maletín-cópteros, so Rexi lives through long Runs.
+        director: {
+          roster: { 'archivador-artillado': { weight: 0 }, 'caminadora-a-reaccion': { weight: 0 } },
+        },
       },
     },
   });

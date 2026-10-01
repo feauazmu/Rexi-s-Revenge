@@ -1,4 +1,6 @@
 import type { Craft, EnemyKind } from '../../ids';
+import type { Tuning } from '../../tuning';
+import type { EnemyPose } from '../../view';
 import type { RunContext } from '../context';
 import type { EnemyState } from '../state';
 
@@ -18,7 +20,15 @@ export interface EnemyDef<M = unknown> {
    * timestep: Power-ups such as Pre-entreno scale Enemy time.
    */
   update(enemy: EnemyState, memory: M, ctx: RunContext, dt: number): void;
+  /**
+   * What the renderer should show of the behavior: facing, attack phase and telegraph progress
+   * (`EnemyView.pose`). Optional: without it the Enemy gets `NEUTRAL_POSE`.
+   */
+  pose?(memory: M, tuning: Tuning): EnemyPose;
 }
+
+/** The pose of an Enemy whose behavior does not report one. */
+export const NEUTRAL_POSE: EnemyPose = { facing: null, attack: 'idle', windup: 0 };
 
 /** Declares an Enemy behavior with its memory type inferred. */
 export function defineEnemy<M>(def: EnemyDef<M>): EnemyDef<M> {

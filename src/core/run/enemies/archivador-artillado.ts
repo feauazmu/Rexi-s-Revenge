@@ -57,12 +57,10 @@ export const archivadorArtillado = defineEnemy<ArchivadorMemory>({
 
     if (memory.windup !== null) {
       memory.windup += dt;
-      enemy.attackWindup = Math.min(1, memory.windup / t.dropWindup);
       if (memory.windup < t.dropWindup - EPSILON) return;
       dropDrawer(enemy, ctx, t);
       memory.windup = null;
       memory.dropTimer = t.dropCooldown;
-      enemy.attackWindup = 0;
       return;
     }
 
@@ -70,8 +68,17 @@ export const archivadorArtillado = defineEnemy<ArchivadorMemory>({
     memory.dropTimer = Math.max(0, memory.dropTimer - dt * enemyFireRate(ctx));
     if (memory.dropTimer > EPSILON || !isOverRexi(enemy, ctx, t)) return;
     memory.windup = dt;
-    enemy.attackWindup = Math.min(1, dt / t.dropWindup);
   },
+
+  // Facing is left to the drawer (it looks the same both ways); the drop itself is instant.
+  pose: (memory, tuning) =>
+    memory.windup === null
+      ? { facing: null, attack: 'idle', windup: 0 }
+      : {
+          facing: null,
+          attack: 'windup',
+          windup: Math.min(1, memory.windup / tuning.enemies['archivador-artillado'].dropWindup),
+        },
 });
 
 /** Eases back into the cruise altitude and bobs gently on its thrusters. */

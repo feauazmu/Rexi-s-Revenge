@@ -38,6 +38,7 @@ export const WEAPON_SOUNDS: Readonly<Record<WeaponId, SoundId>> = {
 export const ENEMY_FIRE_SOUNDS: Readonly<Record<EnemyKind, SoundId>> = {
   'maletin-coptero': 'paper-fwip',
   'archivador-artillado': 'cannon-pomp', // the bomb bay lets a drawer go
+  'caminadora-a-reaccion': 'gatling-tat',
 };
 
 export const EXPLOSION_SOUNDS: Readonly<Record<ExplosionSize, SoundId>> = {

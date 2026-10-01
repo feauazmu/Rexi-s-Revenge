@@ -3,6 +3,7 @@ import { silhouetteContext, type DrawContext } from '../draw-context';
 import { palette } from '../palette';
 import type { SpriteDef } from '../sprite';
 import { archivadorArtilladoDebris, drawArchivadorArtillado } from './archivador-artillado';
+import { caminadoraAReaccionDebris, drawCaminadoraAReaccion } from './caminadora-a-reaccion';
 import { drawMaletinCoptero, maletinCopteroDebris } from './maletin-coptero';
 
 /** Draws one Enemy. `run` gives context such as where Rexi is (e.g. to face him). */
@@ -12,6 +13,7 @@ export type EnemyDrawer = (dc: DrawContext, enemy: EnemyView, run: RunView) => v
 const enemyDrawers: Readonly<Record<EnemyKind, EnemyDrawer>> = {
   'maletin-coptero': drawMaletinCoptero,
   'archivador-artillado': drawArchivadorArtillado,
+  'caminadora-a-reaccion': drawCaminadoraAReaccion,
 };
 
 /**
@@ -21,6 +23,7 @@ const enemyDrawers: Readonly<Record<EnemyKind, EnemyDrawer>> = {
 export const enemyDebris: Readonly<Record<EnemyKind, readonly SpriteDef[]>> = {
   'maletin-coptero': maletinCopteroDebris,
   'archivador-artillado': archivadorArtilladoDebris,
+  'caminadora-a-reaccion': caminadoraAReaccionDebris,
 };
 
 /** Draws every Enemy; a hit Enemy is drawn as a white silhouette (hit flash). */

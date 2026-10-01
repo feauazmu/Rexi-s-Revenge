@@ -104,7 +104,7 @@ export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void
   const x = Math.round(enemy.x);
   const y = Math.round(enemy.y);
   const bottom = y + enemy.h;
-  const winding = enemy.attackWindup > 0;
+  const winding = enemy.pose.attack === 'windup';
 
   // Thruster flames: flickering cones (3 frames), offset per side so they do not pulse together.
   THRUSTER_XS.forEach((tx, side) => {
@@ -121,7 +121,7 @@ export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void
   // The armed drawer slides down out of the bay, behind the cabinet.
   if (winding) {
     const cx = x + enemy.w / 2;
-    const cy = bottom + 5 - Math.round((1 - enemy.attackWindup) * DRAWER_TRAVEL);
+    const cy = bottom + 5 - Math.round((1 - enemy.pose.windup) * DRAWER_TRAVEL);
     drawDrawerBomb(dc, cx, cy, enemy.age);
   }
 

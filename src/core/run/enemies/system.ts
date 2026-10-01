@@ -5,7 +5,10 @@ import type { RunContext } from '../context';
 import { flashEnemy, shatterEnemy } from '../effects';
 import { rexiDamageMultiplier } from '../power-ups/creatina';
 import type { EnemyState } from '../state';
+import type { Tuning } from '../../tuning';
+import type { EnemyPose } from '../../view';
 import { enemyCatalog } from './index';
+import { NEUTRAL_POSE } from './types';
 
 export function spawnEnemy(ctx: RunContext, kind: EnemyKind, x: number, y: number): EnemyState {
   const { width, height, health } = ctx.tuning.enemies[kind];
@@ -20,13 +23,17 @@ export function spawnEnemy(ctx: RunContext, kind: EnemyKind, x: number, y: numbe
     maxHealth: health,
     age: 0,
     hitFlashTick: null,
-    attackWindup: 0,
     memory: undefined,
   };
   enemy.memory = enemyCatalog[kind].init(enemy, ctx);
   ctx.state.enemies.push(enemy);
   ctx.emit({ type: 'enemy-spawned', enemyId: enemy.id, kind });
   return enemy;
+}
+
+/** What the Enemy's behavior shows the renderer (see `EnemyDef.pose`). */
+export function poseOf(enemy: Readonly<EnemyState>, tuning: Tuning): EnemyPose {
+  return enemyCatalog[enemy.kind].pose?.(enemy.memory, tuning) ?? NEUTRAL_POSE;
 }
 
 /** Runs every Enemy's behavior for one tick. */

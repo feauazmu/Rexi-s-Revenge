@@ -88,8 +88,6 @@ export interface EnemyState extends Box {
   age: number;
   /** Run tick of the latest hit-flash start, or null if never hit. */
   hitFlashTick: number | null;
-  /** Progress of an attack telegraph, 0..1 (0 when not winding up). Set by its behavior. */
-  attackWindup: number;
   /** Per-kind behavior memory, created by the Enemy's `init` and only read by its `update`. */
   memory: unknown;
 }

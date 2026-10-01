@@ -173,8 +173,8 @@ keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits
 spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
 every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. An Enemy projectile with a `blast`
 (e.g. the Archivador Artillado's drawer) explodes like Rexi's (see "Weapons and the inventory"), but its splash hurts
-only Rexi. Behaviors that telegraph an attack set `EnemyState.attackWindup` (0..1, shown as
-`EnemyView.attackWindup`) so the renderer can animate the telegraph. When Rexi's health reaches zero the Run emits
+only Rexi. Behaviors that telegraph an attack report it through their optional `pose(memory, tuning)`, which
+becomes `EnemyView.pose` (`attack: 'windup'` with `windup` rising 0..1), so the renderer can animate the telegraph. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
 advancing (it can no longer be paused); the Game then plays the defeat beat and opens the Veredicto (see Screen flow).
 
@@ -245,6 +245,10 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
   go on top.
 - Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
   rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
+- Enemy drawers read `EnemyView.pose` for what the behavior wants shown: `facing` (null when the
+  behavior leaves it to the drawer, e.g. the Maletín-cóptero faces Rexi), the `attack` phase
+  (`idle`, `windup` to telegraph, `firing`) and `windup`, the telegraph's progress 0..1 (e.g. the
+  Archivador Artillado's drawer sliding out of the bay). It is the only telegraph channel.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
 - **Rexi** (`src/render/rexi/`): body parts drawn facing right (`body.ts`) are composed per pose and
   mirrored for facing left; `pose.ts` picks the pose from `RexiView` (grounded/vx/vy, `hurtTicks`
@@ -378,7 +382,8 @@ is code, like the art.
 4. Write its behavior in `src/core/run/enemies/<kind>.ts` with `defineEnemy({ kind, craft, init, update })`.
    Use the `dt` argument for all time-based motion (Pre-entreno scales Enemy time), count attack cooldowns
    down by `dt * enemyFireRate(ctx)` so the ramp raises its fire rate, and use `ctx.rng` for randomness.
-   It may spawn just outside the Arena: it must fly itself in.
+   It may spawn just outside the Arena: it must fly itself in. If the drawer needs to know which way it
+   faces or when (and how far) it winds up and fires, add `pose(memory, tuning)` (it becomes `EnemyView.pose`).
 5. Register it in `src/core/run/enemies/index.ts` (one line).
 6. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
    the drawer and chunks in `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face

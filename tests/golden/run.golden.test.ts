@@ -126,12 +126,38 @@ describe('Run goldens', () => {
     const [falling, arming, waiting] = runOf(game.view).enemies.filter(
       (e) => e.kind === 'archivador-artillado',
     );
-    expect(falling?.attackWindup).toBe(0);
-    expect(arming?.attackWindup).toBeGreaterThan(0.6);
-    expect(arming?.attackWindup).toBeLessThan(0.9);
-    expect(waiting?.attackWindup).toBe(0);
+    expect(falling?.pose).toEqual({ facing: null, attack: 'idle', windup: 0 });
+    expect(arming?.pose.attack).toBe('windup');
+    expect(arming?.pose.windup).toBeGreaterThan(0.6);
+    expect(arming?.pose.windup).toBeLessThan(0.9);
+    expect(waiting?.pose.windup).toBe(0);
     expect(runOf(game.view).projectiles.filter((p) => p.kind === 'drawer')).toHaveLength(1);
     await expectGolden('enemy-archivador-artillado', renderView(game.view));
+  });
+
+  it('enemy-caminadora-a-reaccion: strafing both ways, winding up, and firing a burst', async () => {
+    const kind = 'caminadora-a-reaccion';
+    const game = drive({
+      seed: 2,
+      overrides: {
+        spawns: [
+          { kind, x: 40, y: 60 },
+          { kind, x: 400, y: 128, atTick: 10 },
+          { kind, x: 20, y: 96, atTick: 40 },
+        ],
+        tuning: { enemies: { [kind]: { fireIntervalMin: 1, fireIntervalMax: 1 } } },
+      },
+    });
+    // Rexi runs right, so the first one turns toward him and the second keeps facing him.
+    game.ticks(86, { move: 1, aim: { x: 360, y: 80 } });
+    const poses = runOf(game.view).enemies.map((e) => e.pose);
+    expect(poses).toMatchObject([
+      { facing: 1, attack: 'firing', windup: 0 },
+      { facing: -1, attack: 'windup' },
+      { facing: 1, attack: 'idle', windup: 0 },
+    ]);
+    expect(poses[1]?.windup).toBeGreaterThan(0);
+    await expectGolden('enemy-caminadora-a-reaccion', renderView(game.view));
   });
 });
 
