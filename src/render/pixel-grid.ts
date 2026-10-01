@@ -5,7 +5,7 @@ import type { Color } from './surface';
 const KEYS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&*+-/:;<=>?@^_~';
 
 /**
- * A procedural pixel canvas for large code-drawn art (ADR 0001), such as the Arena backdrop.
+ * A procedural pixel canvas for code-drawn art, such as the Arena's sign lettering.
  * Paint with named palette colors, then turn it into an ordinary {@link SpriteDef} that the
  * SpriteBank rasterizes once. Pixels outside the grid are ignored, so shapes may overhang.
  */

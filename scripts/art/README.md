@@ -129,7 +129,7 @@ An art root is a directory with a `sheets.json` manifest. `--root` defaults to `
     },
     "arena_draft": {
       "type": "draft",
-      "image": "../reference/arena.png",
+      "image": "drafts/arena.png",
       "size": [640, 360],
       "palette": "scene",
     },
@@ -224,6 +224,10 @@ The grid is cached in `grid/` before snapping, so a palette change re-snaps for 
 
 Outputs are `<name>.png` and `<name>_<layer>.png`.
 
+**Registered tiles and patches** (`tiles.py`). Independent tile edits never agree pixel for pixel, and grid recovery usually returns 239×133 cells with the first column and row dropped. With `"register": "drafts/x.png"` (the draft the tiles were cut from, at scene size), `clean` places each tile where it best matches its draft crop, searching ±3 cells; a mostly flat sky tile keeps the offset most tiles agree on. Overlaps are then cut along the least-difference path, as in image quilting, so a cut follows an edge or a flat area. `"patches": [{"name", "guide", "at": [x, y]}]` insets fix-up edits: `guide` is the crop of the assembled scene at `at` that was patched up by hand and edited (`scene_tiles` of a 240×135 guide gives its one template). The patch is registered against its guide and inset along least-difference seams on all four sides.
+
+**Scene scripts** (`scenes/`). Like character scripts, a scene's hand pass is code, so every change to the pipeline's pixels is reviewable. `scenes/arena.py` (#28) rebuilds the sky row by row (a running median of each row's majority sky colour, never stepping back up the ramp, with dithered band seams), clears and copies a few listed rectangles where tiles disagreed, then splits the scene into the `sky`, `far`, `buildings` and `plaza` layers that are exported.
+
 ## Parts
 
 `bake.py` writes `parts/<name>/<angle>.png` and `pivots.json`, which records where the pivot landed in each rotated sprite. RotSprite (`rotsprite.py`) does Scale2x three times, a nearest rotation at 8×, then a mode downsample, so no new colours appear. Angles turn from the nearest multiple of 90°, which is an exact `rot90`. The game mirrors the set for the other facing: 9 angles give 16 directions.
@@ -261,7 +265,7 @@ The run-length format is byte pairs `(palette index, run length − 1)`, row-maj
 `audit.py` checks every sheet output, baked part and `audit` glob:
 
 - **Errors:** partial alpha, a colour not in `src/render/palette.ts`, a colour outside the asset's class.
-- **Warnings:** lone pixels, and a weak outline (under 70% of the silhouette edge is dark ink; scenes are exempt).
+- **Warnings:** lone pixels, and a weak outline (under 70% of the silhouette edge is dark ink). Scenes, `scene`-class `audit` globs and sprites whose `post` entry says `"outline": false` (clouds) are exempt.
 
 It also lists the palette colours used. The renderer side has its own check in `tests/render/palette.test.ts`.
 
@@ -318,6 +322,21 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 - **Tiny sprites cannot be generated at size.** In 16-px cells, Flash drew the projectiles 2.5× too big. Drawn at 2× in 30-px cells they kept the grid, but the 2:1 reduction loses what reads at 8–15 px. So the projectiles are pixel text drawn over that reference (`enemies.py`, `DRAWN`).
 - **A box frame touching the sprite traps the white inside it** when `keep_white` is set. Leave it off unless the sprite has white details.
 
+## The Arena (#28)
+
+`art/sheets.json` → `arena` and `arena_props`; `npm run art -- clean`, then `uv run -q --with pillow --with numpy python scripts/art/scenes/arena.py`, then `npm run art -- export arena`.
+
+- **Draft:** `art/drafts/arena.png` is the retired code-drawn Arena (the composition already fitted to the ground line, the platforms and the HUD and Dialogue Box bands), with every sign face blanked. `reference/arena.png` predates Boissons and puts the 2×1 promo on the gym billboard, so it is not used.
+- **Tiles:** nine edits of the draft's 240×135 tiles (`prompts/arena_rNcM.txt`, each naming what its tile holds), then one fix-up edit of the centre (`drafts/arena_fix_center.png`, built from the assembly with the skyline extruded by hand), because the centre tile invented a far richer skyline than its neighbours.
+- **Props:** `drafts/arena_props.png`, the old ledges and clouds on chroma green, edited into two ledges (102 and 144 px, the tuned platform widths) and five clouds.
+- **Lettering is code** (`src/render/layers/arena-signs.ts`): the model cannot letter at 1:1, so the prompts keep sign faces blank.
+
+Lessons:
+
+- **Every tile edit re-imagines its tile.** Sky bands, curb colours and whole skylines differ between neighbours. Registration plus least-difference seams fix the structure; the sky is better rebuilt than stitched; a big disagreement needs a fix-up edit of a hand-patched guide.
+- **Name what the tile holds.** A tile prompt that says "the top of the courthouse pediment" keeps the shapes; a generic one invents.
+- **The snap can pick the wrong ramp.** The clouds' mauve landed on stone; a per-sprite `recolor` moves it to the sky ramp.
+
 ## Files
 
 | File                                  | Role                                                                                                    |
@@ -328,6 +347,8 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 | `ledger.py`, `gen.py`                 | Budget, ledger and CREDITS.md folding; one generation under the cap.                                    |
 | `templates.py`, `template_specs.py`   | Template builders and the manifest's `templates` section.                                               |
 | `pixelize.py`, `clean.py`, `holes.py` | Grid reconstruction, palette snap, slicing, scenes, hole fill.                                          |
+| `tiles.py`                            | Scene tiles: registration against the draft, least-difference seams, patch insets.                      |
+| `scenes/`                             | Scene hand passes and layer splits (`arena.py`).                                                        |
 | `rotsprite.py`, `bake.py`             | RotSprite and the parts bake.                                                                           |
 | `ik.py`                               | Two-bone IK and outlined, ramp-shaded limbs.                                                            |
 | `export_ts.py`                        | The TypeScript export (rows and RLE).                                                                   |

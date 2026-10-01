@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThe attached image is one 240x135 tile of the Arena backdrop, a 640x360 opaque side-view scene, drawn as a flat draft at its exact in-game pixel size. The Arena is a city plaza at sunset between a classical columned courthouse (left) and the glass Bufete & Pesas S.A. tower (right), with the Boissons cocktail bar on the plaza between them.\n\nThis tile: the bottom right of the scene: the right half of the Boissons bar storefront (striped awning, brick facade, a warm glowing window), a street lamp, the base of the glass Bufete & Pesas S.A. tower with its entrance canopy, glass double doors and a stepped landing, a wooden bench, the distant skyline at the right edge, the low stone wall at the back of the plaza, the paved plaza floor, a sunlit curb, and a calm, flat, dark pavement strip along the bottom.\n\nRedraw this tile in place as crisp, finished, professional pixel art (modern commercial 16-bit quality), at exactly the same pixel size and composition. Every shape stays exactly where it is, within one pixel, so this tile joins its neighbours: the same silhouettes, edges, window grids and horizon lines. Keep the colours and the warm sunset light from the left. Add hand-placed detail: brick texture on the bar, glints on the glass doors and panes, crisp steel jambs, an iron street lamp with a warm glowing glass, wood grain on the bench, stone texture on the wall, and faint seams on the plaza slabs. Keep the pavement strip below the curb calm, flat and low contrast, with only faint slab seams. A dark 1-pixel outline only where a building meets the sky. Opaque scene: fill the whole frame edge to edge, no border, no white background, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a3559bb671b5ea28c/art/templates/arena_tiles_r2c2.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.1016605,
+  "created_at": "2026-10-01T11:25:51.228Z",
+  "asset": {
+    "file": "arena_r2c2.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/arena_r2c2.txt",
+    "style": true,
+    "references": ["art/templates/arena_tiles_r2c2.png"],
+    "note": "Arena tile r2c2 (#28)",
+    "spent_after_usd": 2.728244
+  }
+}

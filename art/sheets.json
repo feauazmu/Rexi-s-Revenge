@@ -29,7 +29,7 @@
     },
     "arena_draft": {
       "type": "draft",
-      "image": "../reference/arena.png",
+      "image": "drafts/arena.png",
       "size": [640, 360],
       "palette": "scene"
     },
@@ -161,6 +161,14 @@
       "n": 10,
       "cell": 30,
       "cols": 5
+    },
+    "arena_fix_center": {
+      "type": "scene_tiles",
+      "draft": "drafts/arena_fix_center.png"
+    },
+    "arena_props": {
+      "type": "scene_tiles",
+      "draft": "drafts/arena_props.png"
     }
   },
   "sheets": {
@@ -202,24 +210,6 @@
       "palette": "icon",
       "out": "sprites/record-clean",
       "names": [null, "seal", "gavel", "wax"]
-    },
-    "_example_arena": {
-      "kind": "scene",
-      "prompt": "prompts/_example_arena_tile.txt",
-      "style": true,
-      "background": "none",
-      "tiles": [
-        ["arena_r0c0", "arena_r0c1", "arena_r0c2"],
-        ["arena_r1c0", "arena_r1c1", "arena_r1c2"],
-        ["arena_r2c0", "arena_r2c1", "arena_r2c2"]
-      ],
-      "tile_step": [200, 113],
-      "crop": [0, 0, 640, 360],
-      "layers": {
-        "sky": {
-          "ramps": ["sky"]
-        }
-      }
     },
     "enemy_maletin": {
       "kind": "sprite",
@@ -309,6 +299,86 @@
         "projectiles/x2/drawer",
         "projectiles/x2/paper_tilt"
       ]
+    },
+    "arena": {
+      "kind": "scene",
+      "background": "none",
+      "tiles": [
+        ["arena_r0c0", "arena_r0c1", "arena_r0c2"],
+        ["arena_r1c0", "arena_r1c1", "arena_r1c2"],
+        ["arena_r2c0", "arena_r2c1", "arena_r2c2"]
+      ],
+      "tile_step": [200, 113],
+      "out": "sprites/arena",
+      "name": "scene",
+      "register": "drafts/arena.png",
+      "patches": [
+        {
+          "name": "arena_fix_center",
+          "guide": "drafts/arena_fix_center.png",
+          "at": [160, 160]
+        }
+      ]
+    },
+    "arena_props": {
+      "kind": "sprite",
+      "prompt": "prompts/arena_props.txt",
+      "style": true,
+      "refs": ["templates/arena_props_r0c0.png"],
+      "background": "green",
+      "palette": {
+        "ramps": ["stone", "sky", "fire"]
+      },
+      "out": "sprites/arena",
+      "names": ["ledge_144", "cloud_a", "ledge_102", "cloud_b", "cloud_c", "cloud_d", "cloud_e"],
+      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky).",
+      "post": {
+        "cloud_a": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_b": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_c": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_d": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        },
+        "cloud_e": {
+          "outline": false,
+          "recolor": {
+            "#4a4a74": "#56298a",
+            "#6c5a6a": "#76308e",
+            "#a28e92": "#8c3a8c",
+            "#c4aca8": "#c8467a"
+          }
+        }
+      }
     }
   },
   "parts": {
@@ -404,12 +474,22 @@
         "rocketPivots": "projectiles/turn/rocket/pivots.json",
         "bulletPivots": "projectiles/turn/bullet/pivots.json"
       }
+    },
+    "arena": {
+      "sprites": [
+        "sprites/arena/layers/*.png",
+        "sprites/arena/ledge_*.png",
+        "sprites/arena/cloud_*.png"
+      ],
+      "format": "rle",
+      "out": "src/render/art/generated"
     }
   },
   "audit": {
     "sprites/icons/*.png": "icon",
     "sprites/record/*.png": "icon",
     "enemies/**/*.png": "enemy",
-    "projectiles/*.png": "enemy"
+    "projectiles/*.png": "enemy",
+    "sprites/arena/layers/*.png": "scene"
   }
 }

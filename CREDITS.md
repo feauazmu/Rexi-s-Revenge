@@ -61,18 +61,29 @@ Generations made with `scripts/art` (see its README), folded in from `art/ledger
 
 <!-- art-ledger:start -->
 
-| #   | Time                | Root  | Name               | Model                         | Cost (USD) | Note     |
-| --- | ------------------- | ----- | ------------------ | ----------------------------- | ---------- | -------- |
-| 1   | 2026-10-01T13:19:09 | `art` | `icons`            | google/gemini-3.1-flash-image | 0.1018     | Refs #29 |
-| 2   | 2026-10-01T13:23:25 | `art` | `enemy_maletin`    | google/gemini-3.1-flash-image | 0.1022     |          |
-| 3   | 2026-10-01T13:23:55 | `art` | `enemy_archivador` | google/gemini-3.1-flash-image | 0.1022     |          |
-| 4   | 2026-10-01T13:24:15 | `art` | `enemy_caminadora` | google/gemini-3.1-flash-image | 0.1022     |          |
-| 5   | 2026-10-01T13:24:37 | `art` | `enemy_banca`      | google/gemini-3.1-flash-image | 0.1022     |          |
-| 6   | 2026-10-01T13:25:05 | `art` | `projectiles`      | google/gemini-3.1-flash-image | 0.1017     |          |
-| 7   | 2026-10-01T13:25:33 | `art` | `enemy_banca_v2`   | google/gemini-3.1-flash-image | 0.1023     |          |
-| 8   | 2026-10-01T13:27:12 | `art` | `enemy_banca_v3`   | google/gemini-3.1-flash-image | 0.1023     |          |
-| 9   | 2026-10-01T13:27:34 | `art` | `projectiles_v2`   | google/gemini-3.1-flash-image | 0.1017     |          |
-| 10  | 2026-10-01T13:31:31 | `art` | `record`           | google/gemini-3.1-flash-image | 0.1016     | Refs #29 |
+| #   | Time                | Root  | Name               | Model                         | Cost (USD) | Note                                           |
+| --- | ------------------- | ----- | ------------------ | ----------------------------- | ---------- | ---------------------------------------------- |
+| 1   | 2026-10-01T13:19:09 | `art` | `icons`            | google/gemini-3.1-flash-image | 0.1018     | Refs #29                                       |
+| 2   | 2026-10-01T13:21:42 | `art` | `arena_r2c1`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r2c1 (#28)                          |
+| 3   | 2026-10-01T13:23:25 | `art` | `enemy_maletin`    | google/gemini-3.1-flash-image | 0.1022     |                                                |
+| 4   | 2026-10-01T13:23:28 | `art` | `arena_r0c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r0c0 (#28)                          |
+| 5   | 2026-10-01T13:23:48 | `art` | `arena_r0c1`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r0c1 (#28)                          |
+| 6   | 2026-10-01T13:23:55 | `art` | `enemy_archivador` | google/gemini-3.1-flash-image | 0.1022     |                                                |
+| 7   | 2026-10-01T13:24:11 | `art` | `arena_r0c2`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r0c2 (#28)                          |
+| 8   | 2026-10-01T13:24:15 | `art` | `enemy_caminadora` | google/gemini-3.1-flash-image | 0.1022     |                                                |
+| 9   | 2026-10-01T13:24:32 | `art` | `arena_r1c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c0 (#28)                          |
+| 10  | 2026-10-01T13:24:37 | `art` | `enemy_banca`      | google/gemini-3.1-flash-image | 0.1022     |                                                |
+| 11  | 2026-10-01T13:25:04 | `art` | `arena_r1c1`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c1 (#28)                          |
+| 12  | 2026-10-01T13:25:05 | `art` | `projectiles`      | google/gemini-3.1-flash-image | 0.1017     |                                                |
+| 13  | 2026-10-01T13:25:28 | `art` | `arena_r1c2`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c2 (#28)                          |
+| 14  | 2026-10-01T13:25:33 | `art` | `enemy_banca_v2`   | google/gemini-3.1-flash-image | 0.1023     |                                                |
+| 15  | 2026-10-01T13:25:50 | `art` | `arena_r2c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r2c0 (#28)                          |
+| 16  | 2026-10-01T13:26:12 | `art` | `arena_r2c2`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r2c2 (#28)                          |
+| 17  | 2026-10-01T13:27:12 | `art` | `enemy_banca_v3`   | google/gemini-3.1-flash-image | 0.1023     |                                                |
+| 18  | 2026-10-01T13:27:34 | `art` | `projectiles_v2`   | google/gemini-3.1-flash-image | 0.1017     |                                                |
+| 19  | 2026-10-01T13:31:31 | `art` | `record`           | google/gemini-3.1-flash-image | 0.1016     | Refs #29                                       |
+| 20  | 2026-10-01T13:32:58 | `art` | `arena_fix_center` | google/gemini-3.1-flash-image | 0.1017     | Arena centre fix: skyline, sun, step end (#28) |
+| 21  | 2026-10-01T13:35:24 | `art` | `arena_props`      | google/gemini-3.1-flash-image | 0.1016     | Arena ledges and clouds (#28)                  |
 
 <!-- art-ledger:end -->
 
@@ -85,7 +96,7 @@ Shared cap for all generated media (images + music): **$10.00** (raised from $5.
 | Images (12 generations)               | 0.8115                                 |
 | Music (2 generations)                 | 0.0800                                 |
 | Rexi version C images (9 generations) | 0.9219                                 |
-| Art pipeline (10 generations)         | 1.0203                                 |
-| **Running total**                     | **2.8337 of 10.00** (7.1663 remaining) |
+| Art pipeline (21 generations)         | 2.1384                                 |
+| **Running total**                     | **3.9518 of 10.00** (6.0482 remaining) |
 
 The image subtotal is summed from the unrounded costs in the JSON sidecars (and the post-processing note for the discarded sheet attempt), so it can differ by $0.0001 from the sum of the rounded table rows.

@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThe attached image is a 240x135 crop of the Arena backdrop, a 640x360 opaque side-view pixel-art scene of a city plaza at sunset: on the left the white marble courthouse's side wing and the end of its marble steps, in the middle the distant city skyline in front of the setting sun with an iron street lamp and two wooden benches along the low stone plaza wall, and on the right edge the brick front of the Boissons cocktail bar under its striped awning. The crop was patched together from several renders, so parts of it are rough.\n\nRepaint it in place as one seamless, crisp, finished, professional pixel-art picture (modern commercial 16-bit quality), at exactly the same pixel size and composition. Keep everything at the edges of the crop exactly as it is, within one pixel, so it joins the rest of the scene: the courthouse wing, the sky at the top, the bar on the right and the plaza wall, benches and paving at the bottom. In the middle: the skyline towers continue straight down behind the plaza wall, with a lower row of dark near buildings with a few warm lit windows at their base; the big low sun sits behind the towers, half hidden, with a clean round edge and a soft dithered glow, and the sky around it is a smooth band of warm orange, peach and gold with no dome or ring shape. Keep the street lamp in front of the skyline with its warm glowing glass. Finish the right end of the courthouse steps cleanly: marble steps ending against a low marble plinth, with nothing else there (no lamp, no railing). Hard pixels on the palette of the picture, no anti-aliasing, no blur. Opaque scene: fill the whole frame edge to edge, no border, no white background, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a3559bb671b5ea28c/art/templates/arena_fix_center_r0c0.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.101656,
+  "created_at": "2026-10-01T11:32:40.402Z",
+  "asset": {
+    "file": "arena_fix_center.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/arena_fix_center.txt",
+    "style": true,
+    "references": ["art/templates/arena_fix_center_r0c0.png"],
+    "note": "Arena centre fix: skyline, sun, step end (#28)",
+    "spent_after_usd": 2.8299
+  }
+}

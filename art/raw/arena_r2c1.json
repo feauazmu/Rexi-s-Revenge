@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThe attached image is one 240x135 tile of the Arena backdrop, a 640x360 opaque side-view scene, drawn as a flat draft at its exact in-game pixel size. The Arena is a city plaza at sunset between a classical columned courthouse (left) and the glass Bufete & Pesas S.A. tower (right), with the Boissons cocktail bar on the plaza between them.\n\nThis tile: the bottom middle of the scene. At the top, the distant purple city skyline with a few lit windows and the low sun setting behind it; the right edge of the courthouse's white wing at the far left; a low stone wall along the back of the plaza with an iron street lamp and two wooden benches; on the right, the Boissons bar storefront: a red-and-cream striped awning, brick facade, two warm glowing windows with bottle shelves, a wooden door with a lit pane, and a sandwich-board chalkboard on the plaza in front of it. Below: the paved plaza floor in large stone slabs, a sunlit curb, and a calm, flat, dark pavement strip along the bottom.\n\nRedraw this tile in place as crisp, finished, professional pixel art (modern commercial 16-bit quality), at exactly the same pixel size and composition. Every shape stays exactly where it is, within one pixel, so this tile joins its neighbours: same skyline silhouette, same wall, lamp, benches, storefront, curb and horizon lines. Keep the colours and the warm sunset light from the left. Add hand-placed detail: brick texture and mortar on the bar, a scalloped awning edge with a shadow, glints on the window glass and bottles, stone block texture and slight weathering on the wall, wood grain on the benches, a soft dithered warm light spill from the bar windows on the plaza floor, and a subtle dithered glow around the sun and the lamp. Leave the chalkboard face and the dark sign panel above the awning completely blank and flat (their lettering is added later). Keep the pavement strip below the curb calm, flat and low contrast, with only faint slab seams. A dark 1-pixel outline only where a building meets the sky. Opaque scene: fill the whole frame edge to edge, no border, no white background, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a3559bb671b5ea28c/art/templates/arena_tiles_r2c1.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.101706,
+  "created_at": "2026-10-01T11:21:21.098Z",
+  "asset": {
+    "file": "arena_r2c1.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/arena_r2c1.txt",
+    "style": true,
+    "references": ["art/templates/arena_tiles_r2c1.png"],
+    "note": "Arena tile r2c1 (#28)",
+    "spent_after_usd": 1.915106
+  }
+}

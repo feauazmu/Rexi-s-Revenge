@@ -27,6 +27,7 @@ import numpy as np
 from PIL import Image
 
 import holes
+import tiles as tile_lib
 from palette import allowed_colors, hex2rgb
 from project import write_json
 from pixelize import blobs, despeckle, drop_islands, fit, head_lock, shorten, snap, to_grid
@@ -121,10 +122,27 @@ def clean_sprites(project, name, cfg, g):
 def assemble_tiles(project, cfg, allowed):
     """`tiles` [[raw name, ...], ...] (rows of columns) placed every `tile_step` [x, y] cells:
     a scene drawn as several edits of a draft's tiles (templates.scene_tiles). Each tile keeps
-    the middle of its overlap with the previous one, so seams fall mid-overlap."""
+    the middle of its overlap with the previous one, so seams fall mid-overlap. With `register`
+    (the draft the tiles were cut from, at scene size), each tile is placed where it best matches
+    the draft and overlaps are cut along least-error seams instead (tiles.py). Then each of
+    `patches` [{"name", "guide", "at": [x, y]}] (an edit of `guide`, a crop of the assembled
+    scene at `at`) is registered against its guide and inset along least-error seams."""
     tiles = cfg["tiles"]
     sx, sy = cfg.get("tile_step", [200, 113])
     grids = [[snap(grid_for(project, t, cfg)[0], allowed) for t in row] for row in tiles]
+    if cfg.get("register"):
+        # Register every tile against the draft, then cut the overlaps along least-error seams.
+        draft = snap(np.asarray(Image.open(project.path(cfg["register"])).convert("RGBA")), allowed)
+        offsets = tile_lib.register(grids, draft, (sx, sy))
+        out = tile_lib.compose(grids, (sx, sy), (draft.shape[1], draft.shape[0]), offsets)
+        for patch in cfg.get("patches", []):
+            # A fix-up edit of a crop of the assembled scene (`guide`, saved before the edit).
+            g = snap(grid_for(project, patch["name"], cfg)[0], allowed)
+            guide = snap(np.asarray(Image.open(project.path(patch["guide"])).convert("RGBA")), allowed)
+            errors = tile_lib.offset_errors(g, guide, (0, 0))
+            dx, dy = min(errors, key=errors.get)
+            out = tile_lib.inset(out, g, (patch["at"][0] + dx, patch["at"][1] + dy))
+        return out
     th = min(g.shape[0] for row in grids for g in row)
     tw = min(g.shape[1] for row in grids for g in row)
     H, W = (len(tiles) - 1) * sy + th, (len(tiles[0]) - 1) * sx + tw
