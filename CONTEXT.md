@@ -24,6 +24,10 @@ _Avoid_: Game over, results screen
 The antagonist faction: crooked lawyers Rexi once sentenced, allied with a rival gym. Every enemy is sent by them.
 _Avoid_: The Syndicate, villains, bad guys
 
+**Boissons**:
+The cocktail bar on the Arena's plaza, between the courthouse and the Bufete & Pesas S.A. tower. Its Thursday 2×1 cocktail promo ("jueves 2 por 1") is a running joke in the Quips. The promo belongs to the bar, not to the gym.
+_Avoid_: The gym promo, el bar
+
 **Enemy**:
 A flying machine sent by Bufete & Pesas S.A. that Rexi destroys (this game's version of Heli Attack's helicopters). Every Enemy is either Lawyer Craft or Gym Craft. In the Spanish UI, destroyed Enemies are counted as "demandas desestimadas".
 _Avoid_: Helicopter, craft, nave, demanda (outside UI copy)

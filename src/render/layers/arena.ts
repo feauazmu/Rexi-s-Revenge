@@ -11,7 +11,7 @@ const BULB_STEP_TICKS = 24;
 
 /**
  * The Arena: painted sunset backdrop (sky, drifting clouds, skyline, courthouse, the Bufete &
- * Pesas S.A. tower and plaza), blinking billboard bulbs, and the one-way platforms.
+ * Pesas S.A. tower, the Boissons bar and plaza), blinking billboard bulbs, and the one-way platforms.
  * Animation phase comes from the Run tick, so the scene freezes while paused.
  */
 export function drawArena(dc: DrawContext, run: RunView): void {
