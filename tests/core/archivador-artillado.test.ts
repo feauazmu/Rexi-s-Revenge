@@ -177,7 +177,7 @@ describe('Archivador Artillado drawer bombs', () => {
   it('stops patrolling during the windup', () => {
     // Patrolling right from just left of Rexi's column.
     const game = archivadorAt(ABOVE_REXI_X - 10, 40, {
-      tuning: withArchivador({ firstDropDelay: 0 }),
+      tuning: holdStill(withArchivador({ firstDropDelay: 0 })),
     });
     const xs: number[] = [];
     for (let t = 0; t < 600; t++) {
@@ -209,7 +209,10 @@ describe('Archivador Artillado drawer bombs', () => {
           {},
           {
             ...invincible,
-            director: { stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 2 }] },
+            director: {
+              growth: { timeScale: 0 },
+              steps: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 2 }],
+            },
           },
         ),
       ),
@@ -307,9 +310,9 @@ describe('Archivador Artillado in the Enemy catalog', () => {
 describe('Archivador Artillado in the Director ramp', () => {
   const entry = defaultTuning.director.roster['archivador-artillado'];
 
-  it('joins the roster after about a minute, entering high from the sides', () => {
+  it('joins the roster after about a minute, entering high from the sides or from above', () => {
     expect(entry.from).toBe(60);
-    expect(entry.edges).toEqual(['left', 'right']);
+    expect(entry.edges).toEqual(['left', 'right', 'top']);
     expect(entry.minY).toBeGreaterThanOrEqual(archivador.patrolMinY);
     expect(entry.maxY).toBeLessThanOrEqual(archivador.patrolMaxY);
   });
@@ -343,7 +346,8 @@ describe('Archivador Artillado in the Director ramp', () => {
           ...invincible,
           director: {
             firstSpawnDelay: 0,
-            stages: [{ from: 0, onScreenCap: 20, spawnInterval: 0.25, fireRate: 1 }],
+            growth: { timeScale: 0 },
+            steps: [{ from: 0, onScreenCap: 20, spawnInterval: 0.25, fireRate: 1 }],
             roster: {
               'maletin-coptero': { weight: 0 },
               'archivador-artillado': { from: 5 },
@@ -356,5 +360,63 @@ describe('Archivador Artillado in the Director ramp', () => {
     const spawned = eventsOf(game.seconds(1), 'enemy-spawned');
     expect(spawned.length).toBeGreaterThan(0);
     expect(new Set(spawned.map((e) => e.kind))).toEqual(new Set(['archivador-artillado']));
+  });
+});
+
+describe('Archivador Artillado entering from the top', () => {
+  it('may drop in from above the Arena, as its roster entry allows', () => {
+    expect(defaultTuning.director.roster['archivador-artillado'].edges).toContain('top');
+  });
+
+  it('enters from above with the default roster, then descends into its patrol band', () => {
+    const game = drive({
+      seed: 3,
+      overrides: {
+        tuning: {
+          ...invincible,
+          director: {
+            firstSpawnDelay: 0,
+            growth: { timeScale: 0 },
+            steps: [{ from: 0, onScreenCap: 6, spawnInterval: 0.5, fireRate: 1 }],
+            roster: {
+              'maletin-coptero': { weight: 0 },
+              'archivador-artillado': { from: 0, maxOnScreen: null },
+            },
+          },
+        },
+      },
+    });
+    const fromTop: number[] = [];
+    for (let t = 0; t < secondsToTicks(3); t++) {
+      for (const { enemyId } of eventsOf(game.ticks(1), 'enemy-spawned')) {
+        const enemy = runOf(game.view).enemies.find((e) => e.id === enemyId);
+        // Spawned just above the screen: after one tick it is still (almost) all above it.
+        if (enemy && enemy.y + enemy.h <= archivador.hoverAmplitude + 2) {
+          expect(enemy.x).toBeGreaterThanOrEqual(0);
+          expect(enemy.x + enemy.w).toBeLessThanOrEqual(SCREEN_WIDTH);
+          fromTop.push(enemyId);
+        }
+      }
+    }
+    expect(fromTop.length).toBeGreaterThan(0);
+    game.seconds(8);
+    for (const id of fromTop) {
+      const enemy = runOf(game.view).enemies.find((e) => e.id === id) ?? expect.unreachable();
+      expect(enemy.y).toBeGreaterThanOrEqual(archivador.patrolMinY - archivador.hoverAmplitude);
+      expect(enemy.y).toBeLessThanOrEqual(archivador.patrolMaxY + archivador.hoverAmplitude);
+    }
+  });
+
+  it('holds its drawers until it is fully inside the Arena', () => {
+    const game = archivadorAt(ABOVE_REXI_X, -archivador.height, {
+      tuning: holdStill(withArchivador({ firstDropDelay: 0 })),
+    });
+    let fired = 0;
+    for (let t = 0; t < secondsToTicks(6); t++) {
+      if (eventsOf(game.ticks(1), 'enemy-fired').length === 0) continue;
+      fired += 1;
+      expect(enemyOf(game)?.y ?? -1).toBeGreaterThanOrEqual(0);
+    }
+    expect(fired).toBeGreaterThan(0);
   });
 });

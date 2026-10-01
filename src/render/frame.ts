@@ -2,6 +2,7 @@
  * Frame building blocks shared by the UI layers (HUD, Crates, Dialogue Box, menu screens):
  * solid rectangles only, per the determinism rule.
  */
+import { masterPalette } from './palette';
 import type { Color, Surface } from './surface';
 
 /**
@@ -18,6 +19,16 @@ export function fillCutRect(
 ): void {
   surface.fillRect(x + 1, y, w - 2, h, color);
   surface.fillRect(x, y + 1, w, h - 2, color);
+}
+
+/**
+ * A dark plate behind readouts and captions (HUD, share card): black outline with cut corners,
+ * night fill and a lit top edge.
+ */
+export function drawPlate(surface: Surface, x: number, y: number, w: number, h: number): void {
+  fillCutRect(surface, x, y, w, h, masterPalette.outline);
+  surface.fillRect(x + 1, y + 1, w - 2, h - 2, masterPalette.night);
+  surface.fillRect(x + 2, y + 1, w - 4, 1, masterPalette.robeSheen);
 }
 
 /**

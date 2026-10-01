@@ -215,7 +215,10 @@ describe('Caminadora a Reacción bursts', () => {
   it('bursts more often as the ramp raises the fire rate', () => {
     const bursts = (fireRate: number) => {
       const game = caminadoraAt(267, 120, burstTuning, {
-        director: { stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }] },
+        director: {
+          growth: { timeScale: 0 },
+          steps: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }],
+        },
       });
       game.seconds(20);
       return eventsOf(game.log, 'enemy-fired').length / caminadora.burstCount;

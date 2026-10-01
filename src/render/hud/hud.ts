@@ -1,11 +1,11 @@
 import { SCREEN_WIDTH, TICKS_PER_SECOND, type ActivePowerUpView, type RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { masterPalette as P } from '../palette';
-import { fillCutRect } from '../frame';
+import { drawPlate, fillCutRect } from '../frame';
 import { drawOutlinedText } from '../screens/ui';
 import { defineSprite, type SpriteDef } from '../sprite';
 import { strings } from '../strings';
-import type { Color, Surface } from '../surface';
+import type { Color } from '../surface';
 import { fonts, formatElapsed, type TextAlign } from '../text';
 import { powerUpIcons } from './power-up-icons';
 import { ICON_SIZE, weaponIcons } from './weapon-icons';
@@ -18,8 +18,6 @@ const ink = {
   outline: P.outline,
   label: P.gold,
   value: P.white,
-  plate: P.night,
-  plateEdge: P.robeSheen,
   slot: P.robe,
   slotLight: P.robeMid,
   barEmpty: P.red1,
@@ -94,13 +92,6 @@ export function drawHud(dc: DrawContext, run: RunView): void {
     'center',
   );
   drawLabeled(dc, strings.hud.score, String(run.stats.score), SCREEN_WIDTH - MARGIN, 'right');
-}
-
-/** A dark rectangle with cut corners and a lit top edge (behind HUD readouts). */
-function drawPlate(surface: Surface, x: number, y: number, w: number, h: number): void {
-  fillCutRect(surface, x, y, w, h, ink.outline);
-  surface.fillRect(x + 1, y + 1, w - 2, h - 2, ink.plate);
-  surface.fillRect(x + 2, y + 1, w - 4, 1, ink.plateEdge);
 }
 
 function drawHealth(dc: DrawContext, health: number, maxHealth: number): void {

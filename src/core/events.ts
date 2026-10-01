@@ -3,10 +3,12 @@ import type {
   CrateContents,
   EnemyKind,
   ProjectileKind,
+  ProjectileOwner,
   SpecialWeaponId,
   WeaponId,
 } from './ids';
 import type { QuipTheme } from './quips/catalog';
+import type { RunStats } from './stats';
 import type { ExplosionSize, TimedPowerUpId } from './tuning';
 import type { ScreenKind } from './view';
 
@@ -38,6 +40,8 @@ export type GameEvent =
   | CratePickedEvent
   | CrateExpiredEvent
   | QuipStartedEvent
+  | HitStopStartedEvent
+  | HitStopEndedEvent
   | QuipCharacterEvent
   | DialogueClosedEvent
   | PowerUpStartedEvent
@@ -179,7 +183,7 @@ export interface EnemyFiredEvent {
 export interface ExplosionEvent {
   readonly type: 'explosion';
   /** Who fired it: Rexi's blasts hurt Enemies, Enemy blasts hurt Rexi. */
-  readonly owner: 'rexi' | 'enemy';
+  readonly owner: ProjectileOwner;
   readonly kind: ProjectileKind;
   /** Explosion preset played (see `tuning.effects.explosions`). */
   readonly size: ExplosionSize;
@@ -199,13 +203,8 @@ export interface RexiHitEvent {
 }
 
 /** Rexi's health reached zero: the Run is over. Emitted once, in the tick of the fatal hit. */
-export interface RunEndedEvent {
+export interface RunEndedEvent extends RunStats {
   readonly type: 'run-ended';
-  readonly score: number;
-  /** Enemies destroyed ("demandas desestimadas" in the UI). */
-  readonly enemiesDestroyed: number;
-  /** Run ticks survived, including the tick of the fatal hit. */
-  readonly ticksSurvived: number;
 }
 
 /**
@@ -234,15 +233,31 @@ export interface MuteToggledEvent {
   readonly muted: boolean;
 }
 
-/** A Quip triggered: the Hit-stop starts and the Dialogue Box opens with this Quip. */
+/** A Quip triggered: the Dialogue Box opens with this Quip (its Hit-stop follows as `hit-stop-started`). */
 export interface QuipStartedEvent {
   readonly type: 'quip-started';
   readonly quipId: string;
   readonly theme: QuipTheme;
   /** The destroyed Enemy that drew the Quip. */
   readonly enemyId: number;
-  /** Ticks of Hit-stop that follow this tick (the Run stays frozen for that many ticks). */
-  readonly hitStopTicks: number;
+}
+
+/**
+ * A Hit-stop began: emitted right after `quip-started`. The Run stays frozen for the next
+ * `ticks` ticks while the Dialogue Box keeps animating.
+ */
+export interface HitStopStartedEvent {
+  readonly type: 'hit-stop-started';
+  /** Ticks the Run stays frozen, starting with the next tick. */
+  readonly ticks: number;
+}
+
+/**
+ * The Hit-stop is over: on its last frozen tick (the Run steps again from the next tick), when a
+ * new Quip restarts it, or when the Run is abandoned during it (Salir from the pause menu).
+ */
+export interface HitStopEndedEvent {
+  readonly type: 'hit-stop-ended';
 }
 
 /** The typewriter revealed one visible character (never a space): the text blip. */

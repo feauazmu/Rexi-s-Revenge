@@ -44,7 +44,11 @@ game.pause();                          // shell: tab hidden / focus lost (no-op 
 - **`GameEvent`** (`src/core/events.ts`): discriminated union on `type`.
 - **`GameView`** (`src/core/view.ts`): everything needed to draw, including `tick` for animation phase.
 - **Determinism**: same seed + same input frames ⇒ identical event log and view. All randomness goes through
-  the seeded `Rng` in `RunContext`; entity ids come from a counter.
+  seeded `Rng` streams: the gameplay `rng` in `RunContext` (seeded with the Game's seed), plus the effects
+  and Quip streams, each seeded from it with `deriveSeed(seed, stream)`; entity ids come from a counter. The streams and the
+  id counter belong to the **Game**, not the Run: they carry on across Runs, so a Game's second Run
+  differs from its first. Determinism is per Game (seed + every input frame since `createGame`); to replay
+  one Run exactly, replay the whole Game that led to it.
 - **Overrides**: `tuning` is deep-merged over `defaultTuning` (unknown keys throw). `spawns` replaces
   the spawn Director and automatic Crate drops entirely (empty list = empty Arena) — this is how tests stage
   scenarios. A spawn is an Enemy (`{ kind: 'maletin-coptero', x, y }`) or a Crate
@@ -65,15 +69,17 @@ game.pause();                          // shell: tab hidden / focus lost (no-op 
 `run` (ended) → `verdict` → `title`.
 Each tick runs exactly one screen's logic, so the tick that changes screens does not also step the Run.
 
-- Title and Cómo jugar accept `start` once `view.startReady` (a 0.5 s guard against double presses).
+- Title and Cómo jugar accept `start` once `view.startReady` (a guard against double presses,
+  `tuning.screens.startGuard`).
 - Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
   The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
   `view.musicMuted`, persists it and emits `mute-toggled`.
-- **Run end**: the ended Run stays on the `run` screen for a 1.5 s defeat beat (`view.defeatAge` counts it),
-  then the Veredicto (`view.verdict`, `src/core/verdict.ts`) shows its stats over the frozen Run. It ignores
-  input for 1 s while the stats are read out. A top-10 Run (`verdict.rank`) signs 3 initials with menu
+- **Run end**: the ended Run stays on the `run` screen for the defeat beat (`tuning.screens.defeatBeat`;
+  `view.defeatAge` counts it), then the Veredicto (`view.verdict`, `src/core/verdict.ts`) shows its stats over
+  the frozen Run. It ignores input while the stats are read out (`tuning.screens.verdictGuard`). `verdict.ts` owns the Veredicto's tick (`stepVerdict`:
+  initials entry, its events, signing, leaving); the Game hands it a `record` callback that saves the table. A top-10 Run (`verdict.rank`) signs 3 initials with menu
   navigation only (up/down: letter, wrapping A–Z; left/right/back: move; confirm: next letter, then sign), so
-  keyboard and touch share it. Signing saves the table and emits `high-score-recorded`; then, after 0.5 s,
+  keyboard and touch share it. Signing saves the table and emits `high-score-recorded`; then, after `tuning.screens.startGuard`,
   `start` returns to the Title (`view.startReady`). Entries start from the initials signed last this session.
 - `view.screenAge` counts ticks on the current screen (entry animations); `view.tick` keeps running while
   paused so menus can animate.
@@ -129,9 +135,14 @@ family-colored Crate and picks the blink cadence.
 The Director (`src/core/run/director.ts`) sends Enemies continuously, HA3-style, from the ramp table in
 `src/core/tuning/director.ts`:
 
-- `stages`: rows of `{ from, onScreenCap, spawnInterval, fireRate }`; the row whose `from` (seconds of ramp
-  clock) last passed applies. After the last row, `growth` keeps raising the cap and fire rate and shortening
-  the interval every `growth.every` seconds, up to its limits.
+- `steps`: the ramp steps, rows of `{ from, onScreenCap, spawnInterval, fireRate }`; the ramp step whose `from`
+  (seconds of ramp clock) last passed applies.
+- `growth`: escalation never ends. Past the last ramp step, with `p = ln(1 + t / timeScale)` (`t` = seconds
+  since it started), the fire rate rises by `growth.fireRate × p`, the spawn interval is divided by
+  `1 + growth.spawnPace × p` and the on-screen cap rises by `growth.onScreenCap × p` (rounded down).
+  Logarithmic growth has no plateau and no cliff: about one ramp step's worth in the first minute, then ever
+  slower, and the cap is a soft one that keeps creeping up. `rampAt(director, seconds)` (exported from the
+  core) is the lookup.
 - `roster`: one entry per Enemy kind (`Record<EnemyKind, RosterEntry>`): when it may start appearing
   (`from`), its relative `weight`, its own on-screen limit (`maxOnScreen`, null for none), and where it enters
   (`edges`: just outside the left/right edge within `minY..maxY`, or above the top). Behaviors then fly
@@ -235,9 +246,14 @@ drive it directly). The Run owns one director and calls it in this order every t
 Trigger rules: an Enemy whose tuning entry has `alwaysQuip: true` always triggers (replacing a
 showing box); otherwise a Quip triggers only with no box showing, after `quips.cooldown` seconds
 since the last box closed, and with `quips.chance`. Craft picks the theme (`THEME_OF_CRAFT`). The
-director draws from its own seeded stream (`seed ^ QUIP_STREAM` in `game.ts`), so talking never
-changes gameplay randomness. Events: `quip-started`, `quip-character` (one per visible character,
-for the blip) and `dialogue-closed`; the view exposes `run.hitStop` and `run.dialogue`.
+director draws from its own seeded stream (`deriveSeed(seed, QUIP_STREAM)` in `game.ts`), so talking
+never changes gameplay randomness. Events: `quip-started`, then `hit-stop-started` (`ticks` frozen, from
+the next tick) in the same tick, `hit-stop-ended` on the last frozen tick (or when a new Quip
+restarts it, or the Run is abandoned during it), `quip-character` (one per
+visible character, for the blip) and `dialogue-closed`; the view exposes `run.hitStop` and
+`run.dialogue`. The typewriter's `revealRate` (its speed between pauses) is set so that, with the
+clause and sentence pauses, the Quip catalog reveals at about 40 chars/s on average (the spec's rate;
+`tests/core/quip-director.test.ts` measures it over every Quip).
 
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
 Positions are game coordinates (640×360); boxes use their top-left corner.
@@ -273,7 +289,8 @@ the gavel and the wax seal are pipeline sprites from `src/render/art/generated/r
 the HUD (`src/render/hud/`), Crates and the Dialogue Box frame draw with master-palette colors only;
 the Weapon and Power-up icons are 16×16 pipeline sprites (`src/render/art/generated/icons.ts`) shared
 by the HUD, the Crates and Cómo jugar. Frames, plates, the parachute and the stamps are hand-authored
-palette data drawn in code (shared frame helpers in `src/render/frame.ts`), not pipeline art: #29
+palette data drawn in code (shared frame helpers in `src/render/frame.ts`: `fillCutRect`, `drawPlate`
+for the dark plates of the HUD and the share card, `drawCornerBrackets`), not pipeline art: #29
 uses the pipeline only where generated art helps (icons, the court record).
 
 - **Determinism rule**: the renderer only uses `Surface.fillRect` (integer-snapped solid rectangles) and
@@ -493,9 +510,10 @@ the touch adapter (no keyboard/mouse adapter, so a finger is never also a mouse 
 - **Stick math** (`src/platform/touch/stick.ts`): pure. Sticks float (the base appears under the thumb and
   is dragged along past the rim); radial dead zone of 20% rescaled from its edge; movement saturates at 60%
   deflection.
-- **Play mode**: left half = move stick, right half = aim stick (aims from Rexi's shoulder, fires while
-  pushed past the dead zone, keeps its last direction when released; while it is idle Rexi faces where he
-  walks). Jump button (bottom right of center), pause button (top right, under the score), and the HUD Weapon
+- **Play mode**: left half = move stick, right half = aim stick (aims from Rexi's shoulder and fires for as
+  long as it is held, even resting inside the dead zone; only a push past the dead zone changes the aim, so a
+  thumb at rest keeps firing along the last aim, or the way Rexi faces before any aim. It keeps its last
+  direction when released; while it is idle Rexi faces where he walks). Jump button (bottom right of center), pause button (top right, under the score), and the HUD Weapon
   icon is a button: a tap is `weaponNext`.
 - **Drop through platforms**: pull the move stick down past 60% deflection, within 45° of straight down
   (the keyboard's S/↓). The 45° cone means running with a downward slant never drops by accident, and it needs
@@ -588,10 +606,10 @@ stretch, and the difficulty should climb steadily rather than hit a cliff.
   last ~0.8 s of flight is straight and dodgeable. Volleys hold 3 rockets (was 4) every 6 s
   (was 5), and the first volley waits 4 s (was 3), so its arrival reads as a set piece. Rockets
   are now 35–40 % of the damage, in line with papers and bullets.
-- **Ramp** (`tuning.director`): the middle stages raise the fire rate more gently (1.05, 1.1,
+- **Ramp** (`tuning.director`): the middle ramp steps raise the fire rate more gently (1.05, 1.1,
   1.2, 1.3 at 1, 2, 3 and 4 minutes; was 1.1, 1.2, 1.3, 1.45), and the spawn interval eases from
   2.6 to 2.4, 2.2 and 2 s. The first minute is unchanged: an idle player still falls in 40–55 s.
-  `growth` is unchanged, so every Run still ends.
+  `growth` was unchanged then (it is endless now; see "Endless escalation" below).
 - **Receso** (`tuning.crates.recesoBoost`): ×3 weight below 50 % health (was ×2 below 40 %),
   so collecting Crates while hurt pays off.
 - **Mancuernas** (`tuning.weapons`): measured in play it dealt about 4 damage a throw and less
@@ -602,6 +620,19 @@ stretch, and the difficulty should climb steadily rather than hit a cliff.
   damage/s against 6.6) and last 7–15 s each. Crate weights give 62 % Weapons, 38 % Power-ups,
   and about 40 % of drops are picked up. Quips trigger about 3.3–3.4 times a minute (chance 0.25,
   cooldown 4 s), and Hit-stop (0.5 s, the spec's value) takes about 3 % of Run time.
+
+**Endless escalation (final review, #1).** `growth` was a step every minute up to hard limits
+(cap 10, interval 1.2 s, fire rate 2, all reached by 11 minutes), so difficulty plateaued. It is now
+logarithmic (see "Spawn Director and the ramp clock"), tuned to match the old steps for the first
+minutes past 4:00: fire rate 1.3 → ~1.4 at 5:00 and ~1.65 at 10:00, interval 2 → ~1.9 s and ~1.65 s, cap
+7 → 8 and 11, and still rising after that. The Archivador Artillado may now also enter from the top,
+and the bot and the Quips draw from `deriveSeed` streams. 100 seeds per profile:
+
+| Profile | Before (#30)             | After                    |
+| ------- | ------------------------ | ------------------------ |
+| casual  | 3:07 (2:45–3:23), 8 700  | 2:58 (2:39–3:20), 8 750  |
+| decent  | 3:50 (3:31–4:11), 14 750 | 3:54 (3:29–4:24), 15 200 |
+| expert  | 5:08 (4:39–5:40), 21 850 | 5:04 (4:25–5:36), 21 350 |
 
 ## How to add…
 
@@ -650,7 +681,10 @@ stretch, and the difficulty should climb steadily rather than hit a cliff.
    `src/render/art/generated/projectiles.ts`). One that turns with its heading or spins gets a
    RotSprite `parts` bake and is drawn with `drawAimed` or `drawTumbling`
    (`src/render/projectiles/turned.ts`, `tumble.ts`), like the law book and the dumbbell.
-7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts`, its
+7. Make its 16×16 icon (also shown on Crates and in Cómo jugar) through the art pipeline: a cell in the
+   `icon_cells` grid (`art/sheets.json`), then `templates` → `gen` → `clean icons` → the hand pass in
+   `scripts/art/ui/icons.py finish` → `export icons` (`scripts/art/README.md`, "UI art"), and map the
+   exported sprite in `weaponIcons` (`src/render/hud/weapon-icons.ts`). Draw its
    look in Rexi's fist (pixel text in `WEAPONS`, `scripts/art/characters/rexi.py`, rebuilt and
    exported, then mapped in `src/render/rexi/held-weapons.ts`), and add its Spanish name to
    `strings.weapons`.
@@ -671,8 +705,9 @@ stretch, and the difficulty should climb steadily rather than hit a cliff.
      Export an effect hook from the same file (`isPowerUpActive(ctx.state.rexi, id)` plus its tuning)
      and call it from the subsystem it changes, e.g. Pre-entreno scaling the `dt` the Enemy and
      Enemy-projectile steps use, or Día de Pierna adding thrust in `stepRexi`.
-4. Draw its icon (at most 12×12) in `src/render/hud/power-up-icons.ts` and add its Spanish name to
-   `strings.powerUps`. A visible effect reads `run.rexi.powerUps` in the renderer
+4. Make its 16×16 icon through the art pipeline, as for a Weapon (`scripts/art/ui/icons.py`, exported
+   to `src/render/art/generated/icons.ts`), map it in `powerUpIcons` (`src/render/hud/power-up-icons.ts`)
+   and add its Spanish name to `strings.powerUps`. A visible effect reads `run.rexi.powerUps` in the renderer
    (`src/render/layers/power-up-effects.ts`).
 5. Give a timed one its start sound in `POWER_UP_START_SOUNDS` (`src/platform/audio/sound-map.ts`).
 6. Test through a scripted Crate: `powerUpCrate(id, ON_REXI.x, { y: ON_REXI.y })` from

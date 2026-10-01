@@ -64,6 +64,9 @@ export const PROJECTILE_KINDS = [
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 
+/** Who fired a projectile: Rexi's projectiles hurt Enemies, Enemy projectiles hurt Rexi. */
+export type ProjectileOwner = 'rexi' | 'enemy';
+
 /** Particle kinds select a particle's look in the renderer (see src/core/run/effects). */
 export const PARTICLE_KINDS = [
   'flash', // opening white disc of an explosion

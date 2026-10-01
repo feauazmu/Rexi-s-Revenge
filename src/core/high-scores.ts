@@ -1,3 +1,4 @@
+import type { RunStats } from './stats';
 import type { StoragePort } from './storage';
 
 /**
@@ -19,14 +20,9 @@ export const HIGH_SCORES_STORAGE_KEY = 'high-scores';
 /** Version of the stored schema. Any other version reads as an empty table. */
 const SCHEMA_VERSION = 1;
 
-export interface HighScoreEntry {
+export interface HighScoreEntry extends RunStats {
   /** Exactly {@link INITIALS_LENGTH} capital letters A–Z. */
   readonly initials: string;
-  readonly score: number;
-  /** Enemies destroyed ("demandas desestimadas" in the UI). */
-  readonly enemiesDestroyed: number;
-  /** Run ticks survived. */
-  readonly ticksSurvived: number;
 }
 
 export type HighScoreTable = readonly HighScoreEntry[];

@@ -6,6 +6,7 @@ import {
   type EnemyKind,
   SCREEN_WIDTH,
   secondsToTicks,
+  rampAt,
   type EnemyView,
   type GameOptions,
   type TuningOverrides,
@@ -35,7 +36,7 @@ function peakOnScreen(game: Driver, seconds: number): number {
   return peak;
 }
 
-/** A Run that releases one Maletín-cóptero per second, with the given ramp stages. */
+/** A Run that releases one Maletín-cóptero per second, with the given ramp steps. */
 function fastRamp(tuning: TuningOverrides['director']): TuningOverrides {
   return { director: { firstSpawnDelay: 0, ...tuning } };
 }
@@ -76,49 +77,55 @@ describe('The first minute', () => {
 });
 
 describe('The ramp table', () => {
-  it('raises the on-screen cap stage by stage with the default table', () => {
+  it('raises the on-screen cap ramp step by ramp step with the default table', () => {
     const game = directed({ seed: 11 });
-    const peaks = [0, 60, 120, 180, 240].map(() => peakOnScreen(game, 60));
-    expect(peaks).toEqual(director.stages.slice(0, 5).map((s) => s.onScreenCap));
-    expect(peaks).toEqual([3, 4, 5, 6, 7]);
+    const peaks = [0, 60, 120, 180].map(() => peakOnScreen(game, 60));
+    expect(peaks).toEqual(director.steps.slice(0, 4).map((s) => s.onScreenCap));
+    expect(peaks).toEqual([3, 4, 5, 6]);
+    // The last ramp step starts at 4:00 with a cap of 7, which growth then raises.
+    expect(peakOnScreen(game, 30)).toBe(7);
   });
 
-  it('keeps creeping up after the last stage, up to the growth limit', () => {
+  it('keeps raising the on-screen cap after the last ramp step, with no hard limit', () => {
     const game = directed({
       tuning: fastRamp({
-        stages: [{ from: 0, onScreenCap: 1, spawnInterval: 0.5, fireRate: 1 }],
-        growth: { every: 3, onScreenCap: 1, onScreenCapMax: 3 },
+        steps: [{ from: 0, onScreenCap: 1, spawnInterval: 0.25, fireRate: 1 }],
+        growth: { timeScale: 2, onScreenCap: 2, spawnPace: 0, fireRate: 0 },
       }),
     });
-    const peaks = [0, 1, 2, 3].map(() => peakOnScreen(game, 3));
-    expect(peaks).toEqual([1, 2, 3, 3]);
+    // cap = floor(1 + 2 ln(1 + t / 2)): 1 until 1.3 s, 2 until 3.4 s, 3 until 7 s, 4 until 12.8 s…
+    const peaks = [1, 2, 3.5, 5.5, 8].map((seconds) => peakOnScreen(game, seconds));
+    expect(peaks).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it('spaces spawns by the stage spawn interval', () => {
+  it('spaces spawns by the ramp step spawn interval', () => {
     const game = directed({
       tuning: fastRamp({
-        stages: [
+        steps: [
           { from: 0, onScreenCap: 20, spawnInterval: 2, fireRate: 1 },
           { from: 10, onScreenCap: 20, spawnInterval: 1, fireRate: 1 },
         ],
+        growth: { timeScale: 0 },
       }),
     });
     expect(eventsOf(game.seconds(10), 'enemy-spawned')).toHaveLength(5);
     expect(eventsOf(game.seconds(5), 'enemy-spawned')).toHaveLength(5);
   });
 
-  it('shortens the spawn interval after the last stage, down to its minimum', () => {
+  it('keeps shortening the spawn interval after the last ramp step', () => {
     const game = directed({
       tuning: fastRamp({
-        stages: [{ from: 0, onScreenCap: 50, spawnInterval: 2, fireRate: 1 }],
-        growth: { every: 10, spawnInterval: -1, spawnIntervalMin: 0.5, onScreenCapMax: 50 },
+        steps: [{ from: 0, onScreenCap: 500, spawnInterval: 2, fireRate: 1 }],
+        growth: { timeScale: 10, spawnPace: 2, onScreenCap: 0, fireRate: 0 },
       }),
     });
-    const counts = [0, 1, 2].map(() => eventsOf(game.seconds(10), 'enemy-spawned').length);
-    expect(counts).toEqual([5, 10, 20]);
+    const counts = [0, 1, 2, 3].map(() => eventsOf(game.seconds(15), 'enemy-spawned').length);
+    counts.slice(1).forEach((count, i) => {
+      expect(count).toBeGreaterThan(counts[i] ?? Infinity);
+    });
   });
 
-  it('raises the Enemy fire rate stage by stage', () => {
+  it('raises the Enemy fire rate ramp step by ramp step', () => {
     const game = drive({
       overrides: {
         spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }],
@@ -128,10 +135,11 @@ describe('The ramp table', () => {
             'maletin-coptero': { fireIntervalMin: 1, fireIntervalMax: 1, driftSpeed: 0 },
           },
           director: {
-            stages: [
+            steps: [
               { from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 1 },
               { from: 10, onScreenCap: 3, spawnInterval: 3, fireRate: 2 },
             ],
+            growth: { timeScale: 0 },
           },
         },
       },
@@ -140,7 +148,7 @@ describe('The ramp table', () => {
     expect(eventsOf(game.seconds(10), 'enemy-fired')).toHaveLength(20);
   });
 
-  it('raises the fire rate after the last stage, up to its maximum', () => {
+  it('keeps raising the fire rate after the last ramp step', () => {
     const game = drive({
       overrides: {
         spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }],
@@ -150,30 +158,62 @@ describe('The ramp table', () => {
             'maletin-coptero': { fireIntervalMin: 1, fireIntervalMax: 1, driftSpeed: 0 },
           },
           director: {
-            stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 1 }],
-            growth: { every: 10, fireRate: 1, fireRateMax: 2 },
+            steps: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 1 }],
+            growth: { timeScale: 10, fireRate: 1, spawnPace: 0, onScreenCap: 0 },
           },
         },
       },
     });
-    const counts = [0, 1, 2].map(() => eventsOf(game.seconds(10), 'enemy-fired').length);
-    expect(counts[1]).toBe(20);
-    expect(counts[2]).toBe(20);
+    const counts = [0, 1, 2, 3].map(() => eventsOf(game.seconds(20), 'enemy-fired').length);
+    counts.slice(1).forEach((count, i) => {
+      expect(count).toBeGreaterThan(counts[i] ?? Infinity);
+    });
   });
 
   it('has a default table whose cap, pace and fire rate only ever escalate', () => {
-    const { stages } = director;
-    expect(stages[0]).toMatchObject({ from: 0, onScreenCap: 3 });
-    stages.slice(1).forEach((stage, i) => {
-      const previous = stages[i] ?? expect.unreachable();
-      expect(stage.from).toBeGreaterThan(previous.from);
-      expect(stage.onScreenCap).toBeGreaterThanOrEqual(previous.onScreenCap);
-      expect(stage.spawnInterval).toBeLessThanOrEqual(previous.spawnInterval);
-      expect(stage.fireRate).toBeGreaterThanOrEqual(previous.fireRate);
+    const { steps } = director;
+    expect(steps[0]).toMatchObject({ from: 0, onScreenCap: 3 });
+    steps.slice(1).forEach((step, i) => {
+      const previous = steps[i] ?? expect.unreachable();
+      expect(step.from).toBeGreaterThan(previous.from);
+      expect(step.onScreenCap).toBeGreaterThanOrEqual(previous.onScreenCap);
+      expect(step.spawnInterval).toBeLessThanOrEqual(previous.spawnInterval);
+      expect(step.fireRate).toBeGreaterThanOrEqual(previous.fireRate);
     });
-    expect(stages.some((s) => s.from === 60)).toBe(true);
+    expect(steps.some((s) => s.from === 60)).toBe(true);
     expect(director.growth.onScreenCap).toBeGreaterThan(0);
+    expect(director.growth.spawnPace).toBeGreaterThan(0);
     expect(director.growth.fireRate).toBeGreaterThan(0);
+  });
+});
+
+describe('Endless escalation', () => {
+  const at = (minutes: number) => rampAt(director, minutes * 60);
+
+  it('is harder at 10 minutes than at 6', () => {
+    const six = at(6);
+    const ten = at(10);
+    expect(ten.fireRate).toBeGreaterThan(six.fireRate);
+    expect(ten.spawnInterval).toBeLessThan(six.spawnInterval);
+    expect(ten.onScreenCap).toBeGreaterThan(six.onScreenCap);
+  });
+
+  it('never plateaus: fire rate and pace keep climbing every minute, and the cap creeps up', () => {
+    for (let minute = 4; minute < 60; minute++) {
+      expect(at(minute + 1).fireRate).toBeGreaterThan(at(minute).fireRate);
+      expect(at(minute + 1).spawnInterval).toBeLessThan(at(minute).spawnInterval);
+      expect(at(minute + 1).onScreenCap).toBeGreaterThanOrEqual(at(minute).onScreenCap);
+    }
+    expect(at(60).onScreenCap).toBeGreaterThan(at(20).onScreenCap);
+  });
+
+  it('climbs ever more slowly, with no cliff after the last ramp step', () => {
+    const rise = (from: number, to: number) => at(to).fireRate - at(from).fireRate;
+    expect(rise(5, 6)).toBeLessThan(rise(4, 5));
+    expect(rise(20, 21)).toBeLessThan(rise(5, 6));
+    // The first minute of growth climbs about as much as one ramp step did.
+    expect(rise(4, 5)).toBeLessThanOrEqual(0.15);
+    expect(at(4 + 1 / 60).spawnInterval).toBeCloseTo(at(4).spawnInterval, 1);
   });
 });
 

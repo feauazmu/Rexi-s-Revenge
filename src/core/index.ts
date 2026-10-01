@@ -13,6 +13,7 @@ export {
 } from './input';
 export type * from './events';
 export type * from './view';
+export type { RunStats } from './stats';
 export type {
   DeviceKind,
   GameOptions,
@@ -38,10 +39,12 @@ export { PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
 export {
   defaultTuning,
   EXPLOSION_SIZES,
+  rampAt,
   resolveTuning,
   type DeepPartial,
   type ExplosionSize,
   type QuipsTuning,
+  type RampValues,
   type TimedPowerUpId,
   type Tuning,
   type TuningOverrides,
@@ -60,11 +63,12 @@ export {
   type ParticleKind,
   type PowerUpId,
   type ProjectileKind,
+  type ProjectileOwner,
   type SpecialWeaponId,
   type WeaponId,
 } from './ids';
 export type { Box, Vec2 } from './math';
-export { createRng, type Rng } from './rng';
+export { createRng, deriveSeed, type Rng } from './rng';
 export { QUIPS, type Quip, type QuipTheme } from './quips/catalog';
 export {
   createQuipDirector,

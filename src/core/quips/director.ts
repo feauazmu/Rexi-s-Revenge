@@ -163,6 +163,9 @@ export function createQuipDirector(deps: QuipDirectorDeps): QuipDirector {
     const quip = drawQuip(theme);
     // A replacement keeps the open box and goes straight to typing.
     const open = box !== null || ticks.transition === 0;
+    // A replacement during a Hit-stop (several kills in one tick) closes the running one first,
+    // so every `hit-stop-started` gets its `hit-stop-ended`.
+    if (hitStop > 0) emit({ type: 'hit-stop-ended' });
     box = {
       quip,
       phase: open ? 'typing' : 'opening',
@@ -178,8 +181,8 @@ export function createQuipDirector(deps: QuipDirectorDeps): QuipDirector {
       quipId: quip.id,
       theme,
       enemyId: enemy.enemyId,
-      hitStopTicks: hitStop,
     });
+    if (hitStop > 0) emit({ type: 'hit-stop-started', ticks: hitStop });
   };
 
   const openness = (b: Box): number => {
@@ -200,7 +203,10 @@ export function createQuipDirector(deps: QuipDirectorDeps): QuipDirector {
 
     advance() {
       const frozen = hitStop > 0;
-      if (frozen) hitStop -= 1;
+      if (frozen) {
+        hitStop -= 1;
+        if (hitStop === 0) emit({ type: 'hit-stop-ended' });
+      }
       if (box) animate(box);
       else if (cooldown > 0) cooldown -= 1;
       return frozen;

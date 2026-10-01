@@ -4,11 +4,11 @@
  */
 import { SCREEN_WIDTH, secondsToTicks } from '../constants';
 import { ENEMY_KINDS, type EnemyKind } from '../ids';
-import type { Rng } from '../rng';
 import type { RosterEntry, Tuning } from '../tuning';
 import type { RunContext } from './context';
 import { spawnEnemy } from './enemies/system';
-import { rampAt, rampSeconds } from './ramp';
+import { rampAt } from '../tuning';
+import { rampSeconds } from './ramp';
 
 /** The Director's own state inside a Run. */
 export interface DirectorState {
@@ -35,7 +35,7 @@ export function stepDirector(ctx: RunContext): void {
   if (state.enemies.length < ramp.onScreenCap) {
     const kinds = allowedKinds(ctx, seconds);
     if (kinds.length === 0) return;
-    const kind = pickWeighted(ctx.rng, kinds);
+    const kind = ctx.rng.weighted(kinds);
     const entry = tuning.director.roster[kind];
     const { x, y } = entryPoint(ctx, kind, entry);
     spawnEnemy(ctx, kind, x, y);
@@ -53,18 +53,6 @@ function allowedKinds(ctx: RunContext, seconds: number): [EnemyKind, number][] {
     if (entry.maxOnScreen !== null && (onScreen.get(kind) ?? 0) >= entry.maxOnScreen) return [];
     return [[kind, entry.weight]];
   });
-}
-
-function pickWeighted<T>(rng: Rng, items: readonly (readonly [T, number])[]): T {
-  const total = items.reduce((sum, [, weight]) => sum + weight, 0);
-  let roll = rng.next() * total;
-  for (const [item, weight] of items) {
-    roll -= weight;
-    if (roll < 0) return item;
-  }
-  const last = items[items.length - 1];
-  if (!last) throw new Error('pickWeighted needs a non-empty list');
-  return last[0];
 }
 
 /** Top-left of a new Enemy just outside the chosen Arena edge. */

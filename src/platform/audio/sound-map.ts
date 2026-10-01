@@ -98,6 +98,8 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
   'crate-picked': () => 'crate-pickup',
   'crate-expired': () => null,
   'quip-started': () => null, // its first character blips
+  'hit-stop-started': () => null, // the freeze is felt, not heard
+  'hit-stop-ended': () => null,
   // Every second character, so fast typing stays a chatter instead of a buzz.
   'quip-character': ({ index }) => (index % 2 === 0 ? 'dialogue-blip' : null),
   'dialogue-closed': () => null,
