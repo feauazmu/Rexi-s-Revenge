@@ -10,13 +10,18 @@ const LEGS: Color = '#3a3448';
 const ARM: Color = '#e8b48a';
 const MAZO: Color = '#8a5a34';
 
+/** While invulnerable, Rexi blinks: hidden for this many ticks, then shown for as many. */
+const BLINK_TICKS = 4;
+
 /**
  * Placeholder Rexi: blocky body plus an "arm" of pixels toward the aim point. Replaced by the
  * code-drawn sprite and animations in the Rexi sprite ticket.
  */
 export function drawRexi(dc: DrawContext, run: RunView): void {
   const { surface } = dc;
-  const { x, y, w, h, facing, muzzle, aimDirection } = run.rexi;
+  const { x, y, w, h, facing, muzzle, aimDirection, invulnerableTicks } = run.rexi;
+  // Placeholder hurt feedback (blink); the hurt animation arrives with the Rexi sprite ticket.
+  if (invulnerableTicks > 0 && Math.floor(invulnerableTicks / BLINK_TICKS) % 2 === 1) return;
 
   surface.fillRect(x + 3, y, w - 6, 4, HAIR);
   surface.fillRect(x + 3, y + 4, w - 6, 5, SKIN);

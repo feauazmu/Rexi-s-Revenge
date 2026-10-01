@@ -13,7 +13,10 @@ export type GameEvent =
   | WeaponFiredEvent
   | EnemySpawnedEvent
   | EnemyHitEvent
-  | EnemyDestroyedEvent;
+  | EnemyDestroyedEvent
+  | EnemyFiredEvent
+  | RexiHitEvent
+  | RunEndedEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -57,4 +60,28 @@ export interface EnemyDestroyedEvent {
   /** Center of the Enemy when it was destroyed, in game coordinates. */
   readonly x: number;
   readonly y: number;
+}
+
+export interface EnemyFiredEvent {
+  readonly type: 'enemy-fired';
+  readonly enemyId: number;
+  readonly kind: EnemyKind;
+}
+
+/** An Enemy projectile hurt Rexi. Not emitted while he is invulnerable. */
+export interface RexiHitEvent {
+  readonly type: 'rexi-hit';
+  readonly damage: number;
+  /** Rexi's health after the hit. */
+  readonly health: number;
+}
+
+/** Rexi's health reached zero: the Run is over. Emitted once, in the tick of the fatal hit. */
+export interface RunEndedEvent {
+  readonly type: 'run-ended';
+  readonly score: number;
+  /** Enemies destroyed ("demandas desestimadas" in the UI). */
+  readonly enemiesDestroyed: number;
+  /** Run ticks survived, including the tick of the fatal hit. */
+  readonly ticksSurvived: number;
 }

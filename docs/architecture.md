@@ -52,6 +52,14 @@ Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
 spawning → Rexi → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
 (`tuning`, `rng`, `state`, `emit`, `nextId`).
 
+Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's projectiles hurt Enemies;
+Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
+A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and the invulnerability window
+(`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
+hit, at the ground, off-screen or when their lifetime runs out. When Rexi's health reaches zero the Run emits
+`run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
+advancing. Until the Veredicto screen exists, the Game starts a new Run 2 s later.
+
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
 Positions are game coordinates (480×270); boxes use their top-left corner.
 

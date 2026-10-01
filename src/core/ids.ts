@@ -17,6 +17,7 @@ export type EnemyKind = (typeof ENEMY_KINDS)[number];
 /** Projectile kinds select a projectile's look in the renderer and its hit rules. */
 export const PROJECTILE_KINDS = [
   'gavel', // Mazo Automático
+  'paper', // Maletín-cóptero
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

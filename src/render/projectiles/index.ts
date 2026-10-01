@@ -1,12 +1,14 @@
 import type { ProjectileKind, ProjectileView, RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { drawGavel } from './gavel';
+import { drawPaper } from './paper';
 
 export type ProjectileDrawer = (dc: DrawContext, projectile: ProjectileView) => void;
 
 /** One drawer per projectile kind (one file per kind, one line per entry here). */
 const projectileDrawers: Readonly<Record<ProjectileKind, ProjectileDrawer>> = {
   gavel: drawGavel,
+  paper: drawPaper,
 };
 
 export function drawProjectiles(dc: DrawContext, run: RunView): void {

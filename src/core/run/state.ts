@@ -10,6 +10,8 @@ export interface RunState {
   enemies: EnemyState[];
   projectiles: ProjectileState[];
   stats: RunStats;
+  /** True once Rexi's health reached zero; the Run no longer advances. */
+  ended: boolean;
   /** Scripted spawns not yet released, sorted by tick. Null when spawning is automatic. */
   scriptedSpawns: ScriptedSpawn[] | null;
 }
@@ -30,6 +32,10 @@ export interface RexiState extends Body {
   /** Ticks until the current Weapon may fire again. */
   fireCooldown: number;
   weapon: WeaponId;
+  /** Ticks left during which hits are ignored (0 = can be hurt). */
+  invulnerableTicks: number;
+  /** Ticks left of the hurt reaction (0 = not hurt). */
+  hurtTicks: number;
 }
 
 export interface EnemyState extends Box {
