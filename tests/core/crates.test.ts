@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultTuning,
   SCREEN_WIDTH,
+  SPECIAL_WEAPON_IDS,
   secondsToTicks,
   TICKS_PER_SECOND,
   type CrateView,
@@ -83,7 +84,12 @@ describe('Automatic Crate drops', () => {
   it('refuses a catalog where no content has a positive weight', () => {
     const game = drive({
       overrides: {
-        tuning: { crates: { firstDrop: 0, weights: { weapons: { 'lluvia-de-sellos': 0 } } } },
+        tuning: {
+          crates: {
+            firstDrop: 0,
+            weights: { weapons: Object.fromEntries(SPECIAL_WEAPON_IDS.map((id) => [id, 0])) },
+          },
+        },
       },
     });
     expect(() => game.ticks(1)).toThrow(/positive weight/);

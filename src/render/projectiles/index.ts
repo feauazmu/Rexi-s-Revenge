@@ -3,6 +3,7 @@ import type { DrawContext } from '../draw-context';
 import { drawGavel } from './gavel';
 import { drawPaper } from './paper';
 import { drawStamp } from './stamp';
+import { drawSubpoena } from './subpoena';
 
 export type ProjectileDrawer = (dc: DrawContext, projectile: ProjectileView) => void;
 
@@ -11,6 +12,7 @@ const projectileDrawers: Readonly<Record<ProjectileKind, ProjectileDrawer>> = {
   gavel: drawGavel,
   paper: drawPaper,
   stamp: drawStamp,
+  subpoena: drawSubpoena,
 };
 
 export function drawProjectiles(dc: DrawContext, run: RunView): void {

@@ -83,6 +83,16 @@ export interface ParticleTuning {
   readonly sparkGravity: number;
 }
 
+/** The trace a beam Weapon (Sentencia Firme) leaves in the air. */
+export interface BeamTuning {
+  /** Seconds the beam shows at full strength. */
+  readonly duration: number;
+  /** Seconds it then takes to fade out. */
+  readonly fade: number;
+  /** Screen-shake trauma added when it fires (0..1). */
+  readonly trauma: number;
+}
+
 export interface EffectsTuning {
   /** Most particles alive at once; the oldest are dropped first. 0 disables particles. */
   readonly maxParticles: number;
@@ -91,6 +101,7 @@ export interface EffectsTuning {
   readonly particles: ParticleTuning;
   readonly debris: DebrisTuning;
   readonly explosions: Readonly<Record<ExplosionSize, ExplosionTuning>>;
+  readonly beam: BeamTuning;
 }
 
 export const effectsTuning: EffectsTuning = {
@@ -147,4 +158,5 @@ export const effectsTuning: EffectsTuning = {
       trauma: 0.65,
     },
   },
+  beam: { duration: 0.17, fade: 0.13, trauma: 0.25 },
 };

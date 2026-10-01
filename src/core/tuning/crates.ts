@@ -41,6 +41,8 @@ export const cratesTuning: CratesTuning = {
   weights: {
     weapons: {
       'lluvia-de-sellos': 18,
+      'citaciones-teledirigidas': 14,
+      'sentencia-firme': 12,
     },
     powerUps: {},
   },

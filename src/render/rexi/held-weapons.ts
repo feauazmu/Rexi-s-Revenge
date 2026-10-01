@@ -54,8 +54,36 @@ const lluviaDeSellos: HeldWeapon = {
   },
 };
 
+/** Citaciones Teledirigidas: a fat manila envelope held edge-on, red wax seal near the front. */
+const citacionesTeledirigidas: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const half = 2.6;
+    if (u < -1 || u > 8 || Math.abs(v) > half) return null;
+    if (u >= 4.8 && u <= 6.8 && Math.abs(v) <= 1.3) return '4';
+    if (u >= 7.2) return barrel(v, half, '2', '2', '3');
+    return barrel(v, half, '1', '1', '3');
+  },
+};
+
+/** Sentencia Firme: a rolled parchment held like a rail gun, its tip glowing gold. */
+const sentenciaFirme: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const roll = 2;
+    if (u < -1.5 || u > 8 || Math.abs(v) > roll) return null;
+    if (u >= 7) return Math.abs(v) <= 0.8 ? '8' : '7';
+    if (u >= 6) return '7';
+    // A red ribbon tied around the roll.
+    if (u >= 2.4 && u < 3.4) return barrel(v, roll, '4', '4', 'Z');
+    return barrel(v, roll, '5', '6', '6');
+  },
+};
+
 /** One held look per Weapon (one line per entry). */
 export const heldWeapons: Readonly<Record<WeaponId, HeldWeapon>> = {
   'mazo-automatico': mazoAutomatico,
   'lluvia-de-sellos': lluviaDeSellos,
+  'citaciones-teledirigidas': citacionesTeledirigidas,
+  'sentencia-firme': sentenciaFirme,
 };

@@ -90,6 +90,8 @@ export interface ProjectileState extends Box {
   vy: number;
   /** Downward acceleration, px/s² (0 for straight shots). */
   readonly gravity: number;
+  /** Homing turn rate toward the nearest target, radians per second (0 = flies straight). */
+  readonly turnRate: number;
   readonly damage: number;
   /** Ticks left before the projectile disappears. */
   ttl: number;
