@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultTuning,
+  ENEMY_KINDS,
+  type EnemyKind,
   SCREEN_WIDTH,
   secondsToTicks,
   type EnemyView,
@@ -367,5 +369,28 @@ describe('The ramp clock', () => {
     game.ticks(1);
     expect(runOf(game.view).rampTicks).toBe(before.rampTicks + 1);
     expect(runOf(game.view).rampTicks).toBe(runOf(game.view).tick);
+  });
+});
+
+describe('A default Director-driven Run', () => {
+  it('runs 4 minutes with an invulnerable Rexi and sends every Enemy kind', () => {
+    // Default tuning except a Rexi who cannot die and a Mazo that one-shots, so the Director
+    // keeps sending fresh Enemies as Rexi clears the oldest one inside the Arena.
+    const game = drive({
+      seed: 7,
+      overrides: { tuning: { ...invincible, weapons: { 'mazo-automatico': { damage: 1000 } } } },
+    });
+    const seen = new Set<EnemyKind>();
+    for (let t = 0; t < secondsToTicks(4 * 60); t++) {
+      const enemies = runOf(game.view).enemies;
+      const target = enemies.find((e) => e.x > 0 && e.x + e.w < SCREEN_WIDTH);
+      const aim = target && { x: target.x + target.w / 2, y: target.y + target.h / 2 };
+      const events = game.ticks(1, aim ? { aim, fire: true } : {});
+      for (const e of eventsOf(events, 'enemy-spawned')) seen.add(e.kind);
+      expect(eventsOf(events, 'run-ended')).toHaveLength(0);
+    }
+    expect(game.view.screen).toBe('run');
+    expect(runOf(game.view).ended).toBe(false);
+    expect([...seen].sort()).toEqual([...ENEMY_KINDS].sort());
   });
 });
