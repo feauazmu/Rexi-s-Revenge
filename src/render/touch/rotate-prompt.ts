@@ -3,6 +3,7 @@
  * own small portrait surface (the platform scales it up like the game image): a phone that
  * turns from upright to sideways, an arrow, and the caption.
  */
+import { fillCutRect } from '../frame';
 import { masterPalette } from '../palette';
 import { defineSprite } from '../sprite';
 import { strings } from '../strings';
@@ -89,8 +90,7 @@ export function drawRotatePrompt(dc: TextTarget, tick: number): void {
 
 /** A phone: outlined body, screen with a glare stripe, and a speaker slot on the short side. */
 function drawPhone(s: Surface, x: number, y: number, w: number, h: number, sideways: boolean) {
-  s.fillRect(x + 1, y, w - 2, h, ui.ink);
-  s.fillRect(x, y + 1, w, h - 2, ui.ink);
+  fillCutRect(s, x, y, w, h, ui.ink);
   s.fillRect(x + 1, y + 1, w - 2, h - 2, PHONE_BODY);
   const bezel = 4;
   const sx = x + (sideways ? bezel + 2 : bezel);

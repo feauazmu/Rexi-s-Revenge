@@ -1,6 +1,7 @@
 import { SCREEN_WIDTH, TICKS_PER_SECOND, type ActivePowerUpView, type RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { masterPalette as P } from '../palette';
+import { fillCutRect } from '../frame';
 import { drawOutlinedText } from '../screens/ui';
 import { defineSprite, type SpriteDef } from '../sprite';
 import { strings } from '../strings';
@@ -23,11 +24,11 @@ const ink = {
   slotLight: P.robeMid,
   barEmpty: P.red1,
   barEmptyLine: P.night,
+  barTick: P.night,
   bar: P.red3,
   barShine: P.redLight,
   barGlint: P.coral,
   barShade: P.red2,
-  barLow: P.coral,
   timer: P.gold,
   timerShade: P.brass,
   timerEmpty: P.robe,
@@ -43,9 +44,6 @@ const PLATE = { x: MARGIN - 2, y: 4, w: 152, h: 15 } as const;
 const BAR = { x: PLATE.x + 15, y: PLATE.y + 4, w: 132, h: 7 } as const;
 /** The bar is cut into this many segments by dark ticks. */
 const BAR_SEGMENTS = 10;
-/** At or below this share of max health the bar pulses and the heart beats. */
-const LOW_HEALTH = 0.3;
-const PULSE_TICKS = 8;
 
 const HEART = defineSprite(
   { k: P.outline, t: P.coral, v: P.redLight, s: P.red3, q: P.red2, w: P.white },
@@ -100,20 +98,17 @@ export function drawHud(dc: DrawContext, run: RunView): void {
 
 /** A dark rectangle with cut corners and a lit top edge (behind HUD readouts). */
 function drawPlate(surface: Surface, x: number, y: number, w: number, h: number): void {
-  surface.fillRect(x + 1, y, w - 2, h, ink.outline);
-  surface.fillRect(x, y + 1, w, h - 2, ink.outline);
+  fillCutRect(surface, x, y, w, h, ink.outline);
   surface.fillRect(x + 1, y + 1, w - 2, h - 2, ink.plate);
   surface.fillRect(x + 2, y + 1, w - 4, 1, ink.plateEdge);
 }
 
 function drawHealth(dc: DrawContext, health: number, maxHealth: number): void {
-  const { surface, view } = dc;
+  const { surface } = dc;
   const share = maxHealth > 0 ? Math.min(1, Math.max(0, health / maxHealth)) : 0;
-  const low = health > 0 && share <= LOW_HEALTH;
-  const pulse = low && Math.floor(view.tick / PULSE_TICKS) % 2 === 1;
 
   drawPlate(surface, PLATE.x, PLATE.y, PLATE.w, PLATE.h);
-  surface.drawBitmap(dc.sprites.get(HEART), PLATE.x + 3, PLATE.y + 3 - (pulse ? 1 : 0));
+  surface.drawBitmap(dc.sprites.get(HEART), PLATE.x + 3, PLATE.y + 3);
 
   surface.fillRect(BAR.x, BAR.y, BAR.w, BAR.h, ink.outline);
   const inner = { x: BAR.x + 1, y: BAR.y + 1, w: BAR.w - 2, h: BAR.h - 2 };
@@ -122,7 +117,7 @@ function drawHealth(dc: DrawContext, health: number, maxHealth: number): void {
   // Never show an empty bar while Rexi still has health left.
   const fill = health > 0 ? Math.max(1, Math.round(inner.w * share)) : 0;
   if (fill > 0) {
-    surface.fillRect(inner.x, inner.y, fill, inner.h, pulse ? ink.barLow : ink.bar);
+    surface.fillRect(inner.x, inner.y, fill, inner.h, ink.bar);
     surface.fillRect(inner.x, inner.y, fill, 1, ink.barShine);
     surface.fillRect(inner.x, inner.y + inner.h - 1, fill, 1, ink.barShade);
     surface.fillRect(inner.x, inner.y, Math.min(fill, 2), 1, ink.barGlint);
@@ -130,16 +125,15 @@ function drawHealth(dc: DrawContext, health: number, maxHealth: number): void {
   // Segment ticks: dark notches on the top and bottom rows.
   for (let i = 1; i < BAR_SEGMENTS; i++) {
     const tx = inner.x + Math.round((inner.w * i) / BAR_SEGMENTS);
-    surface.fillRect(tx, inner.y, 1, 1, ink.outline);
-    surface.fillRect(tx, inner.y + inner.h - 1, 1, 1, ink.outline);
+    surface.fillRect(tx, inner.y, 1, 1, ink.barTick);
+    surface.fillRect(tx, inner.y + inner.h - 1, 1, 1, ink.barTick);
   }
 }
 
 /** A framed square holding an icon: outline with cut corners, bevelled fill. */
 function drawSlot(dc: DrawContext, icon: SpriteDef | null, x: number, y: number): void {
   const { surface } = dc;
-  surface.fillRect(x + 1, y, SLOT - 2, SLOT, ink.outline);
-  surface.fillRect(x, y + 1, SLOT, SLOT - 2, ink.outline);
+  fillCutRect(surface, x, y, SLOT, SLOT, ink.outline);
   surface.fillRect(x + 1, y + 1, SLOT - 2, SLOT - 2, ink.slot);
   surface.fillRect(x + 2, y + 1, SLOT - 4, 1, ink.slotLight);
   surface.fillRect(x + 1, y + 2, 1, SLOT - 4, ink.slotLight);

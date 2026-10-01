@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NEUTRAL_INPUT, type GameView, type Vec2 } from '../../src/core';
 import { createTouchController, AIM_DISTANCE } from '../../src/platform/touch/controller';
+import { HUD_WEAPON_ICON } from '../../src/render/hud/hud';
 import { TOUCH_LAYOUT } from '../../src/render/touch/layout';
 import { drive, driveFromTitle } from '../support/driver';
 
@@ -120,6 +121,15 @@ describe('touch controller: playing a Run', () => {
     expect(touch.sample(view).jump).toBe(true);
     touch.up(3, { x: 0, y: 0 });
     expect(touch.sample(view).jump).toBe(false);
+  });
+
+  it('the Weapon button covers the HUD Weapon slot it brackets', () => {
+    const slot = HUD_WEAPON_ICON;
+    const hit = L.weapon;
+    expect(hit.x).toBeLessThanOrEqual(slot.x);
+    expect(hit.y).toBeLessThanOrEqual(slot.y);
+    expect(hit.x + hit.w).toBeGreaterThanOrEqual(slot.x + slot.w);
+    expect(hit.y + hit.h).toBeGreaterThanOrEqual(slot.y + slot.h);
   });
 
   it('cycles Weapons with a tap on the HUD Weapon icon, as a one-tick edge', () => {

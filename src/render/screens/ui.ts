@@ -5,6 +5,7 @@
  */
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { drawCornerBrackets, fillCutRect } from '../frame';
 import { masterPalette } from '../palette';
 import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
@@ -18,10 +19,11 @@ export const ui = {
   goldDeep: masterPalette.brass,
   goldLight: masterPalette.light,
   muted: masterPalette.grey2,
-  panel: masterPalette.night,
-  panelLight: masterPalette.robe,
-  panelMid: masterPalette.robeMid,
+  /** Panels: robe fill on a night inner line, inside a robeMid bevel lit with robeSheen. */
+  panel: masterPalette.robe,
+  panelLight: masterPalette.robeMid,
   panelEdge: masterPalette.robeSheen,
+  panelLine: masterPalette.night,
   dim: masterPalette.night,
   keyFace: masterPalette.marble,
   keyLip: masterPalette.grey2,
@@ -31,8 +33,10 @@ export const ui = {
   wood: masterPalette.leather3,
   red: masterPalette.red3,
   redLight: masterPalette.coral,
+  redShade: masterPalette.red2,
   ghost: masterPalette.grey3,
   knob: masterPalette.grey2,
+  knobShade: masterPalette.grey1,
   backdrop: masterPalette.robe,
   backdropStripe: masterPalette.robeMid,
 } as const satisfies Record<string, Color>;
@@ -63,30 +67,20 @@ export function drawOutlinedText(
 }
 
 /**
- * A framed panel: outline with cut corners, a two-step bevel (lit top and left, shaded bottom
- * and right), an inner ink line, a flat fill with a highlight row, and brass corner brackets.
+ * A framed panel: outline with cut corners, a bevel (lit top and left, shaded bottom and
+ * right), a night inner line, a robe fill with a highlight row, and brass corner brackets.
  */
 export function drawPanel(surface: Surface, x: number, y: number, w: number, h: number): void {
-  surface.fillRect(x + 1, y, w - 2, h, ui.ink);
-  surface.fillRect(x, y + 1, w, h - 2, ui.ink);
-  surface.fillRect(x + 1, y + 1, w - 2, h - 2, ui.panelMid);
+  fillCutRect(surface, x, y, w, h, ui.ink);
+  surface.fillRect(x + 1, y + 1, w - 2, h - 2, ui.panelLight);
   surface.fillRect(x + 1, y + 1, w - 2, 1, ui.panelEdge);
   surface.fillRect(x + 1, y + 1, 1, h - 2, ui.panelEdge);
-  surface.fillRect(x + 2, y + h - 2, w - 3, 1, ui.panelLight);
-  surface.fillRect(x + w - 2, y + 2, 1, h - 3, ui.panelLight);
-  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ui.ink);
+  surface.fillRect(x + 2, y + h - 2, w - 3, 1, ui.panel);
+  surface.fillRect(x + w - 2, y + 2, 1, h - 3, ui.panel);
+  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ui.panelLine);
   surface.fillRect(x + 3, y + 3, w - 6, h - 6, ui.panel);
   surface.fillRect(x + 3, y + 3, w - 6, 1, ui.panelLight);
-  for (const [cx, cy, sx, sy] of [
-    [x + 4, y + 4, 1, 1],
-    [x + w - 5, y + 4, -1, 1],
-    [x + 4, y + h - 5, 1, -1],
-    [x + w - 5, y + h - 5, -1, -1],
-  ] as const) {
-    surface.fillRect(sx > 0 ? cx : cx - 3, cy, 4, 1, ui.goldDeep);
-    surface.fillRect(cx, sy > 0 ? cy : cy - 3, 1, 4, ui.goldDeep);
-    surface.fillRect(cx, cy, 1, 1, ui.gold);
-  }
+  drawCornerBrackets(surface, { x: x + 4, y: y + 4, w: w - 8, h: h - 8 }, 4, ui.goldDeep, ui.gold);
 }
 
 /** A filled disc drawn as one rectangle per row (no arcs: determinism rule). */
@@ -117,8 +111,7 @@ export function keyWidth(label: KeyLabel): number {
 export function drawKey(dc: DrawContext, label: KeyLabel, x: number, y: number): number {
   const { surface } = dc;
   const w = keyWidth(label);
-  surface.fillRect(x + 1, y, w - 2, KEY_HEIGHT, ui.ink);
-  surface.fillRect(x, y + 1, w, KEY_HEIGHT - 2, ui.ink);
+  fillCutRect(surface, x, y, w, KEY_HEIGHT, ui.ink);
   surface.fillRect(x + 1, y + 1, w - 2, KEY_HEIGHT - 2, ui.keyLip);
   surface.fillRect(x + 1, y + 1, w - 2, KEY_HEIGHT - 5, ui.keyFace);
   if (typeof label === 'string') {

@@ -3,6 +3,7 @@ import type { DrawContext } from '../draw-context';
 import { powerUpIcons } from '../hud/power-up-icons';
 import { weaponIcons } from '../hud/weapon-icons';
 import { masterPalette as P } from '../palette';
+import { drawCornerBrackets, fillCutRect } from '../frame';
 import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
 
@@ -67,7 +68,10 @@ const CANOPY_H = 11;
 const STRINGS_H = 7;
 const PANELS = 5;
 
-/** Built once from shapes (pixel text would be 32×16 of noise to review). */
+/**
+ * Built once from shapes (a 32×18 dome and strings; as pixel text it would be a block of noise to
+ * review). UI chrome like this is hand-authored palette data, not pipeline art (#29).
+ */
 function parachuteRows(): string[] {
   const rows: string[][] = [];
   const cx = (CANOPY_W - 1) / 2;
@@ -161,8 +165,7 @@ function drawCrate(dc: DrawContext, crate: CrateView): void {
   }
 
   // Outline with clipped corners.
-  surface.fillRect(x + 1, y, w - 2, h, P.outline);
-  surface.fillRect(x, y + 1, w, h - 2, P.outline);
+  fillCutRect(surface, x, y, w, h, P.outline);
 
   if (isFlashing(crate)) {
     surface.fillRect(x + 1, y + 1, w - 2, h - 2, FLASH);
@@ -213,14 +216,5 @@ function drawFrame(
   surface.fillRect(ix + FRAME, iy + FRAME, iw - 2 * FRAME, 1, style.labelShade);
   surface.fillRect(ix + FRAME, iy + FRAME, 1, ih - 2 * FRAME, style.labelShade);
   // L-shaped brackets on the four corners, each with a lit rivet.
-  for (const [cx, cy, sx, sy] of [
-    [ix, iy, 1, 1],
-    [ix + iw - 1, iy, -1, 1],
-    [ix, iy + ih - 1, 1, -1],
-    [ix + iw - 1, iy + ih - 1, -1, -1],
-  ] as const) {
-    surface.fillRect(sx > 0 ? cx : cx - 3, cy, 4, 1, style.bracket);
-    surface.fillRect(cx, sy > 0 ? cy : cy - 3, 1, 4, style.bracket);
-    surface.fillRect(cx + sx, cy + sy, 1, 1, style.bracketLight);
-  }
+  drawCornerBrackets(surface, { x: ix, y: iy, w: iw, h: ih }, 4, style.bracket, style.bracketLight);
 }

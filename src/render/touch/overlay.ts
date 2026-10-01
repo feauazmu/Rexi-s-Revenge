@@ -16,6 +16,7 @@ const KNOB: Color = ui.knob;
 const GHOST: Color = ui.ghost;
 const RED: Color = ui.red;
 const RED_LIGHT: Color = ui.redLight;
+const RED_SHADE: Color = ui.redShade;
 
 export function drawTouchOverlay(dc: DrawContext, overlay: TouchOverlayView): void {
   const pressed = (button: TouchButton) => overlay.pressed.includes(button);
@@ -79,10 +80,11 @@ function ghostDisc(r: number, fill: Color): SpriteDef {
   });
 }
 
-/** A solid button: outline, fill, and a lighter crescent at the top left. */
-function solidDisc(r: number, fill: Color, light: Color): SpriteDef {
-  return discSprite(r, { k: ui.ink, f: fill, l: light }, (dx, dy) => {
+/** A solid button: outline, fill, a lighter crescent at the top left and a shaded rim at the bottom right. */
+function solidDisc(r: number, fill: Color, light: Color, shade: Color): SpriteDef {
+  return discSprite(r, { k: ui.ink, f: fill, l: light, s: shade }, (dx, dy) => {
     if (!inDisc(r - 1, dx, dy)) return 'k';
+    if (!inDisc(r - 2, dx + 1, dy + 1)) return 's';
     const lit = inDisc(r - 3, dx + 1, dy + 1) && !inDisc(r - 3, dx - 1, dy);
     return lit ? 'l' : 'f';
   });
@@ -105,10 +107,17 @@ const STICK_REST_KNOB = discSprite(7, { g: GHOST }, (dx, dy) => (checker(dx, dy)
 const STICK_BASE_OUTER = ringSprite(R + 1, 1, ui.ink, false);
 const STICK_BASE_RING = ringSprite(R, 1, RING, false);
 const STICK_BASE_INNER = ringSprite(R - 1, 1, GHOST, true);
-const STICK_KNOB = discSprite(11, { k: ui.ink, f: KNOB, w: ui.keyFace }, (dx, dy) => {
-  if (!inDisc(10, dx, dy)) return 'k';
-  return inDisc(3, dx + 3, dy + 3) ? 'w' : 'f';
-});
+/** The held knob: a shaded ball (grey ramp) lit from the upper left. */
+const STICK_KNOB = discSprite(
+  11,
+  { k: ui.ink, f: KNOB, w: ui.keyFace, l: ui.ghost, s: ui.knobShade },
+  (dx, dy) => {
+    if (!inDisc(10, dx, dy)) return 'k';
+    if (inDisc(2, dx + 4, dy + 4)) return 'w';
+    if (inDisc(5, dx + 3, dy + 3)) return 'l';
+    return inDisc(8, dx + 1, dy + 1) ? 'f' : 's';
+  },
+);
 
 function drawStick(dc: DrawContext, stick: { origin: Vec2; knob: Vec2 } | null, rest: Vec2) {
   if (!stick) {
@@ -151,7 +160,7 @@ const JUMP_ARROW = defineSprite({ '#': ui.text, k: ui.ink }, [
   '..kkkkk..',
 ]);
 const JUMP_IDLE = ghostDisc(L.jump.r, RED);
-const JUMP_PRESSED = solidDisc(L.jump.r, RED, RED_LIGHT);
+const JUMP_PRESSED = solidDisc(L.jump.r, RED, RED_LIGHT, RED_SHADE);
 
 function drawJump(dc: DrawContext, pressed: boolean): void {
   const { x, y } = L.jump;
@@ -160,7 +169,7 @@ function drawJump(dc: DrawContext, pressed: boolean): void {
 }
 
 const PAUSE_IDLE = ghostDisc(L.pause.r, RING);
-const PAUSE_PRESSED = solidDisc(L.pause.r, RING, KNOB);
+const PAUSE_PRESSED = solidDisc(L.pause.r, RING, KNOB, ui.panelLight);
 
 function drawPause(dc: DrawContext, pressed: boolean): void {
   const { x, y } = L.pause;
@@ -210,14 +219,14 @@ interface RoundButton {
 
 const CONFIRM: RoundButton = {
   ...L.confirm,
-  idle: solidDisc(L.confirm.r, ui.gold, ui.keyFace),
-  pressed: solidDisc(L.confirm.r, ui.keyLit, ui.keyFace),
+  idle: solidDisc(L.confirm.r, ui.gold, ui.goldLight, ui.goldDeep),
+  pressed: solidDisc(L.confirm.r, ui.goldLight, ui.text, ui.gold),
   icon: CHECK,
 };
 const BACK: RoundButton = {
   ...L.back,
-  idle: solidDisc(L.back.r, ui.panelLight, ui.panelEdge),
-  pressed: solidDisc(L.back.r, ui.panelEdge, KNOB),
+  idle: solidDisc(L.back.r, ui.panelLight, ui.panelEdge, ui.panel),
+  pressed: solidDisc(L.back.r, ui.panelEdge, KNOB, ui.panelLight),
   icon: CROSS,
 };
 

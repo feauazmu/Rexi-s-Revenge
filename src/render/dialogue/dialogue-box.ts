@@ -4,17 +4,18 @@ import { masterPalette as P } from '../palette';
 import { strings } from '../strings';
 import type { Color } from '../surface';
 import { drawText, fonts, type BitmapFont } from '../text';
+import { fillCutRect } from '../frame';
 import { REXI_PORTRAIT } from './rexi-portrait';
 
-/** Frame colors (master palette): a marble border lit at the top, a night panel, gold accents. */
+/** Frame colors (master palette): a marble border lit at the top, a robe panel, gold accents. */
 const ink = {
   outline: P.outline,
   border: P.marble,
   borderLight: P.white,
   borderShade: P.grey3,
-  fill: P.night,
-  fillShade: P.outline,
-  fillSheen: P.robe,
+  fill: P.robe,
+  fillLine: P.night,
+  fillSheen: P.robeMid,
   text: P.white,
   name: P.gold,
   nameLight: P.light,
@@ -125,8 +126,7 @@ function drawPlate(
   shade: Color,
 ): void {
   const { surface } = dc;
-  surface.fillRect(x + 1, y, w - 2, h, OUTLINE);
-  surface.fillRect(x, y + 1, w, h - 2, OUTLINE);
+  fillCutRect(surface, x, y, w, h, OUTLINE);
   surface.fillRect(x + 1, y + 1, w - 2, h - 2, face);
   surface.fillRect(x + 2, y + 1, w - 4, 1, light);
   surface.fillRect(x + 1, y + h - 2, w - 2, 1, shade);
@@ -135,13 +135,13 @@ function drawPlate(
 
 /**
  * The frame shared by the box and the portrait: a marble border plate (lit top, shaded bottom
- * and right). With `filled`, an inner ink line and the night panel with a sheen row follow.
+ * and right). With `filled`, an inner ink line and the robe panel with a sheen row follow.
  */
 function drawFrame(dc: DrawContext, x: number, y: number, w: number, h: number, filled: boolean) {
   drawPlate(dc, x, y, w, h, ink.border, ink.borderLight, ink.borderShade);
   if (!filled) return;
   const { surface } = dc;
-  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ink.fillShade);
+  surface.fillRect(x + 2, y + 2, w - 4, h - 4, ink.fillLine);
   surface.fillRect(x + 3, y + 3, w - 6, h - 6, ink.fill);
   surface.fillRect(x + 3, y + 3, w - 6, 1, ink.fillSheen);
 }

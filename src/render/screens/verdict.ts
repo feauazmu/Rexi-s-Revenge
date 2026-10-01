@@ -65,7 +65,7 @@ export function drawDefeatBanner(dc: DrawContext, age: number): void {
   const { surface } = dc;
   const drop = Math.max(0, BANNER_AT + BANNER_DROP_TICKS - age);
   const y = BANNER.y - Math.round((drop * drop * (BANNER.y + BANNER.h)) / BANNER_DROP_TICKS ** 2);
-  surface.fillRect(0, y, SCREEN_WIDTH, BANNER.h, ui.ink);
+  surface.fillRect(0, y, SCREEN_WIDTH, BANNER.h, ui.panelLine);
   surface.fillRect(0, y + 3, SCREEN_WIDTH, 1, doc.red);
   surface.fillRect(0, y + BANNER.h - 4, SCREEN_WIDTH, 1, doc.red);
   drawOutlinedText(dc, fonts.large, strings.defeat, SCREEN_WIDTH / 2, y + 13 - LARGE_CAP, ui.gold, {
@@ -228,11 +228,12 @@ function drawStamp(dc: DrawContext, verdict: VerdictView, cx: number, cy: number
   surface.fillRect(left + w - 2, top + 15, 2, 4, doc.paper);
   surface.fillRect(left + w - 30, top + h - 2, 7, 2, doc.paper);
   drawText(dc, fonts.large, text, cx + 1, top + 6 - LARGE_CAP, { color: doc.red, align: 'center' });
-  // Ink that did not take: paper specks scattered over the stamp on a fixed hash, so the
-  // wear is the same every frame.
+  // Ink that did not take: paper specks on the stamp's frame (never on the glyphs, so the
+  // word stays readable), on a fixed hash so the wear is the same every frame.
   for (let i = 0; i < (w * h) / 22; i++) {
     const sx = (i * 37 + ((i * i * 13) % 11)) % (w - 2);
     const sy = (i * 23 + ((i * 7) % 5)) % (h - 2);
+    if (sy >= 3 && sy < h - 5 && sx >= 3 && sx < w - 5) continue;
     surface.fillRect(left + 1 + sx, top + 1 + sy, 1, 1, doc.paper);
   }
 }
