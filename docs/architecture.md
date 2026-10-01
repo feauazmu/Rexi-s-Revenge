@@ -279,8 +279,8 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 
 ## Audio
 
-`src/platform/audio/` turns Game events into synthesized sound effects. No audio files: every sound
-is code, like the art.
+`src/platform/audio/` turns Game events into synthesized sound effects and plays the soundtrack. The
+effects are code, like the art; the only audio file is the music loop, `public/music/theme.mp3`.
 
 - **Synth** (`synth.ts`, pure): a small sfxr-style synthesizer. A `SynthPatch` is a few layers
   (square/saw/triangle/sine/noise, exponential pitch slide, steps, vibrato/tremolo, attack-hold-punch-decay
@@ -301,11 +301,22 @@ is code, like the art.
   preset into an `AudioBuffer` once, and plays each cue as a buffer source → gain (→ panner) → effects bus.
   Mix: effects bus and music bus → master → compressor → speakers. "Silenciar música" (`mute-toggled`,
   and the persisted flag at start) fades only the **music bus**.
-- **Music**: `engine.connectMusic((context, musicBus) => …)` hands the music player the context and the
-  music bus once audio is unlocked; connect a looping `AudioBufferSourceNode` to `musicBus` and mute just
-  works.
+- **Music** (`music.ts`): `createMusicPlug({ track: MUSIC_TRACK, load })` starts fetching the MP3 at boot
+  and returns the plug for `engine.connectMusic((context, musicBus) => …)`, which runs once audio is
+  unlocked: it decodes the file and starts one `AudioBufferSourceNode` with `loop`, explicit `loopStart`
+  and `loopEnd`, from `loopStart`. It is never stopped, so the music carries on across Title, Run, pause
+  and Veredicto; mute fades the music bus. `MUSIC_LEVEL` balances the bus against the effects.
+- **Music track** (`music-track.ts`, generated): file and loop points written by
+  `scripts/music-loop/make-music-loop.ts`. The script decodes a generated clip (raw clips live in
+  `reference/audio/`, outside the bundle), finds a bar-aligned loop (`loop-math.ts`, pure and tested:
+  the longest bar count whose seam repeats, refined sample by sample), crossfades the seam, pads the body
+  with 0.5 s of its own wrap-around audio on both sides (so the MP3 encoder delay, which browsers trim
+  differently, cannot open a gap) and encodes the MP3 with LAME in WASM. Re-run it with
+  `node scripts/music-loop/make-music-loop.ts reference/audio/music-candidate-2.mp3`; add `--analyze` to
+  compare clips without writing anything.
 - The shell mirrors the engine status to `#app[data-audio]` (`locked` → `running`, or `suspended`,
-  `unavailable`) and `#app[data-music]` (`on`/`muted`) for the smoke tests.
+  `unavailable`), `#app[data-music]` (`on`/`muted`) and the soundtrack to `#app[data-music-track]`
+  (`loading` → `playing`, or `failed`) for the smoke tests.
 
 ## How to add…
 

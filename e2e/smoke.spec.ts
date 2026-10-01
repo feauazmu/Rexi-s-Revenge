@@ -136,6 +136,10 @@ test('audio stays off until the first interaction, then starts without autoplay 
   await page.keyboard.press('Enter');
   await expect.poll(() => screenOf(page)).toBe('run');
   await expect.poll(() => page.locator('#app').getAttribute('data-audio')).toBe('running');
+  // The soundtrack (public/music) is fetched with the site base, decoded and looping.
+  await expect
+    .poll(() => page.locator('#app').getAttribute('data-music-track'), { timeout: 10_000 })
+    .toBe('playing');
   await page.mouse.down(); // fire a few shots: sounds play through the running engine
   await page.waitForTimeout(400);
   await page.mouse.up();

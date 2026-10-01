@@ -20,6 +20,16 @@ All images were generated through OpenRouter with the creation-tool, using the d
 
 No image was regenerated. Every first attempt met its brief.
 
+## Music
+
+Generated through OpenRouter with the creation-tool and the default music model `google/lyria-3-clip-preview` (30.8 s clips, MP3 44.1 kHz stereo). Both raw clips and their JSON sidecars (full prompt, model, cost) are in `reference/audio/`, outside the bundle. The prompts asked for an instrumental, comedic 80s workout synth-rock track with a chiptune square-wave lead at a steady 140 BPM, so the loop could be cut on bars.
+
+| File                                    | Model                       | Notes                                                                                                                                                                                         | Cost (USD) |
+| --------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `reference/audio/music-candidate-1.mp3` | google/lyria-3-clip-preview | Candidate 1: 140.0 BPM, RMS -14.3 dBFS, steady level; best 16-bar seam score 0.78 (100 ms window). Not used                                                                                   | 0.04       |
+| `reference/audio/music-candidate-2.mp3` | google/lyria-3-clip-preview | Candidate 2: 140.0 BPM, RMS -14.3 dBFS, steady level, no intro or ending; best 16-bar seam score 0.88. **Used**                                                                               | 0.04       |
+| `public/music/theme.mp3`                | (derived)                   | 16 bars (27.43 s) of candidate 2 from 0.366 s, 30 ms equal-power seam crossfade, 0.5 s wrap-around padding, peak -1 dBFS, LAME VBR q4 (~140 kbps) via `scripts/music-loop/make-music-loop.ts` | 0.0000     |
+
 ## Budget
 
 Shared cap for all generated media (images + music): **$5.00**
@@ -27,5 +37,5 @@ Shared cap for all generated media (images + music): **$5.00**
 | Item                   | Cost (USD)                            |
 | ---------------------- | ------------------------------------- |
 | Images (8 generations) | 0.5389                                |
-| Music                  | not yet generated                     |
-| **Running total**      | **0.5389 of 5.00** (4.4611 remaining) |
+| Music (2 generations)  | 0.0800                                |
+| **Running total**      | **0.6189 of 5.00** (4.3811 remaining) |

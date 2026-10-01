@@ -49,8 +49,12 @@ export interface AudioEngine {
   readonly status: AudioStatus;
 }
 
-/** Music bus level when not muted. */
-export const MUSIC_LEVEL = 0.55;
+/**
+ * Music bus level when not muted. The track is normalized to a -1 dBFS peak (about -16 dBFS RMS);
+ * at 0.35 (-9 dB) it sits around -25 dBFS RMS, 7-12 dB under the common effects (shots, hits,
+ * pickups and menu blips reach -12 to -18 dBFS RMS over 100 ms), so they stay readable over it.
+ */
+export const MUSIC_LEVEL = 0.35;
 /** Sound effects never exceed this many voices together. */
 const MAX_VOICES = 14;
 /** Time constant of mute fades, seconds (about 0.1 s to silence, no click). */

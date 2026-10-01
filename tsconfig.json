@@ -16,7 +16,9 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    // Lets the Node build scripts (run with type stripping) import each other as `./x.ts`.
+    "allowImportingTsExtensions": true
   },
-  "include": ["src", "tests", "e2e", "*.config.ts"]
+  "include": ["src", "tests", "e2e", "scripts", "*.config.ts"]
 }
