@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art side-scrolling game background, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, wide 16:9 single-screen arena. A city plaza at sunset: sky in banded gradient from deep purple at top through magenta and orange to yellow near the horizon, a few drifting pixel clouds, a distant city skyline silhouette. On the left a classical white courthouse with columns, steps and a triangular pediment. On the right a tall modern glass office tower labeled \"BUFETE & PESAS S.A.\" with a large rooftop billboard that reads \"JUEVES 2×1\" with a dumbbell graphic. Flat stone plaza ground across the bottom with a couple of raised stone platforms and benches. Empty of characters, wide open sky in the middle for flying enemies.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.067286,
+  "created_at": "2026-10-01T07:53:01.790Z",
+  "asset": {
+    "file": "arena.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}

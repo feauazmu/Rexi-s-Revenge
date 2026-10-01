@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art character reference sheet, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Character \"Rexi\": an extremely muscular male judge (bodybuilder physique, huge arms and shoulders), short light-brown hair, confident grin, clean-shaven with strong jaw. He wears a black judge's robe whose sleeves are torn off (ragged frayed edges at the shoulders), worn open over a white tank top, gray trousers and dark boots. On his LEFT upper arm a tattoo of a lion head next to a small classical columned courthouse (Greek temple with pillars and triangular pediment). Show three views side by side at the same scale: front view, side view (facing right), and back view, plus one close-up inset of the left-arm tattoo and one close-up face portrait inset (for a dialogue box portrait). Clean character turnaround layout, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.0672995,
+  "created_at": "2026-10-01T07:51:44.215Z",
+  "asset": {
+    "file": "rexi-character-sheet.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}

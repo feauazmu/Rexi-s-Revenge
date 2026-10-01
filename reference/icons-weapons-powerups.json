@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art game icon sheet, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, flat plain dark-gray background, grid of 11 square icons with consistent size and black outlines, each with a small label underneath in pixel font. Top row, 6 WEAPON icons: \"MAZO AUTOMÁTICO\" a judge's wooden gavel with motion lines; \"LLUVIA DE SELLOS\" a fan of red rubber stamps; \"MANCUERNAS\" an iron dumbbell with a lit fuse; \"CÓDIGO PENAL\" a thick red law book with a rocket flame behind it; \"CITACIONES TELEDIRIGIDAS\" a folded paper subpoena envelope with a homing target reticle; \"SENTENCIA FIRME\" a glowing golden beam emanating from a scroll. Bottom row, 5 POWER-UP icons: \"PRE-ENTRENO\" a pre-workout shaker bottle with a clock; \"RECESO\" a coffee cup with a red health cross; \"INMUNIDAD JUDICIAL\" a golden shield with scales of justice; \"DÍA DE PIERNA\" a muscular leg with jet flames (jetpack); \"CREATINA\" a white supplement tub with \"x3\".",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.067332,
+  "created_at": "2026-10-01T07:53:11.649Z",
+  "asset": {
+    "file": "icons-weapons-powerups.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}
