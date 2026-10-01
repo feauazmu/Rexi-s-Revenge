@@ -148,6 +148,8 @@ export interface RexiView extends BoxView {
   readonly vx: number;
   readonly vy: number;
   readonly grounded: boolean;
+  /** Día de Pierna's thrust is pushing him up this tick (its jet trail is drawn). */
+  readonly flying: boolean;
   /** Current health, 0..maxHealth (the HUD health bar). */
   readonly health: number;
   readonly maxHealth: number;

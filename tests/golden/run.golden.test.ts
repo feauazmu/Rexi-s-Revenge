@@ -177,13 +177,50 @@ describe('Power-up goldens', () => {
       seed: 1,
       overrides: {
         spawns: [
-          powerUpCrate('receso', 200),
-          powerUpCrate('inmunidad-judicial', 270),
-          powerUpCrate('creatina', 340),
+          powerUpCrate('receso', 180),
+          powerUpCrate('inmunidad-judicial', 235),
+          powerUpCrate('creatina', 290),
+          powerUpCrate('pre-entreno', 345),
+          powerUpCrate('dia-de-pierna', 400),
         ],
       },
     });
     game.seconds(2, { aim: { x: 300, y: 200 } });
     await expectGolden('crate-power-ups', renderView(game.view));
+  });
+
+  it('run-pre-entreno: the slowed world tinted, speed lines behind a running Rexi', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [maletin, powerUpCrate('pre-entreno', ON_REXI.x, onRexi)],
+        tuning: holdStill({
+          enemies: {
+            'maletin-coptero': { fireIntervalMin: 0.4, fireIntervalMax: 0.4, aimError: 0 },
+          },
+        }),
+      },
+    });
+    game.seconds(2.5, { aim: atMaletin });
+    game.seconds(0.4, { move: 1, aim: atMaletin });
+    const { rexi, projectiles } = runOf(game.view);
+    expect(rexi.powerUps.map((p) => p.id)).toEqual(['pre-entreno']);
+    expect(projectiles.some((p) => p.owner === 'enemy')).toBe(true);
+    await expectGolden('run-pre-entreno', renderView(game.view));
+  });
+
+  it('run-dia-de-pierna: Rexi flying on a jet trail from his legs', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [maletin, powerUpCrate('dia-de-pierna', ON_REXI.x, onRexi)],
+        tuning: holdStill(),
+      },
+    });
+    game.seconds(0.6, { jump: true, move: 1, aim: atMaletin });
+    const { rexi } = runOf(game.view);
+    expect(rexi.flying).toBe(true);
+    expect(rexi.powerUps.map((p) => p.id)).toEqual(['dia-de-pierna']);
+    await expectGolden('run-dia-de-pierna', renderView(game.view));
   });
 });

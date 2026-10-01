@@ -46,16 +46,18 @@ export const cratesTuning: CratesTuning = {
   blinkTime: 3,
   weights: {
     weapons: {
-      'lluvia-de-sellos': 18,
-      'citaciones-teledirigidas': 14,
-      'sentencia-firme': 12,
+      'lluvia-de-sellos': 27,
+      'citaciones-teledirigidas': 21,
+      'sentencia-firme': 18,
     },
-    // About 37 % of drops (Weapons about 63 %); Receso the most common. Rebalance when the
+    // About 38 % of drops (Weapons about 62 %); Receso the most common. Rebalance when the
     // explosive Weapons get their weights.
     powerUps: {
       receso: 12,
       'inmunidad-judicial': 6,
       creatina: 8,
+      'pre-entreno': 7,
+      'dia-de-pierna': 7,
     },
   },
   recesoBoost: { belowHealth: 0.4, weightMultiplier: 2 },

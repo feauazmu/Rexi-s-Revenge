@@ -4,6 +4,7 @@ import { clamp, directionTo, type Vec2 } from '../math';
 import type { Tuning } from '../tuning';
 import type { RunContext } from './context';
 import { stepBody, type World } from './physics';
+import { applyFlightThrust, stopAtFlightCeiling } from './power-ups/dia-de-pierna';
 import { hasInmunidadJudicial } from './power-ups/inmunidad-judicial';
 import type { RexiState } from './state';
 import { createInventory } from './weapons/inventory';
@@ -22,6 +23,7 @@ export function createRexi(tuning: Tuning): RexiState {
     vy: 0,
     grounded: true,
     rising: false,
+    flying: false,
     health: rexi.maxHealth,
     maxHealth: rexi.maxHealth,
     facing: 1,
@@ -44,7 +46,10 @@ export function worldOf(tuning: Tuning): World {
   };
 }
 
-/** Rexi controller: running, jumping, gravity and aiming from one input frame. */
+/**
+ * Rexi controller: running, jumping, gravity and aiming from one input frame, plus Día de
+ * Pierna's flight while jump is held.
+ */
 export function stepRexi(ctx: RunContext, input: InputFrame): void {
   const { rexi } = ctx.state;
   const { tuning } = ctx;
@@ -62,7 +67,9 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
     if (rexi.vy < 0) rexi.vy *= tuning.rexi.jumpCutFactor;
     rexi.rising = false;
   }
+  rexi.flying = applyFlightThrust(ctx, input);
   stepBody(rexi, worldOf(tuning), DT, { dropThrough: input.drop });
+  stopAtFlightCeiling(ctx);
 
   rexi.aim = input.aim;
   rexi.facing = input.aim.x < rexi.x + rexi.w / 2 ? -1 : 1;

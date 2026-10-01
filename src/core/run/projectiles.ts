@@ -3,6 +3,7 @@ import type { ProjectileKind } from '../ids';
 import { center, clamp, overlaps, rotate, type Box, type Vec2 } from '../math';
 import type { RunContext } from './context';
 import { damageEnemy } from './enemies/system';
+import { enemyTimeScale } from './power-ups/pre-entreno';
 import { canHurtRexi, damageRexi } from './rexi';
 import type { ProjectileState } from './state';
 
@@ -49,18 +50,24 @@ export function spawnProjectile(ctx: RunContext, spawn: ProjectileSpawn): Projec
   return projectile;
 }
 
-/** Moves every projectile, resolves hits and removes spent ones. */
+/**
+ * Moves every projectile, resolves hits and removes spent ones. Enemy projectiles run on Enemy
+ * time (Pre-entreno slows their flight, homing and lifetime); Rexi's always run at full speed.
+ */
 export function stepProjectiles(ctx: RunContext): void {
   const { state } = ctx;
   const groundY = ctx.tuning.arena.groundY;
+  const enemyScale = enemyTimeScale(ctx);
 
   state.projectiles = state.projectiles.filter((p) => {
-    if (p.turnRate > 0) steer(ctx, p);
-    p.vy += p.gravity * DT;
-    p.x += p.vx * DT;
-    p.y += p.vy * DT;
+    const scale = p.owner === 'enemy' ? enemyScale : 1;
+    const dt = DT * scale;
+    if (p.turnRate > 0) steer(ctx, p, dt);
+    p.vy += p.gravity * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
     p.age += 1;
-    p.ttl -= 1;
+    p.ttl -= scale;
 
     if (p.owner === 'rexi') {
       const target = state.enemies.find((enemy) => enemy.health > 0 && overlaps(p, enemy));
@@ -79,7 +86,7 @@ export function stepProjectiles(ctx: RunContext): void {
 }
 
 /** Turns a homing projectile toward its nearest target by at most its turn rate, keeping its speed. */
-function steer(ctx: RunContext, p: ProjectileState): void {
+function steer(ctx: RunContext, p: ProjectileState, dt: number): void {
   const target = homingTarget(ctx, p);
   if (!target) return;
   const from = center(p);
@@ -88,7 +95,7 @@ function steer(ctx: RunContext, p: ProjectileState): void {
   const wanted = Math.atan2(to.y - from.y, to.x - from.x);
   // Shortest signed angle from the heading to the target, in (-π, π].
   const error = Math.atan2(Math.sin(wanted - heading), Math.cos(wanted - heading));
-  const maxTurn = p.turnRate * DT;
+  const maxTurn = p.turnRate * dt;
   const turned = rotate({ x: p.vx, y: p.vy }, clamp(error, -maxTurn, maxTurn));
   p.vx = turned.x;
   p.vy = turned.y;

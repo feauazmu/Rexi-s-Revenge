@@ -3,6 +3,7 @@ import {
   defaultTuning,
   ENEMY_KINDS,
   EXPLOSION_SIZES,
+  POWER_UP_IDS,
   WEAPON_IDS,
   type GameEvent,
   type GameEventType,
@@ -11,6 +12,7 @@ import { SOUND_PRESETS } from '../../../src/platform/audio/presets';
 import {
   ENEMY_FIRE_SOUNDS,
   EXPLOSION_SOUNDS,
+  POWER_UP_START_SOUNDS,
   soundForEvent,
   WEAPON_SOUNDS,
 } from '../../../src/platform/audio/sound-map';
@@ -117,8 +119,19 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
       { type: 'power-up-started', powerUp: 'inmunidad-judicial', ticks: 480, refreshed: true },
       'power-up-start',
     ],
+    [
+      { type: 'power-up-started', powerUp: 'pre-entreno', ticks: 480, refreshed: false },
+      'slow-motion',
+    ],
+    [
+      { type: 'power-up-started', powerUp: 'dia-de-pierna', ticks: 360, refreshed: false },
+      'jet-ignite',
+    ],
   ],
-  'power-up-ended': [[{ type: 'power-up-ended', powerUp: 'creatina' }, 'power-up-end']],
+  'power-up-ended': [
+    [{ type: 'power-up-ended', powerUp: 'creatina' }, 'power-up-end'],
+    [{ type: 'power-up-ended', powerUp: 'dia-de-pierna' }, 'power-up-end'],
+  ],
   'rexi-healed': [[{ type: 'rexi-healed', amount: 30, health: 80 }, 'power-up-start']],
   'dialogue-closed': [[{ type: 'dialogue-closed', quipId: 'legal-x' }, null]],
 };
@@ -179,6 +192,13 @@ describe('sound catalogs', () => {
       });
       expect(cue?.sound).toBe(EXPLOSION_SOUNDS[defaultTuning.enemies[kind].explosion]);
     }
+  });
+
+  it('every timed Power-up has a sound as it kicks in (instant ones sound through their event)', () => {
+    const timed = POWER_UP_IDS.filter((id) => 'duration' in defaultTuning.powerUps[id]);
+    expect(Object.keys(POWER_UP_START_SOUNDS).sort()).toEqual([...timed].sort());
+    for (const sound of Object.values(POWER_UP_START_SOUNDS))
+      expect(SOUND_PRESETS).toHaveProperty(sound);
   });
 
   it('every explosion size has a sound', () => {

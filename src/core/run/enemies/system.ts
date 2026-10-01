@@ -4,6 +4,7 @@ import { center } from '../../math';
 import type { RunContext } from '../context';
 import { flashEnemy, shatterEnemy } from '../effects';
 import { rexiDamageMultiplier } from '../power-ups/creatina';
+import { enemyTimeScale } from '../power-ups/pre-entreno';
 import type { EnemyState } from '../state';
 import { enemyCatalog } from './index';
 
@@ -28,11 +29,15 @@ export function spawnEnemy(ctx: RunContext, kind: EnemyKind, x: number, y: numbe
   return enemy;
 }
 
-/** Runs every Enemy's behavior for one tick. */
+/**
+ * Runs every Enemy's behavior for one tick, on Enemy time: a tick's worth of seconds, scaled
+ * down while Pre-entreno slows Enemies. (`age` counts ticks, for animation.)
+ */
 export function stepEnemies(ctx: RunContext): void {
+  const dt = DT * enemyTimeScale(ctx);
   for (const enemy of ctx.state.enemies) {
     enemy.age += 1;
-    enemyCatalog[enemy.kind].update(enemy, enemy.memory, ctx, DT);
+    enemyCatalog[enemy.kind].update(enemy, enemy.memory, ctx, dt);
   }
 }
 

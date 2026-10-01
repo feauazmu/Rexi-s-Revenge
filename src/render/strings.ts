@@ -28,6 +28,8 @@ export const strings = {
     receso: 'Receso',
     'inmunidad-judicial': 'Inmunidad Judicial',
     creatina: 'Creatina',
+    'pre-entreno': 'Pre-entreno',
+    'dia-de-pierna': 'Día de Pierna',
   } satisfies Record<PowerUpId, string>,
 
   titleScreen: {

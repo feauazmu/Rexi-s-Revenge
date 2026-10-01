@@ -7,6 +7,7 @@ import { drawHud } from './hud/hud';
 import { drawArena } from './layers/arena';
 import { drawCrates } from './layers/crates';
 import { drawCrosshair } from './layers/crosshair';
+import { drawSlowMotionTint } from './layers/power-up-effects';
 import { drawRexi } from './layers/rexi';
 import { palette } from './palette';
 import { drawProjectiles } from './projectiles';
@@ -29,6 +30,7 @@ const WORLD_LAYERS: readonly RunLayer[] = [
   drawCrates,
   drawEnemies,
   drawProjectiles,
+  drawSlowMotionTint,
   drawRexi,
   drawEffects,
 ];

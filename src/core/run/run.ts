@@ -193,6 +193,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector)
       vx: rexi.vx,
       vy: rexi.vy,
       grounded: rexi.grounded,
+      flying: rexi.flying,
       health: rexi.health,
       maxHealth: rexi.maxHealth,
       facing: rexi.facing,
