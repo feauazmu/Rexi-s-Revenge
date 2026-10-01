@@ -10,6 +10,8 @@ export const WEAPON_IDS = [
   'lluvia-de-sellos', // Lluvia de Sellos
   'citaciones-teledirigidas', // Citaciones Teledirigidas
   'sentencia-firme', // Sentencia Firme
+  'mancuernas', // Mancuernas
+  'codigo-penal', // Código Penal
 ] as const;
 export type WeaponId = (typeof WEAPON_IDS)[number];
 
@@ -49,6 +51,8 @@ export const PROJECTILE_KINDS = [
   'paper', // Maletín-cóptero
   'stamp', // Lluvia de Sellos
   'subpoena', // Citaciones Teledirigidas
+  'dumbbell', // Mancuernas
+  'law-book', // Código Penal
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

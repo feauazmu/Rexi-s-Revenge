@@ -1,6 +1,8 @@
 import type { WeaponId } from '../../ids';
 import { citacionesTeledirigidas } from './citaciones-teledirigidas';
+import { codigoPenal } from './codigo-penal';
 import { lluviaDeSellos } from './lluvia-de-sellos';
+import { mancuernas } from './mancuernas';
 import { mazoAutomatico } from './mazo-automatico';
 import { sentenciaFirme } from './sentencia-firme';
 import type { WeaponDef } from './types';
@@ -11,4 +13,6 @@ export const weaponCatalog: Readonly<Record<WeaponId, WeaponDef>> = {
   'lluvia-de-sellos': lluviaDeSellos,
   'citaciones-teledirigidas': citacionesTeledirigidas,
   'sentencia-firme': sentenciaFirme,
+  mancuernas,
+  'codigo-penal': codigoPenal,
 };

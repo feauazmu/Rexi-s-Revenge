@@ -95,6 +95,17 @@ one ammo (a whole Lluvia de Sellos fan is one); at zero the Weapon leaves the in
 selected. Slots follow `WEAPON_IDS`: number key N selects entry N − 1 if carried; next/previous cycle the
 carried Weapons in that order, wrapping. Cooldowns are per Weapon, so switching never skips one.
 
+Projectile behaviors are options of `spawnProjectile` (`src/core/run/projectiles.ts`), so a Weapon
+composes them instead of writing motion code: `gravity` (arcs), `bounce` (off the ground and one-way
+platforms, landing from above), `thrust` (accelerate along the heading to a top speed), `trailInterval`
+(cosmetic smoke puffs) and `blast`. A projectile with a `blast` is explosive: it detonates when it hits an
+Enemy (after its impact `damage`), lands with no bounces left, or its lifetime runs out — never when it
+leaves the screen. `detonate` (`src/core/run/explosives.ts`) emits `explosion`, plays the blast's
+explosion preset and deals splash damage (`SplashTuning`: full at the center, linear falloff to
+`splashEdge` at `splashRadius`, measured to the nearest point of each Enemy). Splash never hurts Rexi.
+Mancuernas (`gravity` + `bounce` + `blast`) and Código Penal (`thrust` + `trailInterval` + `blast`) are
+built this way.
+
 ### Crates
 
 `src/core/run/crates/system.ts` drops Crates on a seeded timer (`tuning.crates`), lets them fall at the
@@ -153,7 +164,7 @@ Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's pro
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
 A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and the invulnerability window
 (`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
-hit, at the ground, off-screen or when their lifetime runs out. A projectile spawned with a `turnRate`
+hit, at the ground (unless they bounce), off-screen or when their lifetime runs out. A projectile spawned with a `turnRate`
 homes: each tick it turns toward the nearest live Enemy (Rexi, for Enemy projectiles) by at most that rate,
 keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits inside `fire` instead of
 spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
@@ -328,12 +339,13 @@ is code, like the art.
   envelope, swept state-variable filter, delay), mixed, optionally soft-clipped (`drive`) and normalized to
   `peak`. `renderPatch` renders it offline to samples; it is deterministic and tested in Node.
 - **Presets** (`presets.ts`): the sound catalog, `SOUND_PRESETS[id]` = patch + voice rules (`maxVoices`,
-  `priority`, `minGap`), `pitchJitter` and noise `variants`. Some presets wait for events later tickets add
-  (stamp, dumbbell, Código Penal, Citaciones, Sentencia Firme, cannon, Crate, Power-ups, Dialogue blip).
+  `priority`, `minGap`), `pitchJitter` and noise `variants`. Some presets wait for content later tickets
+  add (the cannon).
 - **Sound map** (`sound-map.ts`, pure): `soundForEvent(event)` → `{ sound, pan? }` or null. A
   `Record<GameEventType, …>` rule per event kind, plus `WEAPON_SOUNDS` (`Record<WeaponId, …>`),
   `ENEMY_FIRE_SOUNDS` (`Record<EnemyKind, …>`) and `EXPLOSION_SOUNDS` (by the Enemy's tuned `explosion`
-  size). Explosions pan with the Enemy's x.
+  size). Explosions pan with the Enemy's x. An explosive Weapon's `explosion` event picks the small or
+  large blast by its splash radius (`LARGE_BLAST_RADIUS`) and pans with the blast's x.
 - **Voice limiter** (`voices.ts`, pure): per-sound voice caps (the oldest voice of the same sound is
   stolen), a global cap (the oldest voice of the lowest priority is stolen; a new voice that matters less
   than everything playing is dropped) and a `minGap` that drops same-tick duplicates.
@@ -381,13 +393,16 @@ is code, like the art.
 3. Give it a Crate weight in `tuning.crates.weights.weapons` (`src/core/tuning/crates.ts`). That alone makes
    it Crate content; the Crate system and inventory need no changes.
 4. Implement `src/core/run/weapons/<id>.ts` exporting a `WeaponDef` whose `fire(shot, ctx)` spawns
-   projectiles with `spawnProjectile` (the Weapon system already handles switching, trigger, cooldown,
-   ammo and `weapon-fired`).
+   projectiles with `spawnProjectile`, composing its behavior options (`gravity`, `bounce`, `thrust`,
+   `blast`, `trailInterval`; see "Weapons and the inventory"). The Weapon system already handles
+   switching, trigger, cooldown, ammo and `weapon-fired`.
 5. Register it in `src/core/run/weapons/index.ts`.
 6. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
-7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts` and add
-   its Spanish name to `strings.weapons`.
+   A projectile that turns with its heading or spins can be drawn procedurally with
+   `rotatedShapeSprites` (`src/render/projectiles/rotated-shape.ts`), like the dumbbell and law book.
+7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts`, its
+   look in Rexi's fist in `src/render/rexi/held-weapons.ts`, and add its Spanish name to `strings.weapons`.
 8. Give it a firing sound in `WEAPON_SOUNDS` (`src/platform/audio/sound-map.ts`); most v1 Weapons already
    have a preset waiting in `src/platform/audio/presets.ts`.
 9. Test it through a scripted Crate: `weaponCrate(id, ON_REXI.x, { y: ON_REXI.y })` from

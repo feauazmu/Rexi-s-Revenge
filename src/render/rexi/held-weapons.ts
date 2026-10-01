@@ -80,10 +80,39 @@ const sentenciaFirme: HeldWeapon = {
   },
 };
 
+/** Mancuernas: a dumbbell gripped in the fist by its bar, plates sticking out on both sides. */
+const mancuernas: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const across = Math.abs(v);
+    if (across >= 3.4 && across <= 6.4 && Math.abs(u) <= 2.9) {
+      if (across > 5.5) return 'P';
+      return u < -0.9 ? 'W' : 'p';
+    }
+    if (across < 3.4 && Math.abs(u) <= 1) return 'W';
+    return null;
+  },
+};
+
+/** Código Penal: the red law book held by its spine, cover toward the aim, pages underneath. */
+const codigoPenal: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const half = 3.4;
+    if (u < -2 || u > 8 || Math.abs(v) > half) return null;
+    if (v > half - 1.3) return 'w'; // page edges
+    if (u < -0.8) return 'Z'; // spine
+    if (u >= 3 && u <= 5.4 && Math.abs(v + 0.3) <= 1.1) return 'y'; // gold scales emblem
+    return barrel(v, half, 'x', 'z', 'Z');
+  },
+};
+
 /** One held look per Weapon (one line per entry). */
 export const heldWeapons: Readonly<Record<WeaponId, HeldWeapon>> = {
   'mazo-automatico': mazoAutomatico,
   'lluvia-de-sellos': lluviaDeSellos,
   'citaciones-teledirigidas': citacionesTeledirigidas,
   'sentencia-firme': sentenciaFirme,
+  mancuernas,
+  'codigo-penal': codigoPenal,
 };

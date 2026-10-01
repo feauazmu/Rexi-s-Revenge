@@ -5,10 +5,12 @@ import {
   EXPLOSION_SIZES,
   WEAPON_IDS,
   type GameEvent,
+  type ExplosionSize,
   type GameEventType,
 } from '../../../src/core';
 import { SOUND_PRESETS } from '../../../src/platform/audio/presets';
 import {
+  blastSound,
   ENEMY_FIRE_SOUNDS,
   EXPLOSION_SOUNDS,
   soundForEvent,
@@ -39,6 +41,8 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     [{ type: 'weapon-fired', weapon: 'lluvia-de-sellos' }, 'stamp-thunk'],
     [{ type: 'weapon-fired', weapon: 'citaciones-teledirigidas' }, 'citation-whistle'],
     [{ type: 'weapon-fired', weapon: 'sentencia-firme' }, 'verdict-boom'],
+    [{ type: 'weapon-fired', weapon: 'mancuernas' }, 'dumbbell-clang'],
+    [{ type: 'weapon-fired', weapon: 'codigo-penal' }, 'book-slam'],
   ],
   'weapon-switched': [
     [{ type: 'weapon-switched', from: 'mazo-automatico', to: 'sentencia-firme' }, 'menu-move'],
@@ -64,6 +68,10 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
       },
       'explosion-small',
     ],
+  ],
+  explosion: [
+    [{ type: 'explosion', weapon: 'mancuernas', x: 240, y: 200, radius: 28 }, 'explosion-small'],
+    [{ type: 'explosion', weapon: 'codigo-penal', x: 240, y: 200, radius: 36 }, 'explosion-large'],
   ],
   'enemy-fired': [[{ type: 'enemy-fired', enemyId: 1, kind: 'maletin-coptero' }, 'paper-fwip']],
   'rexi-hit': [[{ type: 'rexi-hit', damage: 5, health: 95 }, 'rexi-oof']],
@@ -158,6 +166,19 @@ describe('soundForEvent', () => {
     expect(right).toBeGreaterThan(0.3);
     expect(Math.abs(left)).toBeLessThan(1); // never hard-panned: both ears hear every blast
   });
+
+  it('pans a Weapon blast with its x', () => {
+    const blastAt = (x: number): GameEvent => ({
+      type: 'explosion',
+      weapon: 'codigo-penal',
+      x,
+      y: 200,
+      radius: 36,
+    });
+    expect(soundForEvent(blastAt(0))?.pan).toBeLessThan(-0.3);
+    expect(soundForEvent(blastAt(240))?.pan).toBeCloseTo(0, 5);
+    expect(soundForEvent(blastAt(480))?.pan).toBeGreaterThan(0.3);
+  });
 });
 
 describe('sound catalogs', () => {
@@ -178,6 +199,18 @@ describe('sound catalogs', () => {
         y: 0,
       });
       expect(cue?.sound).toBe(EXPLOSION_SOUNDS[defaultTuning.enemies[kind].explosion]);
+    }
+  });
+
+  it('an explosive Weapon blast sounds like its tuned explosion preset', () => {
+    for (const weapon of WEAPON_IDS) {
+      const tuning: object = defaultTuning.weapons[weapon];
+      if (!('explosion' in tuning && 'splashRadius' in tuning)) continue;
+      const { explosion, splashRadius } = tuning as {
+        explosion: ExplosionSize;
+        splashRadius: number;
+      };
+      expect(blastSound(splashRadius)).toBe(EXPLOSION_SOUNDS[explosion]);
     }
   });
 

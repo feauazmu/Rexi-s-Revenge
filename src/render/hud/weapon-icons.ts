@@ -84,6 +84,57 @@ const SENTENCIA_FIRME = defineSprite(
   ],
 );
 
+/** Mancuernas: a dumbbell with a lit fuse (12×9). */
+const MANCUERNAS = defineSprite(
+  {
+    k: palette.outline,
+    W: '#d8dce6',
+    p: '#8e8e9a',
+    P: '#4e4e5c',
+    b: '#c0c4cc',
+    y: '#ffe060',
+    O: '#ff7a2a',
+  },
+  [
+    '.........yO.',
+    '.........k..',
+    '.kkk....kkk.',
+    'kWWpk..kWWpk',
+    'kWppkkkkWppk',
+    'kppPbbbbppPk',
+    'kppPkkkkppPk',
+    'kpPPk..kpPPk',
+    '.kkk....kkk.',
+  ],
+);
+
+/** Código Penal: a red law book with gold scales, rocket flame at its back (12×11). */
+const CODIGO_PENAL = defineSprite(
+  {
+    k: palette.outline,
+    r: '#c42a2a',
+    R: '#7a1414',
+    d: '#5a0e0e',
+    w: '#f4ecd8',
+    y: '#f0c040',
+    Y: '#fff2a0',
+    o: '#ff8a2a',
+  },
+  [
+    '...kkkkkkkk.',
+    '..kdrrrrrrrk',
+    '..kdrrryrrrk',
+    '..kdryyyyyrk',
+    '..kdryrrryrk',
+    '.okdrrryrrrk',
+    'oYkdrryyyrrk',
+    'YykdrrrrrrRk',
+    'oYkdRRRRRRRk',
+    '.okwwwwwwwwk',
+    '..kkkkkkkkk.',
+  ],
+);
+
 /**
  * HUD icon of each Weapon, also shown on Crates (at most 12×12 to fit a Crate's label).
  * A new Weapon fails to typecheck until it gets an icon here.
@@ -93,4 +144,6 @@ export const weaponIcons: Readonly<Record<WeaponId, SpriteDef>> = {
   'lluvia-de-sellos': LLUVIA_DE_SELLOS,
   'citaciones-teledirigidas': CITACIONES_TELEDIRIGIDAS,
   'sentencia-firme': SENTENCIA_FIRME,
+  mancuernas: MANCUERNAS,
+  'codigo-penal': CODIGO_PENAL,
 };

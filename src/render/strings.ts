@@ -22,6 +22,8 @@ export const strings = {
     'lluvia-de-sellos': 'Lluvia de Sellos',
     'citaciones-teledirigidas': 'Citaciones Teledirigidas',
     'sentencia-firme': 'Sentencia Firme',
+    mancuernas: 'Mancuernas',
+    'codigo-penal': 'Código Penal',
   } satisfies Record<WeaponId, string>,
 
   powerUps: {

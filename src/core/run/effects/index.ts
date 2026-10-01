@@ -8,7 +8,8 @@
  *
  * Other subsystems use the verbs below: `flashEnemy` on every hit, `shatterEnemy` when an
  * Enemy is destroyed, `explode` / `addShakeTrauma` for anything else that blows up
- * (explosive Weapons, Rexi getting hurt) and `traceBeam` for beam Weapons.
+ * (explosive Weapons, Rexi getting hurt), `traceBeam` for beam Weapons and `puffSmoke` for
+ * rocket trails.
  */
 import { secondsToTicks } from '../../constants';
 import { center, type Vec2 } from '../../math';
@@ -148,6 +149,22 @@ export function explode(ctx: RunContext, at: Vec2, size: ExplosionSize): void {
     life: p.flashLife,
   });
   addTrauma(effects.shake, preset.trauma);
+}
+
+/** One small smoke puff left behind at `at` (a rocket's trail). */
+export function puffSmoke(ctx: RunContext, at: Vec2): void {
+  const { effects } = ctx.state;
+  const tuning = ctx.tuning.effects;
+  const p = tuning.particles;
+  const { rng } = effects;
+  spawnParticle(effects, tuning, {
+    kind: 'smoke',
+    x: at.x + rng.range(-1, 1),
+    y: at.y + rng.range(-1, 1),
+    vy: -p.smokeRise * rng.range(0.3, 0.6),
+    size: rng.range(p.trailPuffRadius * 0.5, p.trailPuffRadius),
+    life: rng.range(p.smokeLifeMin, p.smokeLifeMax),
+  });
 }
 
 function spawnDebris(ctx: RunContext, enemy: Readonly<EnemyState>, pieces: number): void {

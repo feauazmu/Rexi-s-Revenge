@@ -153,7 +153,7 @@ export const SOUND_PRESETS = {
     pitchJitter: 0.08,
     variants: 3,
   },
-  /** Mancuernas: iron plates clanging (inharmonic bar partials, two plates beating). (future) */
+  /** Mancuernas: iron plates clanging (inharmonic bar partials, two plates beating). */
   'dumbbell-clang': {
     patch: {
       peak: 0.45,
@@ -180,7 +180,7 @@ export const SOUND_PRESETS = {
     pitchJitter: 0.05,
     variants: 1,
   },
-  /** Código Penal: a heavy book "whump" and its pages riffling. (future) */
+  /** Código Penal: a heavy book "whump" and its pages riffling. */
   'book-slam': {
     patch: {
       peak: 0.5,
