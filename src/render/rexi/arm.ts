@@ -54,6 +54,25 @@ export interface ArmSprite {
   readonly pivotY: number;
 }
 
+/**
+ * Sleeve tattoo over the upper arm (Rexi's left arm): the lion's golden mane near the shoulder
+ * flowing into the courthouse's columns toward the elbow, shaded with the limb. `u` runs along
+ * the arm from the shoulder, `v` across it.
+ */
+function sleeveTone(brightness: number, u: number, v: number): RexiInk {
+  if (brightness < -0.45) return 'i';
+  if (u < ELBOW * 0.5) {
+    // Mane: golden locks and ink curls.
+    const curl = (Math.floor(u * 1.4) + Math.floor(v + 8)) % 3 === 0;
+    if (brightness > 0.2) return curl ? 'a' : 'j';
+    return curl ? 's' : 'j';
+  }
+  // The courthouse's steps: an ink band at the elbow where the sleeve ends.
+  if (u > ELBOW - 1) return 'i';
+  // Columns: ink stripes with skin showing between them.
+  return Math.floor(v + 8) % 2 === 0 ? 'j' : skinTone(brightness);
+}
+
 function skinTone(brightness: number): RexiInk {
   if (brightness > 0.36) return 'l';
   if (brightness > -0.18) return 's';
@@ -69,7 +88,13 @@ interface Cell {
 }
 
 /** What covers the point (u along the arm, v across it); front-most part first. */
-function armCell(u: number, v: number, lit: number, weapon: HeldWeapon): Cell | null {
+function armCell(
+  u: number,
+  v: number,
+  lit: number,
+  weapon: HeldWeapon,
+  inked: boolean,
+): Cell | null {
   // Fist: a ball at the end of the forearm.
   const fu = u - FIST;
   const fistDistance = Math.hypot(fu, v);
@@ -86,6 +111,8 @@ function armCell(u: number, v: number, lit: number, weapon: HeldWeapon): Cell | 
     const t = (u - ELBOW) / (WRIST - ELBOW);
     const radius = 2.8 - 0.7 * t + 0.5 * Math.sin(Math.PI * Math.min(1, t * 1.6));
     if (Math.abs(v) <= radius) {
+      // The sleeve reaches the elbow, where the forearm's root overlaps the upper arm.
+      if (inked && u <= ELBOW) return { ink: sleeveTone((lit * v) / radius, u, v), part: 'fore' };
       if (u < ELBOW + 0.6 && v > 0.6) return { ink: 'n', part: 'fore' };
       return { ink: skinTone((lit * v) / radius), part: 'fore' };
     }
@@ -95,14 +122,20 @@ function armCell(u: number, v: number, lit: number, weapon: HeldWeapon): Cell | 
     const t = Math.max(0, u) / ELBOW;
     const radius = 3 + 1.1 * Math.sin(Math.PI * t);
     if (Math.abs(v) <= radius) {
-      return { ink: skinTone((lit * v) / radius + 0.1), part: 'upper' };
+      const brightness = (lit * v) / radius + 0.1;
+      // The sleeve stops at the elbow, where the forearm takes over.
+      const ink = inked && u <= ELBOW ? sleeveTone(brightness, u, v) : skinTone(brightness);
+      return { ink, part: 'upper' };
     }
   }
   return null;
 }
 
-/** Rasterizes the arm for one step (facing right), cropped, with an outline. */
-function buildArm(step: number, weapon: HeldWeapon): ArmSprite {
+/**
+ * Rasterizes the arm for one step (facing right), cropped, with an outline. `inked` draws the
+ * sleeve tattoo on the upper arm.
+ */
+function buildArm(step: number, weapon: HeldWeapon, inked: boolean): ArmSprite {
   const dir = stepDirection(step);
   // Across-axis unit vector pointing at the arm's underside.
   const side: Vec2 = { x: -dir.y, y: dir.x };
@@ -121,7 +154,7 @@ function buildArm(step: number, weapon: HeldWeapon): ArmSprite {
       const py = gy - center;
       const u = px * dir.x + py * dir.y;
       const v = px * side.x + py * side.y;
-      row.push(armCell(u, v, lit, weapon));
+      row.push(armCell(u, v, lit, weapon, inked));
     }
     cells.push(row);
   }
@@ -174,7 +207,8 @@ function flashArm(arm: ArmSprite): ArmSprite {
 
 /**
  * The arm sprite for `step` and facing, holding `weapon` (`flash`: hurt-blink colors). Built
- * once, then cached.
+ * once, then cached. Facing right the aiming arm is Rexi's left arm and wears the sleeve
+ * tattoo; facing left it is his right arm (a plain arm, mirrored).
  */
 export function armSprite(
   weapon: HeldWeapon,
@@ -191,8 +225,8 @@ export function armSprite(
   let arm = arms.get(key);
   if (!arm) {
     if (flash) arm = flashArm(armSprite(weapon, step, facing));
-    else if (facing === -1) arm = mirrorArm(armSprite(weapon, step, 1));
-    else arm = buildArm(step, weapon);
+    else if (facing === -1) arm = mirrorArm(buildArm(step, weapon, false));
+    else arm = buildArm(step, weapon, true);
     arms.set(key, arm);
   }
   return arm;

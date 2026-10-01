@@ -8,7 +8,6 @@ import {
   BODY_WIDTH,
   bodySprite,
   capSprite,
-  tattooSprite,
 } from '../rexi/body';
 import { heldWeapons } from '../rexi/held-weapons';
 import { rexiPalette } from '../rexi/palette';
@@ -23,7 +22,8 @@ const MUZZLE_FLASH = [
 
 /**
  * Rexi: the composed body for his pose, then the aiming arm with his Weapon in one of 16
- * directions, the deltoid cap over the arm's root and the tattoo on his left arm.
+ * directions, the deltoid cap over the arm's root. The sleeve tattoo on his left upper arm is part of the
+ * body, arm and cap sprites (whichever of them is his left arm for the facing).
  */
 export function drawRexi(dc: DrawContext, run: RunView): void {
   const { surface, sprites } = dc;
@@ -56,10 +56,6 @@ export function drawRexi(dc: DrawContext, run: RunView): void {
 
   const cap = capSprite(facing, pose.flash);
   surface.drawBitmap(sprites.get(cap.sprite), left + ux + cap.x, top + uy + cap.y);
-  if (!pose.flash) {
-    const tattoo = tattooSprite(facing);
-    surface.drawBitmap(sprites.get(tattoo.sprite), left + ux + tattoo.x, top + uy + tattoo.y);
-  }
 
   const flash = pose.muzzleFlash > 0 ? MUZZLE_FLASH[pose.muzzleFlash - 1] : undefined;
   if (flash) {

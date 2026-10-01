@@ -4,7 +4,9 @@ import { defineSprite } from '../sprite';
 /**
  * Rexi's Dialogue Box portrait (40×40), after reference/rexi-character-sheet.png: light-brown
  * flat-top, confident grin, sleeveless judge's robe over a white tank top, and his left arm
- * flexed to show the tattoo (a lion head next to a columned courthouse).
+ * flexed to show the sleeve tattoo covering the upper arm from the shoulder to the elbow: a
+ * lion head by the shoulder whose mane flows into a columned courthouse by the elbow, the gaps
+ * filled with ink shading so it reads as one piece.
  */
 export const REXI_PORTRAIT = defineSprite(
   {
@@ -21,8 +23,9 @@ export const REXI_PORTRAIT = defineSprite(
     g: '#c8c8d8', // tank top shading
     r: '#23202e', // robe
     R: '#3a3448', // robe folds
-    A: '#9a5a2a', // tattoo: lion mane
-    T: '#4a2a1a', // tattoo: ink
+    A: '#c08038', // sleeve tattoo: lion mane
+    I: '#7a4a36', // sleeve tattoo: ink shading over skin
+    T: '#4a2a1a', // sleeve tattoo: linework
   },
   [
     'pppppppppppppppppppppppppppppppppppppppp',
@@ -44,17 +47,17 @@ export const REXI_PORTRAIT = defineSprite(
     'pppppppppkssSSSSSSSSsskpppppppkSSSSSsskp',
     'pppppppppksssSSSSSSssskpppppppkSSSSSsskp',
     'pppppppppkskSSSSSSSSkskppppkkkkSSSSSsskp',
-    'pppppppppksskkkkkkkssskpppklllSsSSSSSskp',
-    'ppppppkkSSssssssssssssSSSkSlllSSsSSSSskp',
-    'ppppkkSSSSsSSSSSSSSSSsSSSSkSSllSSSSSSskp',
-    'ppkrrkrSSSSSSSllllSSSSSSrkrSAAASSSSTSSkp',
-    'pkrrRrrSSSSSSSSSSSSSSSSSrrkAkSkASSTTTSkp',
-    'SSskrrRrrrwwSSSSSSSwwrrrrrkASTSASTTTTTkp',
-    'SSskrrRrrrwwwSSSSSwwwrrrrrkAATAASTSTSTkp',
-    'SSskrRrrRrwwwwwwwwwwwrrrrrkSAAASSTTTTTkp',
-    'SSskrRrrRrwwwwwgwwwwwrrrrrksSSSSSSSSSskp',
-    'SSskrRrrRrwwwwwgwwwwwrrrrrkssSSSSSSssskp',
-    'sSskrRrrRrgggwwgwwgggrrrrrrksssssssssskp',
+    'pppppppppksskkkkkkkssskpppkAIAAIAAIAIIkp',
+    'ppppppkkSSssssssssssssSSSkSIAAAAIAITIIkp',
+    'ppppkkSSSSsSSSSSSSSSSsSSSSkAASSAAATSTIkp',
+    'ppkrrkrSSSSSSSllllSSSSSSrkrATSSTATSSSTkp',
+    'pkrrRrrSSSSSSSSSSSSSSSSSrrkASSSSATTTTTkp',
+    'SSskrrRrrrwwSSSSSSSwwrrrrrkASTTSATSTSTkp',
+    'SSskrrRrrrwwwSSSSSwwwrrrrrkAASSAATSTSTkp',
+    'SSskrRrrRrwwwwwwwwwwwrrrrrkIAAAAITSTSTkp',
+    'SSskrRrrRrwwwwwgwwwwwrrrrrkIIAAIITSTSTkp',
+    'SSskrRrrRrwwwwwgwwwwwrrrrrkIIIAAATTTTTkp',
+    'sSskrRrrRrgggwwgwwgggrrrrrrkIIIIIIIIIIkp',
     'sSskrRrrRrwwwwwwwwwwwrrrrrrrkkkkkkkkkkpp',
     'SSskrRrrRrwwgwwwwwgwwrrrrRrrkppppppppppp',
     'SSskrRrrRrwwwwwwwwwwwrrrrRrrkppppppppppp',

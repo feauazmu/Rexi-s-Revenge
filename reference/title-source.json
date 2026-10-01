@@ -1,16 +1,17 @@
 {
   "modality": "image",
-  "prompt": "Title-screen illustration for a retro arcade game, pixel art, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, 16:9 landscape. Use the attached character sheet as the exact design of the hero \"Rexi\": extremely muscular judge, short light-brown hair, black judge's robe with torn-off sleeves worn open over a white tank top, gray trousers, dark brown boots, and on his LEFT upper arm the tattoo of a lion head next to a classical columned courthouse (keep the tattoo visible). Heroic low-angle pose: Rexi stands in the lower-right two-thirds of the frame, flexing his left bicep and raising a big wooden judge's gavel in his right hand, robe flapping in the wind, confident grin. Background: a sunset city plaza with banded purple-to-orange sky, a white columned courthouse at the far left, small silhouettes of flying briefcase-helicopters in the distance. Leave the upper-left third of the image as calm, uncluttered sky as empty space for a game logo to be added later. Absolutely no text, no letters, no logo in the image.",
+  "prompt": "Edit the first attached image (the title-screen illustration) and keep it identical in composition, framing, pose, background, sunset palette, pixel-art style, and keep the calm empty sky in the upper-left third reserved for a logo. The ONLY change: Rexi's tattoo. Following the second attached image (the updated character sheet), the tattoo is a SLEEVE on his LEFT arm only (the flexing arm), covering the whole UPPER ARM from the shoulder down to the elbow and stopping at the elbow: one continuous piece of dark tattoo ink over the skin, a lion head and a classical columned courthouse woven together, the lion's mane flowing into the columns and pediment, connecting linework and shading. The forearm and hand stay bare; the right arm holding the gavel has no tattoo. Pixel art, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, 16:9. Absolutely no text, no letters, no logo.",
   "model": "google/gemini-3.1-flash-image",
   "parameters": {
     "aspect_ratio": "16:9",
     "references": [
-      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a32e32b23f6b8afb2/reference/rexi-character-sheet.png"
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a073358448a57715b/reference/title-source-v1.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a073358448a57715b/reference/rexi-character-sheet.png"
     ]
   },
   "seed": null,
-  "cost_usd": 0.067884,
-  "created_at": "2026-10-01T07:53:42.265Z",
+  "cost_usd": 0.068424,
+  "created_at": "2026-10-01T09:02:21.311Z",
   "asset": {
     "file": "title-source.png",
     "media_type": "image/png",
