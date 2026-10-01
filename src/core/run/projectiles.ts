@@ -1,6 +1,6 @@
 import { DT, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../constants';
 import type { ProjectileKind } from '../ids';
-import { overlaps, type Vec2 } from '../math';
+import { center, clamp, overlaps, rotate, type Box, type Vec2 } from '../math';
 import type { RunContext } from './context';
 import { damageEnemy } from './enemies/system';
 import { canHurtRexi, damageRexi } from './rexi';
@@ -21,6 +21,11 @@ export interface ProjectileSpawn {
   readonly lifetime: number;
   /** Downward acceleration, px/s². Default 0. */
   readonly gravity?: number;
+  /**
+   * Homing: fastest turn toward the nearest target (Enemies for Rexi's projectiles, Rexi for
+   * Enemy ones), degrees per second. Default 0: flies straight.
+   */
+  readonly turnRate?: number;
 }
 
 export function spawnProjectile(ctx: RunContext, spawn: ProjectileSpawn): ProjectileState {
@@ -35,6 +40,7 @@ export function spawnProjectile(ctx: RunContext, spawn: ProjectileSpawn): Projec
     vx: spawn.velocity.x,
     vy: spawn.velocity.y,
     gravity: spawn.gravity ?? 0,
+    turnRate: ((spawn.turnRate ?? 0) * Math.PI) / 180,
     damage: spawn.damage,
     ttl: secondsToTicks(spawn.lifetime),
     age: 0,
@@ -49,6 +55,7 @@ export function stepProjectiles(ctx: RunContext): void {
   const groundY = ctx.tuning.arena.groundY;
 
   state.projectiles = state.projectiles.filter((p) => {
+    if (p.turnRate > 0) steer(ctx, p);
     p.vy += p.gravity * DT;
     p.x += p.vx * DT;
     p.y += p.vy * DT;
@@ -69,6 +76,40 @@ export function stepProjectiles(ctx: RunContext): void {
 
     return p.ttl > 0 && p.y + p.h < groundY && isNearScreen(p);
   });
+}
+
+/** Turns a homing projectile toward its nearest target by at most its turn rate, keeping its speed. */
+function steer(ctx: RunContext, p: ProjectileState): void {
+  const target = homingTarget(ctx, p);
+  if (!target) return;
+  const from = center(p);
+  const to = center(target);
+  const heading = Math.atan2(p.vy, p.vx);
+  const wanted = Math.atan2(to.y - from.y, to.x - from.x);
+  // Shortest signed angle from the heading to the target, in (-π, π].
+  const error = Math.atan2(Math.sin(wanted - heading), Math.cos(wanted - heading));
+  const maxTurn = p.turnRate * DT;
+  const turned = rotate({ x: p.vx, y: p.vy }, clamp(error, -maxTurn, maxTurn));
+  p.vx = turned.x;
+  p.vy = turned.y;
+}
+
+/** The nearest live Enemy for Rexi's projectiles, or Rexi for Enemy ones. */
+function homingTarget(ctx: RunContext, p: Readonly<ProjectileState>): Readonly<Box> | null {
+  if (p.owner === 'enemy') return ctx.state.rexi;
+  const from = center(p);
+  let nearest: Readonly<Box> | null = null;
+  let best = Infinity;
+  for (const enemy of ctx.state.enemies) {
+    if (enemy.health <= 0) continue;
+    const c = center(enemy);
+    const distance = (c.x - from.x) ** 2 + (c.y - from.y) ** 2;
+    if (distance < best) {
+      best = distance;
+      nearest = enemy;
+    }
+  }
+  return nearest;
 }
 
 function isNearScreen(p: Readonly<ProjectileState>): boolean {

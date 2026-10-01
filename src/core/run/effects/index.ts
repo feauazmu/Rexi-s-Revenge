@@ -7,8 +7,8 @@
  * alter how a Run plays out.
  *
  * Other subsystems use the verbs below: `flashEnemy` on every hit, `shatterEnemy` when an
- * Enemy is destroyed, and `explode` / `addShakeTrauma` for anything else that blows up
- * (explosive Weapons, Rexi getting hurt).
+ * Enemy is destroyed, `explode` / `addShakeTrauma` for anything else that blows up
+ * (explosive Weapons, Rexi getting hurt) and `traceBeam` for beam Weapons.
  */
 import { secondsToTicks } from '../../constants';
 import { center, type Vec2 } from '../../math';
@@ -17,6 +17,7 @@ import type { EffectsTuning, ExplosionSize, Tuning } from '../../tuning';
 import type { EffectsView } from '../../view';
 import type { RunContext } from '../context';
 import type { EnemyState } from '../state';
+import { spawnBeam, stepBeams, viewBeam, type BeamState } from './beams';
 import {
   DEBRIS_AIR_LIFE,
   spawnParticle,
@@ -31,6 +32,7 @@ export interface EffectsState extends ParticlePool {
   readonly list: ParticleState[];
   readonly rng: Rng;
   readonly shake: ShakeState;
+  readonly beams: BeamState[];
 }
 
 /** `seed` is the effects stream's own seed (see `deriveSeed`), never the gameplay Rng. */
@@ -38,7 +40,7 @@ export function createEffects(seed: number): EffectsState {
   const rng = createRng(seed);
   const shakeSeedX = rng.int(0, 0x7fffffff);
   const shakeSeedY = rng.int(0, 0x7fffffff);
-  return { list: [], rng, shake: createShake(shakeSeedX, shakeSeedY) };
+  return { list: [], rng, shake: createShake(shakeSeedX, shakeSeedY), beams: [] };
 }
 
 /** Advances every effect one tick. Runs first in the tick, so new effects show at age 0. */
@@ -46,6 +48,14 @@ export function stepEffects(ctx: RunContext): void {
   const { effects } = ctx.state;
   stepShake(effects.shake, ctx.tuning.effects.shake);
   stepParticles(effects, ctx.tuning.effects, ctx.tuning.arena.groundY);
+  stepBeams(effects.beams, ctx.tuning.effects.beam);
+}
+
+/** Shows the trace of a beam shot from `from` to `to`, with a jolt of screen shake. */
+export function traceBeam(ctx: RunContext, from: Vec2, to: Vec2): void {
+  const { effects } = ctx.state;
+  spawnBeam(effects.beams, from, to);
+  addTrauma(effects.shake, ctx.tuning.effects.beam.trauma);
 }
 
 /** Adds screen-shake trauma (0..1) without an explosion, e.g. when Rexi is hurt. */
@@ -185,5 +195,6 @@ export function viewEffects(
   return {
     particles: effects.list.map((p) => viewParticle(p, tuning.effects)),
     shake: shakeOffset(effects.shake, tuning.effects.shake, tick),
+    beams: effects.beams.map((beam) => viewBeam(beam, tuning.effects.beam)),
   };
 }

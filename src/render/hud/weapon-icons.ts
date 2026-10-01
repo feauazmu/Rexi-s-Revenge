@@ -38,6 +38,52 @@ const LLUVIA_DE_SELLOS = defineSprite(
   ],
 );
 
+/** Citaciones Teledirigidas: a manila envelope locked on by a red target reticle (12×12). */
+const CITACIONES_TELEDIRIGIDAS = defineSprite(
+  { k: palette.outline, p: '#f0dcb0', f: '#b89464', r: '#e02828', w: '#ffffff' },
+  [
+    'kkkkkkkkkk..',
+    'kfppppppfk..',
+    'kpffppffpk..',
+    'kpppffpppk..',
+    'kppppppppk..',
+    'kppppppppk..',
+    'kppppprrrk..',
+    'kppppr.r.rk.',
+    'kkkkkrrwrrk.',
+    '.....r.r.rk.',
+    '......rrrk..',
+    '.......kk...',
+  ],
+);
+
+/** Sentencia Firme: a rolled-out sentence firing a golden beam (12×12). */
+const SENTENCIA_FIRME = defineSprite(
+  {
+    k: palette.outline,
+    W: '#ffffff',
+    Y: '#ffe066',
+    o: '#ffa030',
+    P: '#f4e4bc',
+    p: '#c9ae7c',
+    l: '#8a6a44',
+  },
+  [
+    '........kkk.',
+    '.......kWYok',
+    '......kWYok.',
+    '.....kWYok..',
+    '....kWYok...',
+    '...kWYok....',
+    '.kkkkkkkkk..',
+    'kpPPPPPPPpk.',
+    'kpPllllPPpk.',
+    'kpPPPPPPPpk.',
+    'kpPlllPPPpk.',
+    '.kkkkkkkkk..',
+  ],
+);
+
 /**
  * HUD icon of each Weapon, also shown on Crates (at most 12×12 to fit a Crate's label).
  * A new Weapon fails to typecheck until it gets an icon here.
@@ -45,4 +91,6 @@ const LLUVIA_DE_SELLOS = defineSprite(
 export const weaponIcons: Readonly<Record<WeaponId, SpriteDef>> = {
   'mazo-automatico': MAZO_AUTOMATICO,
   'lluvia-de-sellos': LLUVIA_DE_SELLOS,
+  'citaciones-teledirigidas': CITACIONES_TELEDIRIGIDAS,
+  'sentencia-firme': SENTENCIA_FIRME,
 };

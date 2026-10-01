@@ -20,6 +20,8 @@ export const strings = {
   weapons: {
     'mazo-automatico': 'Mazo Automático',
     'lluvia-de-sellos': 'Lluvia de Sellos',
+    'citaciones-teledirigidas': 'Citaciones Teledirigidas',
+    'sentencia-firme': 'Sentencia Firme',
   } satisfies Record<WeaponId, string>,
 
   titleScreen: {

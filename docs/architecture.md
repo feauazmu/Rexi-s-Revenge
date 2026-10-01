@@ -96,7 +96,11 @@ Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's pro
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
 A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and the invulnerability window
 (`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
-hit, at the ground, off-screen or when their lifetime runs out. When Rexi's health reaches zero the Run emits
+hit, at the ground, off-screen or when their lifetime runs out. A projectile spawned with a `turnRate`
+homes: each tick it turns toward the nearest live Enemy (Rexi, for Enemy projectiles) by at most that rate,
+keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits inside `fire` instead of
+spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
+every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
 advancing (it can no longer be paused). Until the Veredicto screen exists, the Game returns to the Title 2 s later.
 
@@ -109,7 +113,9 @@ from the gameplay `rng`, and gameplay never reads them — tuning effects can't 
 
 - Verbs for other subsystems: `flashEnemy` (called by `damageEnemy` on every hit), `shatterEnemy`
   (on destruction: debris + the kind's explosion preset), `explode(ctx, at, 'small' | 'large')` and
-  `addShakeTrauma` for explosive Weapons or Rexi getting hurt.
+  `addShakeTrauma` for explosive Weapons or Rexi getting hurt, and `traceBeam(ctx, from, to)` for beam
+  Weapons (`RunView.effects.beams`, each with an `intensity` that falls from 1 as it fades; the renderer
+  draws it as runs of rectangles in `src/render/effects/beam.ts`).
 - Particles live in a bounded pool (`tuning.effects.maxParticles`, oldest dropped first) and are
   culled when their life ends or they leave the screen; debris settles on the ground, rests, then blinks out.
 - Screen shake is trauma-based: events add trauma (0..1), it decays linearly, and the view's

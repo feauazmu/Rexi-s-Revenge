@@ -46,6 +46,16 @@ export const rexiPalette = {
   z: '#d42a2a',
   Z: '#8a1a1a',
   u: '#3a4ec0',
+  // Citaciones Teledirigidas: manila envelope, red wax seal.
+  '1': '#f0dcb0',
+  '2': '#d2b482',
+  '3': '#9a7a4c',
+  '4': '#e02828',
+  // Sentencia Firme: parchment scroll with a golden, glowing tip.
+  '5': '#f4e4bc',
+  '6': '#c9ae7c',
+  '7': '#ffe066',
+  '8': '#ffffff',
 } as const satisfies Record<string, Color>;
 
 export type RexiInk = keyof typeof rexiPalette;

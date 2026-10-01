@@ -34,6 +34,18 @@ export interface SpreadShotTuning extends StraightShotTuning {
   readonly spreadAngle: number;
 }
 
+/** Archetype: a straight projectile that steers toward the nearest Enemy. */
+export interface HomingShotTuning extends StraightShotTuning {
+  /** Fastest the projectile turns toward its target, degrees per second. */
+  readonly turnRate: number;
+}
+
+/** Archetype: an instant beam that hits every Enemy along its line, up to the screen edge. */
+export interface PiercingBeamTuning extends WeaponTuningBase {
+  /** Thickness of the beam's hit line, px: Enemies it grazes count as on the line. */
+  readonly beamWidth: number;
+}
+
 /**
  * One entry per Weapon (keyed by WeaponId); each Weapon picks its archetype's tuning shape.
  * Special Weapons (all but the Mazo Automático) add {@link AmmoTuning}.
@@ -41,6 +53,8 @@ export interface SpreadShotTuning extends StraightShotTuning {
 export interface WeaponsTuning {
   readonly 'mazo-automatico': StraightShotTuning;
   readonly 'lluvia-de-sellos': SpreadShotTuning & AmmoTuning;
+  readonly 'citaciones-teledirigidas': HomingShotTuning & AmmoTuning;
+  readonly 'sentencia-firme': PiercingBeamTuning & AmmoTuning;
 }
 
 export const weaponsTuning = {
@@ -62,6 +76,25 @@ export const weaponsTuning = {
     projectileSize: 6,
     pickupAmmo: 20,
     maxAmmo: 40,
+  },
+  // After HA3's Seeker Launcher, lighter and quicker: one subpoena settles a Maletín-cóptero.
+  'citaciones-teledirigidas': {
+    fireInterval: 0.9,
+    damage: 12,
+    projectileSpeed: 200,
+    turnRate: 240,
+    projectileLifetime: 3,
+    projectileSize: 7,
+    pickupAmmo: 8,
+    maxAmmo: 16,
+  },
+  // After HA3's Rail Gun: slow, rare and devastating along its whole line.
+  'sentencia-firme': {
+    fireInterval: 2,
+    damage: 30,
+    beamWidth: 4,
+    pickupAmmo: 6,
+    maxAmmo: 12,
   },
 } as const satisfies WeaponsTuning &
   Record<WeaponId, WeaponTuningBase> &

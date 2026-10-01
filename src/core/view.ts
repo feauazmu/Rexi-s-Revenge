@@ -173,6 +173,18 @@ export interface EffectsView {
    * (crosshair, HUD, Dialogue Box) ignore it.
    */
   readonly shake: Vec2;
+  /** Fading traces of beam shots (Sentencia Firme), oldest first. */
+  readonly beams: readonly BeamView[];
+}
+
+/** The trace of a beam shot, from the muzzle to where it left the screen or met the ground. */
+export interface BeamView {
+  readonly from: Vec2;
+  readonly to: Vec2;
+  /** Ticks since it was fired. */
+  readonly age: number;
+  /** 1 at full strength, falling toward 0 as it fades out. */
+  readonly intensity: number;
 }
 
 export type ParticleView = BurstParticleView | DebrisParticleView;
