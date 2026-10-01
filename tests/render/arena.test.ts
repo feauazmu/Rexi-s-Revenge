@@ -10,6 +10,7 @@ import type { Bitmap } from '../../src/render/surface';
 import { drive, eventsOf } from '../support/driver';
 import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
+import type { RgbaImage } from '../golden/golden';
 
 type Op =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; color: string }
@@ -117,27 +118,45 @@ describe('Arena', () => {
         }),
       },
     });
-    let shake = { x: 0, y: 0 };
-    for (let t = 0; t < 240 && Math.abs(shake.x) <= ARENA_BLEED; t++) {
+    // A frame shaken past the bleed on each axis; the strip the world moved away from would
+    // be letterbox black without the bleed.
+    const frames: { x?: RgbaImage; y?: RgbaImage } = {};
+    const shakes = { x: 0, y: 0 };
+    for (let t = 0; t < 240 && !(frames.x && frames.y); t++) {
       game.ticks(1, {
         aim: { x: 335, y: 132 },
         fire: eventsOf(game.log, 'enemy-destroyed').length === 0,
       });
-      shake = game.view.run?.effects.shake ?? shake;
-    }
-    expect(Math.abs(shake.x)).toBeGreaterThan(ARENA_BLEED);
-    const { width, data } = renderView(game.view);
-    // The uncovered strip (letterbox black without the bleed) is on the side the world moved.
-    const strip = shake.x > 0 ? [0, ARENA_BLEED] : [SCREEN_WIDTH - ARENA_BLEED, SCREEN_WIDTH];
-    let black = 0;
-    let total = 0;
-    for (let y = 40; y < SCREEN_HEIGHT - 60; y++) {
-      for (let x = strip[0] ?? 0; x < (strip[1] ?? 0); x++) {
-        const i = (y * width + x) * 4;
-        total++;
-        if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0) black++;
+      const shake = game.view.run?.effects.shake ?? { x: 0, y: 0 };
+      for (const axis of ['x', 'y'] as const) {
+        if (!frames[axis] && Math.abs(shake[axis]) > ARENA_BLEED) {
+          frames[axis] = renderView(game.view);
+          shakes[axis] = shake[axis];
+        }
       }
     }
-    expect(black / total).toBeLessThan(0.2);
+    if (!frames.x || !frames.y) throw new Error('the shake never passed the bleed on both axes');
+    const B = ARENA_BLEED;
+    const columns = shakes.x > 0 ? [0, B] : [SCREEN_WIDTH - B, SCREEN_WIDTH];
+    const rows = shakes.y > 0 ? [0, B] : [SCREEN_HEIGHT - B, SCREEN_HEIGHT];
+    // Rows clear of the HUD corners and the Dialogue Box; columns clear of the HUD corners.
+    expect(blackShare(frames.x, columns, [40, SCREEN_HEIGHT - 60])).toBeLessThan(0.2);
+    expect(blackShare(frames.y, [160, SCREEN_WIDTH - 160], rows)).toBeLessThan(0.2);
   });
 });
+
+/** Share of pure-black pixels in the box [x0, x1) × [y0, y1) of `image`. */
+function blackShare(
+  image: RgbaImage,
+  [x0 = 0, x1 = 0]: number[],
+  [y0 = 0, y1 = 0]: number[],
+): number {
+  let black = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = (y * image.width + x) * 4;
+      if (image.data[i] === 0 && image.data[i + 1] === 0 && image.data[i + 2] === 0) black++;
+    }
+  }
+  return black / ((x1 - x0) * (y1 - y0));
+}

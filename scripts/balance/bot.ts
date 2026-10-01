@@ -35,6 +35,7 @@ import {
   type ProjectileView,
   type Rng,
   type RunView,
+  type Box,
   type Tuning,
   type TuningOverrides,
   type Vec2,
@@ -175,15 +176,18 @@ export function playRun({ seed, profile, tuning, maxSeconds = 900 }: PlayOptions
 /** Which Enemy projectile (or splash) most likely dealt a hit, from the tick before it. */
 function hitSource(run: RunView): ProjectileKind | 'blast' {
   const { rexi } = run;
-  const near = run.projectiles.find(
-    (p) =>
-      p.owner === 'enemy' &&
-      p.x < rexi.x + rexi.w + 12 &&
-      p.x + p.w > rexi.x - 12 &&
-      p.y < rexi.y + rexi.h + 12 &&
-      p.y + p.h > rexi.y - 12,
-  );
+  const near = run.projectiles.find((p) => p.owner === 'enemy' && overlaps(p, rexi, 12));
   return near?.kind ?? 'blast';
+}
+
+/** Whether two boxes overlap once `b` is grown by `margin` on every side. */
+function overlaps(a: Box, b: Box, margin = 0): boolean {
+  return (
+    a.x < b.x + b.w + margin &&
+    a.x + a.w > b.x - margin &&
+    a.y < b.y + b.h + margin &&
+    a.y + a.h > b.y - margin
+  );
 }
 
 interface Plan {
@@ -322,7 +326,7 @@ export function createBot(profile: BotProfile, seed: number, tuning: Tuning): Bo
 function lobAim(
   from: Vec2,
   target: Vec2,
-  { launchSpeed: v, gravity: g }: { readonly launchSpeed: number; readonly gravity: number },
+  { launchSpeed: v, gravity: g }: Tuning['weapons']['mancuernas'],
 ): Vec2 {
   const dx = target.x - from.x;
   const up = from.y - target.y;
@@ -341,7 +345,7 @@ function shotSpeed(weapon: WeaponId, tuning: Tuning): number {
   if ('projectileSpeed' in w) return w.projectileSpeed;
   if ('maxSpeed' in w) return (w.launchSpeed + w.maxSpeed) / 2;
   if ('launchSpeed' in w) return w.launchSpeed;
-  return 1e6;
+  return Infinity;
 }
 
 /** The Weapon a sensible player would hold against `target`. */
@@ -419,13 +423,8 @@ function choosePlan(
       for (const path of paths) {
         if (hit.has(path)) continue;
         const at = path.at(s * dt + lag);
-        const m = path.margin;
-        if (
-          at.x < x + rexi.w + m &&
-          at.x + path.w > x - m &&
-          at.y < y + rexi.h + m &&
-          at.y + path.h > y - m
-        ) {
+        const shot = { x: at.x, y: at.y, w: path.w, h: path.h };
+        if (overlaps(shot, { x, y, w: rexi.w, h: rexi.h }, path.margin)) {
           hit.add(path);
           cost += 10 + 10 * (1 - s / steps);
         }

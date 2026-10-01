@@ -27,12 +27,12 @@ export function drawArena(dc: DrawContext, run: RunView): void {
     surface.drawBitmap(sprites.get(sprite), x, y);
   };
 
-  draw(bled('layers/sky'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/sky'), -ARENA_BLEED, -ARENA_BLEED);
   const t = run.tick / TICKS_PER_SECOND;
   for (const cloud of CLOUDS) draw(cloud.sprite, cloudX(cloud, t), cloud.y);
-  draw(bled('layers/far'), -ARENA_BLEED, -ARENA_BLEED);
-  draw(bled('layers/buildings'), -ARENA_BLEED, -ARENA_BLEED);
-  draw(bled('layers/plaza'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/far'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/buildings'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/plaza'), -ARENA_BLEED, -ARENA_BLEED);
 
   const signs = arenaSigns();
   const neon = signs.neon[neonState(run.tick)];
@@ -60,7 +60,7 @@ const bleedCache = new Map<ArenaLayer, SpriteDef>();
  * flat sky band and the pavement continue, and the buildings cut by the screen edge carry on
  * with their own windows and columns for the few pixels a shake reveals.
  */
-function bled(name: ArenaLayer): SpriteDef {
+function bleedLayer(name: ArenaLayer): SpriteDef {
   let sprite = bleedCache.get(name);
   if (!sprite) {
     const { palette, rows, width, height } = art[name];

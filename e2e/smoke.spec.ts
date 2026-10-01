@@ -1,14 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-
-/** Collects console errors and uncaught exceptions for the whole test. */
-function trackErrors(page: Page): string[] {
-  const errors: string[] = [];
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
-  page.on('pageerror', (error) => errors.push(error.message));
-  return errors;
-}
+import { readHighScores, SWEEP_STEP_MS, SWEEP_STEPS, sweepAngle, trackErrors } from './support';
 
 /** Number of distinct colors in the game canvas (1 means blank). */
 function distinctCanvasColors(page: Page): Promise<number> {
@@ -74,7 +65,8 @@ test('the Title is drawn over the title illustration', async ({ page }) => {
       const expected = reference.getImageData(...box).data;
       let same = 0;
       for (let i = 0; i < shown.length; i += 4) {
-        if (shown[i] === expected[i] && shown[i + 1] === expected[i + 1]) same++;
+        const rgb = [0, 1, 2].every((c) => shown[i + c] === expected[i + c]);
+        if (rgb) same++;
       }
       return same / (shown.length / 4);
     });
@@ -148,13 +140,13 @@ test('a whole Run end to end: Rexi falls, the Veredicto is signed, the Title kee
   const box = await page.locator('canvas').boundingBox();
   if (!box) throw new Error('canvas has no layout box');
   await page.mouse.down();
-  for (let i = 0; i < 240 && (await screenOf(page)) === 'run'; i++) {
-    const angle = Math.PI * (0.1 + 0.8 * ((i * 0.37) % 1));
+  for (let i = 0; i < SWEEP_STEPS && (await screenOf(page)) === 'run'; i++) {
+    const angle = sweepAngle(i);
     await page.mouse.move(
       box.x + box.width * (0.5 + 0.45 * Math.cos(angle)),
       box.y + box.height * (0.6 - 0.5 * Math.sin(angle)),
     );
-    await page.clock.runFor(500);
+    await page.clock.runFor(SWEEP_STEP_MS);
   }
   await page.mouse.up();
   await expect.poll(() => screenOf(page)).toBe('verdict');
@@ -165,11 +157,7 @@ test('a whole Run end to end: Rexi falls, the Veredicto is signed, the Title kee
     await page.keyboard.press('Enter');
     await page.clock.runFor(100);
   }
-  const table = await page.evaluate(() => localStorage.getItem('rexis-revenge:high-scores'));
-  const { version, entries } = JSON.parse(table ?? '{}') as {
-    version?: number;
-    entries?: { initials: string; score: number }[];
-  };
+  const { version, entries } = await readHighScores(page);
   expect(version).toBe(1);
   expect(entries?.map(({ initials }) => initials)).toEqual(['AAA']);
   expect(entries?.[0]?.score).toBeGreaterThan(0);

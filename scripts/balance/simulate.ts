@@ -43,10 +43,23 @@ const { values } = parseArgs({
   },
 });
 
-const seeds = Number(values.seeds);
-const first = Number(values.first);
-const maxSeconds = Number(values['max-seconds']);
-const names = (values.profile ?? Object.keys(bot.PROFILES)) as Bot.ProfileName[];
+function positiveInteger(option: string, value: string): number {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error(`--${option} must be a positive integer, got "${value}"`);
+  return n;
+}
+const seeds = positiveInteger('seeds', values.seeds);
+const first = positiveInteger('first', values.first);
+const maxSeconds = positiveInteger('max-seconds', values['max-seconds']);
+const isProfile = (name: string): name is Bot.ProfileName => Object.hasOwn(bot.PROFILES, name);
+const names = values.profile ?? Object.keys(bot.PROFILES);
+const unknown = names.filter((name) => !isProfile(name));
+if (unknown.length > 0) {
+  throw new Error(
+    `Unknown --profile ${unknown.join(', ')}; one of ${Object.keys(bot.PROFILES).join(', ')}`,
+  );
+}
 const tuningArg = values.tuning?.trim();
 const tuning = tuningArg
   ? (JSON.parse(
@@ -54,7 +67,7 @@ const tuning = tuningArg
     ) as Bot.PlayOptions['tuning'])
   : undefined;
 
-for (const name of names) {
+for (const name of names.filter(isProfile)) {
   const profile = bot.PROFILES[name];
   const reports = Array.from({ length: seeds }, (_, i) =>
     bot.playRun({ seed: first + i, profile, maxSeconds, ...(tuning ? { tuning } : {}) }),

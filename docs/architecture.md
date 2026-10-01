@@ -349,6 +349,17 @@ from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of i
   `tests/render/ui-palette.test.ts` also draws the HUD, Crates, Dialogue Box frame, touch controls,
   pause menu and Veredicto alone over a palette color, and `tests/render/arena.test.ts` checks the
   Arena's sprites and rectangles.
+- **Consistency pass (#30)**: every asset was reviewed side by side in the goldens and on a
+  sheet of every Enemy shot drawn over each part of the Arena (sky bands, marble courthouse,
+  night skyline, glass tower, Boissons, plaza). Outline weight is 1 px black everywhere (Rexi,
+  Enemies, projectiles, icons, ledges), the key light comes from the upper left on every
+  sprite against the backlit sunset, and the saturated sunset scene matches the saturated
+  characters, so none of those needed changes. Readability did: the Caminadora's bullet
+  tracer (thin dotted pixels lost over the orange sunset band) is now an unbroken 2 px
+  white-hot streak, the Banca's rocket (a dark body lost over the skyline and the blue glass)
+  gets a bigger exhaust with a white-hot core, and the crosshair (light strokes lost over the
+  marble) is now fully outlined. Rexi, the Enemies, papers and drawers read everywhere thanks
+  to their outlines. The title illustration was snapped to the palette (`rexi_refs.py title`).
 - **A new color**: first try the nearest ramp step (`nearestPaletteColor` suggests one). If no
   step works, ask the owner, with a mock-up showing why. An accepted color gets a semantic name,
   goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
@@ -589,7 +600,7 @@ stretch, and the difficulty should climb steadily rather than hit a cliff.
   and 18/36 ammo (was 15/30) to keep about 13 s of fire.
 - **Unchanged, by measurement:** the other Weapons out-damage the Mazo while held (11–19
   damage/s against 6.6) and last 7–15 s each. Crate weights give 62 % Weapons, 38 % Power-ups,
-  and about 40 % of drops are picked up. Quips trigger about 3.3 times a minute (chance 0.25,
+  and about 40 % of drops are picked up. Quips trigger about 3.3–3.4 times a minute (chance 0.25,
   cooldown 4 s), and Hit-stop (0.5 s, the spec's value) takes about 3 % of Run time.
 
 ## How to add…

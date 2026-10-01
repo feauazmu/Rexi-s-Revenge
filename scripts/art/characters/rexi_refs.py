@@ -140,7 +140,7 @@ def title(src=os.path.join(REF, "title-source.png"), out=os.path.join(ROOT, "pub
     edges, so outlines stay hard) and snap it to the master palette in CIELAB. The sky is then
     flattened into one palette colour per row: the source's soft gradient noise would otherwise
     snap into speckles between neighbouring ramp steps. A sky cell is one that is close to its
-    row's sky colour and connected to the open sky, so Rexi, the gavel and the helicopters keep
+    row's sky colour and connected to the open sky, so Rexi, the gavel and the Enemies keep
     their pixels."""
     from pixelize import label, snap, to_lab
 

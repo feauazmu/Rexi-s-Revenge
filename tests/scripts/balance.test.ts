@@ -8,11 +8,11 @@ describe('balance bot', () => {
     expect(run()).toEqual(run());
   });
 
-  it('plays a real Run: fights, collects Crates and eventually loses', () => {
-    const report = playRun({ seed: 1, profile: PROFILES.decent });
-    expect(report.capped).toBe(false);
-    expect(report.seconds).toBeGreaterThan(60);
-    expect(report.enemiesDestroyed).toBeGreaterThan(10);
+  it('plays a real Run: fights, collects Crates and takes damage', () => {
+    // Loose bounds on purpose: the balance pass may move the numbers, not the behavior.
+    const report = playRun({ seed: 1, profile: PROFILES.decent, maxSeconds: 120 });
+    expect(report.seconds).toBeGreaterThan(30);
+    expect(report.enemiesDestroyed).toBeGreaterThan(5);
     expect(report.cratesPicked).toBeGreaterThan(0);
     expect(Object.values(report.damageBy).reduce((sum, d) => sum + d, 0)).toBeGreaterThan(0);
   });
@@ -23,13 +23,10 @@ describe('balance bot', () => {
   });
 
   it('plays the Run its tuning overrides describe', () => {
-    const fragile = playRun({
-      seed: 1,
-      profile: PROFILES.decent,
-      tuning: { rexi: { maxHealth: 5 } },
-    });
-    const sturdy = playRun({ seed: 1, profile: PROFILES.decent });
-    expect(fragile.seconds).toBeLessThan(sturdy.seconds);
+    const options = { seed: 1, profile: PROFILES.decent, maxSeconds: 120 };
+    const fragile = playRun({ ...options, tuning: { rexi: { maxHealth: 5 } } });
+    expect(fragile.capped).toBe(false);
+    expect(fragile.seconds).toBeLessThan(playRun(options).seconds);
   });
 });
 

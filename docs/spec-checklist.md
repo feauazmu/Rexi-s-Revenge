@@ -6,7 +6,7 @@ is implemented and a test covers it. **Done, amended** means it is implemented a
 decision changed it (listed under "Amendments"). **Deferred** means it is knowingly left out
 of v1.
 
-Result: 89 of 90 stories are done (four as amended). One part of one story is deferred: the
+Result: 89 of 90 stories are done (three of them as amended). One part of one story is deferred: the
 dev-sandbox page in story 86.
 
 Tests are named by file: `core/…`, `golden/…`, `render/…`, `platform/…`, `content/…` and
@@ -93,19 +93,19 @@ production build.
 
 ## Enemies and difficulty
 
-| #   | Story                                                   | Status | Where                                           | Verified by                                                                         |
-| --- | ------------------------------------------------------- | ------ | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 45  | Maletín-cóptero, the common light Enemy shooting papers | Done   | `core/run/enemies/maletin-coptero.ts`           | `core/maletin-coptero`, `golden/run` (`enemy-maletin-coptero`)                      |
-| 46  | Archivador Artillado drops drawer bombs                 | Done   | `archivador-artillado.ts`                       | `core/archivador-artillado`, `golden/run`                                           |
-| 47  | Caminadora a Reacción strafes with bursts               | Done   | `caminadora-a-reaccion.ts`                      | `core/caminadora-a-reaccion`, `golden/run`                                          |
-| 48  | Banca Artillada, tanky, rocket volleys                  | Done   | `banca-artillada.ts`                            | `core/banca-artillada`, `golden/run` (`banca-windup`, `banca-volley`)               |
-| 49  | Distinct silhouette, colors and movement per Enemy      | Done   | pipeline sprites (`render/enemies/`), behaviors | `render/enemy-art`, `golden/run` (one per kind)                                     |
-| 50  | Enemies break apart with debris                         | Done   | `core/run/effects/`, `render/effects/`          | `core/effects`, `golden/effects`                                                    |
-| 51  | Enemies flash when hit                                  | Done   | `silhouetteContext` in `render/enemies/`        | `core/effects`, `golden/effects` (`effects-hit-flash`)                              |
-| 52  | Only Maletín-cópteros in the first minute               | Done   | `tuning.director` roster                        | `core/director`                                                                     |
-| 53  | New kinds over time, rising cap and fire rate           | Done   | `tuning.director` stages and growth             | `core/director`, `scripts/balance` (`npm run balance`)                              |
-| 54  | Enemy shots clearly visible and dodgeable               | Done   | `render/projectiles/`; balance pass (#30)       | `golden/run`, `core/enemy-fire`; simulated play in `docs/architecture.md` "Balance" |
-| 55  | Brief invulnerability and a hurt animation              | Done   | `core/run/rexi.ts`, `render/rexi/pose.ts`       | `core/rexi`, `golden/rexi` (`rexi-hurt`), `golden/run` (`run-hurt`)                 |
+| #   | Story                                                   | Status | Where                                           | Verified by                                                                                                                                                                    |
+| --- | ------------------------------------------------------- | ------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 45  | Maletín-cóptero, the common light Enemy shooting papers | Done   | `core/run/enemies/maletin-coptero.ts`           | `core/maletin-coptero`, `golden/run` (`enemy-maletin-coptero`)                                                                                                                 |
+| 46  | Archivador Artillado drops drawer bombs                 | Done   | `archivador-artillado.ts`                       | `core/archivador-artillado`, `golden/run`                                                                                                                                      |
+| 47  | Caminadora a Reacción strafes with bursts               | Done   | `caminadora-a-reaccion.ts`                      | `core/caminadora-a-reaccion`, `golden/run`                                                                                                                                     |
+| 48  | Banca Artillada, tanky, rocket volleys                  | Done   | `banca-artillada.ts`                            | `core/banca-artillada`, `golden/run` (`banca-windup`, `banca-volley`)                                                                                                          |
+| 49  | Distinct silhouette, colors and movement per Enemy      | Done   | pipeline sprites (`render/enemies/`), behaviors | `render/enemy-art`, `golden/run` (one per kind)                                                                                                                                |
+| 50  | Enemies break apart with debris                         | Done   | `core/run/effects/`, `render/effects/`          | `core/effects`, `golden/effects`                                                                                                                                               |
+| 51  | Enemies flash when hit                                  | Done   | `silhouetteContext` in `render/enemies/`        | `core/effects`, `golden/effects` (`effects-hit-flash`)                                                                                                                         |
+| 52  | Only Maletín-cópteros in the first minute               | Done   | `tuning.director` roster                        | `core/director`                                                                                                                                                                |
+| 53  | New kinds over time, rising cap and fire rate           | Done   | `tuning.director` stages and growth             | `core/director`, `scripts/balance` (`npm run balance`)                                                                                                                         |
+| 54  | Enemy shots clearly visible and dodgeable               | Done   | `render/projectiles/`; balance pass (#30)       | `core/enemy-fire`, `golden/run`; readability reviewed over the whole Arena ("Consistency pass" in `docs/architecture.md`); dodgeability measured by simulated play ("Balance") |
+| 55  | Brief invulnerability and a hurt animation              | Done   | `core/run/rexi.ts`, `render/rexi/pose.ts`       | `core/rexi`, `golden/rexi` (`rexi-hurt`), `golden/run` (`run-hurt`)                                                                                                            |
 
 ## Quips and the Dialogue Box
 

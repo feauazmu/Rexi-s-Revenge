@@ -1,4 +1,5 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { readHighScores, SWEEP_STEP_MS, SWEEP_STEPS, sweepAngle, trackErrors } from './support';
 
 // Emulated phones: a coarse touch pointer, so the shell picks the touch controls.
 // `defaultBrowserType` cannot be set inside a describe block; the project's browser is used.
@@ -84,8 +85,7 @@ test.describe('phone in landscape, a whole Run', () => {
     page,
   }) => {
     test.setTimeout(180_000);
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
+    const errors = trackErrors(page);
     // A fake clock drives requestAnimationFrame (a minute of play runs as fast as it renders);
     // the fixed seed makes the Run the same every time.
     await page.clock.install({ time: 0 });
@@ -112,14 +112,18 @@ test.describe('phone in landscape, a whole Run', () => {
       type: 'touchStart',
       touchPoints: [{ ...client(origin.x, origin.y), id: 1 }],
     });
-    for (let i = 0; i < 240 && (await app(page).getAttribute('data-screen')) === 'run'; i++) {
-      const angle = Math.PI * (0.1 + 0.8 * ((i * 0.37) % 1));
+    for (
+      let i = 0;
+      i < SWEEP_STEPS && (await app(page).getAttribute('data-screen')) === 'run';
+      i++
+    ) {
+      const angle = sweepAngle(i);
       const point = client(origin.x + 40 * Math.cos(angle), origin.y - 40 * Math.sin(angle));
       await cdp.send('Input.dispatchTouchEvent', {
         type: 'touchMove',
         touchPoints: [{ ...point, id: 1 }],
       });
-      await page.clock.runFor(500);
+      await page.clock.runFor(SWEEP_STEP_MS);
     }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await expect(app(page)).toHaveAttribute('data-screen', 'verdict');
@@ -131,8 +135,9 @@ test.describe('phone in landscape, a whole Run', () => {
       await tapGame(page, 576, 280);
       await page.clock.runFor(100);
     }
-    const table = await page.evaluate(() => localStorage.getItem('rexis-revenge:high-scores'));
-    expect(JSON.parse(table ?? '{}')).toMatchObject({ entries: [{ initials: 'AAA' }] });
+    const { entries } = await readHighScores(page);
+    expect(entries?.map(({ initials }) => initials)).toEqual(['AAA']);
+    expect(entries?.[0]?.score).toBeGreaterThan(0);
 
     await page.clock.runFor(600);
     await tapGame(page, 320, 180);
