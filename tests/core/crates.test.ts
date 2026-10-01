@@ -4,6 +4,7 @@ import {
   defaultTuning,
   SCREEN_WIDTH,
   secondsToTicks,
+  SPECIAL_WEAPON_IDS,
   TICKS_PER_SECOND,
   type CrateView,
 } from '../../src/core';
@@ -79,11 +80,24 @@ describe('Automatic Crate drops', () => {
     }
   });
 
+  it('drops every Weapon that has a positive weight', () => {
+    const fast = { firstDrop: 0, dropInterval: 0.5, dropIntervalJitter: 0 };
+    const game = drive({ seed: 3, overrides: { tuning: { crates: fast } } });
+    const dropped = new Set(
+      eventsOf(game.seconds(40), 'crate-spawned').map((e) =>
+        e.contents.kind === 'weapon' ? e.contents.weapon : null,
+      ),
+    );
+    const weighted = SPECIAL_WEAPON_IDS.filter((id) => crates.weights.weapons[id] > 0);
+    expect(weighted).toContain('mancuernas');
+    expect(weighted).toContain('codigo-penal');
+    for (const id of weighted) expect(dropped).toContain(id);
+  });
+
   it('refuses a catalog where no content has a positive weight', () => {
+    const noWeapons = Object.fromEntries(SPECIAL_WEAPON_IDS.map((id) => [id, 0]));
     const game = drive({
-      overrides: {
-        tuning: { crates: { firstDrop: 0, weights: { weapons: { 'lluvia-de-sellos': 0 } } } },
-      },
+      overrides: { tuning: { crates: { firstDrop: 0, weights: { weapons: noWeapons } } } },
     });
     expect(() => game.ticks(1)).toThrow(/positive weight/);
   });

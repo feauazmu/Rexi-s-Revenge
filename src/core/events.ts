@@ -18,6 +18,7 @@ export type GameEvent =
   | EnemyHitEvent
   | EnemyDestroyedEvent
   | EnemyFiredEvent
+  | ExplosionEvent
   | RexiHitEvent
   | RunEndedEvent
   | MuteToggledEvent
@@ -123,6 +124,20 @@ export interface EnemyFiredEvent {
   readonly type: 'enemy-fired';
   readonly enemyId: number;
   readonly kind: EnemyKind;
+}
+
+/**
+ * An explosive Weapon's projectile detonated (Mancuernas, Código Penal). Its splash damage is
+ * applied in the same tick, as `enemy-hit` events after this one.
+ */
+export interface ExplosionEvent {
+  readonly type: 'explosion';
+  readonly weapon: SpecialWeaponId;
+  /** Center of the blast, in game coordinates. */
+  readonly x: number;
+  readonly y: number;
+  /** Splash radius, px. */
+  readonly radius: number;
 }
 
 /** An Enemy projectile hurt Rexi. Not emitted while he is invulnerable. */

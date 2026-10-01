@@ -41,6 +41,8 @@ export const cratesTuning: CratesTuning = {
   weights: {
     weapons: {
       'lluvia-de-sellos': 18,
+      mancuernas: 14,
+      'codigo-penal': 12,
     },
     powerUps: {},
   },

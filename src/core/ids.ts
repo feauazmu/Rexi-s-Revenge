@@ -8,6 +8,8 @@
 export const WEAPON_IDS = [
   'mazo-automatico', // Mazo Automático
   'lluvia-de-sellos', // Lluvia de Sellos
+  'mancuernas', // Mancuernas
+  'codigo-penal', // Código Penal
 ] as const;
 export type WeaponId = (typeof WEAPON_IDS)[number];
 
@@ -42,6 +44,8 @@ export const PROJECTILE_KINDS = [
   'gavel', // Mazo Automático
   'paper', // Maletín-cóptero
   'stamp', // Lluvia de Sellos
+  'dumbbell', // Mancuernas
+  'law-book', // Código Penal
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

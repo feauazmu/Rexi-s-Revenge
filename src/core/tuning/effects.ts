@@ -81,6 +81,8 @@ export interface ParticleTuning {
   readonly sparkLifeMin: number;
   readonly sparkLifeMax: number;
   readonly sparkGravity: number;
+  /** Largest radius of a smoke-trail puff behind a rocket, px. */
+  readonly trailPuffRadius: number;
 }
 
 export interface EffectsTuning {
@@ -107,6 +109,7 @@ export const effectsTuning: EffectsTuning = {
     sparkLifeMin: 0.25,
     sparkLifeMax: 0.5,
     sparkGravity: 400,
+    trailPuffRadius: 3,
   },
   debris: {
     gravity: 600,

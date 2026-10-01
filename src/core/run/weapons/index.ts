@@ -1,5 +1,7 @@
 import type { WeaponId } from '../../ids';
+import { codigoPenal } from './codigo-penal';
 import { lluviaDeSellos } from './lluvia-de-sellos';
+import { mancuernas } from './mancuernas';
 import { mazoAutomatico } from './mazo-automatico';
 import type { WeaponDef } from './types';
 
@@ -7,4 +9,6 @@ import type { WeaponDef } from './types';
 export const weaponCatalog: Readonly<Record<WeaponId, WeaponDef>> = {
   'mazo-automatico': mazoAutomatico,
   'lluvia-de-sellos': lluviaDeSellos,
+  mancuernas,
+  'codigo-penal': codigoPenal,
 };
