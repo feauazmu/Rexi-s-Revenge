@@ -4,7 +4,7 @@ import { translatedContext, type DrawContext } from './draw-context';
 import { drawEffects } from './effects';
 import { drawEnemies } from './enemies';
 import { drawHud } from './hud/hud';
-import { drawArena } from './layers/arena';
+import { ARENA_BLEED, drawArena } from './layers/arena';
 import { drawCrates } from './layers/crates';
 import { drawCrosshair } from './layers/crosshair';
 import { drawSlowMotionTint } from './layers/power-up-effects';
@@ -49,7 +49,10 @@ export interface RendererOptions {
 
 type ScreenDrawer = (dc: DrawContext, view: GameView) => void;
 
-/** Draws world layers offset by the screen shake, then fixed screen layers. */
+/**
+ * Draws world layers offset by the screen shake (clamped to the Arena's bleed, so the edges
+ * never show the letterbox), then fixed screen layers.
+ */
 function drawRun(
   dc: DrawContext,
   worldLayers: readonly RunLayer[],
@@ -57,7 +60,9 @@ function drawRun(
 ): void {
   const { run } = dc.view;
   if (!run) return;
-  const world = translatedContext(dc, run.effects.shake.x, run.effects.shake.y);
+  const clampShake = (offset: number) => Math.max(-ARENA_BLEED, Math.min(ARENA_BLEED, offset));
+  const { x, y } = run.effects.shake;
+  const world = translatedContext(dc, clampShake(x), clampShake(y));
   for (const layer of worldLayers) layer(world, run);
   for (const layer of screenLayers) layer(dc, run);
 }

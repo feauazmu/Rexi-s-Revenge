@@ -1,13 +1,14 @@
 /** Golden specimen of the bitmap fonts: every glyph, both sizes, and wrapped text. */
 import { describe, it } from 'vitest';
 import { drawText, fonts } from '../../src/render';
+import { masterPalette } from '../../src/render/palette';
 import { renderPart } from '../support/render-node';
 import { expectGolden } from './golden';
 
-const BACKGROUND = '#2b1e4a';
-const INK = '#ffffff';
-const ACCENT = '#ffd88a';
-const SHADOW = '#1a1020';
+const BACKGROUND = masterPalette.robe;
+const INK = masterPalette.white;
+const ACCENT = masterPalette.gold;
+const SHADOW = masterPalette.night;
 
 describe('Text goldens', () => {
   it('font-specimen: regular and large fonts, alignment and wrapping', async () => {
