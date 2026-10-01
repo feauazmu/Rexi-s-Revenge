@@ -119,6 +119,51 @@ test('pauses with Esc, auto-pauses when the tab is hidden, and Salir returns to 
   await expect.poll(() => screenOf(page)).toBe('title');
 });
 
+test('audio stays off until the first interaction, then starts without autoplay errors', async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const audioWarnings: string[] = [];
+  page.on('console', (msg) => {
+    if (/audio/i.test(msg.text())) audioWarnings.push(msg.text());
+  });
+  await asReturningPlayer(page);
+  await page.goto('');
+  await expect.poll(() => screenOf(page)).toBe('title');
+  await page.waitForTimeout(600);
+  expect(await page.locator('#app').getAttribute('data-audio')).toBe('locked');
+
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+  await expect.poll(() => page.locator('#app').getAttribute('data-audio')).toBe('running');
+  await page.mouse.down(); // fire a few shots: sounds play through the running engine
+  await page.waitForTimeout(400);
+  await page.mouse.up();
+
+  expect(errors).toEqual([]);
+  expect(audioWarnings).toEqual([]);
+});
+
+test('muting the music from the pause menu persists across reloads', async ({ page }) => {
+  const music = () => page.locator('#app').getAttribute('data-music');
+  await asReturningPlayer(page);
+  await page.goto('');
+  await expect.poll(music).toBe('on');
+  await page.waitForTimeout(600);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  await page.keyboard.press('Escape');
+  await expect.poll(() => screenOf(page)).toBe('paused');
+  await page.keyboard.press('ArrowDown'); // Silenciar música
+  await page.keyboard.press('Enter');
+  await expect.poll(music).toBe('muted');
+
+  await page.reload();
+  await expect.poll(() => screenOf(page)).toBe('title');
+  expect(await music()).toBe('muted');
+});
+
 test('scales the canvas by a whole number with letterboxing', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('');
