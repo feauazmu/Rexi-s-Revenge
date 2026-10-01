@@ -34,6 +34,13 @@ export const strings = {
     'dia-de-pierna': 'Día de Pierna',
   } satisfies Record<PowerUpId, string>,
 
+  /** The link preview image (Open Graph / Twitter card) under the logo. */
+  share: {
+    /** "Court is adjourned… and the weights are lifted!": levantar is both. */
+    tagline: '¡Se levanta la sesión…\ny las pesas!',
+    blurb: 'Arcade de pixel art gratis en tu navegador',
+  },
+
   titleScreen: {
     pressAnyKey: 'Presiona cualquier tecla',
     tapToStart: 'Toca para empezar',

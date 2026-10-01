@@ -5,7 +5,7 @@ import {
   listenForAudioUnlock,
   MUSIC_TRACK,
 } from './platform/audio';
-import { startShell } from './platform/shell';
+import { loadTitleIllustration, startShell } from './platform/shell';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('Missing #app element');
@@ -17,7 +17,12 @@ const audio = createAudioEngine({
     root.dataset.music = musicMuted ? 'muted' : 'on';
   },
 });
+// The Title opens over its illustration, so decode it before the first frame (if it fails to
+// load, the Title falls back to its code-drawn backdrop).
+const titleIllustration = await loadTitleIllustration(import.meta.env.BASE_URL);
+root.dataset.titleIllustration = titleIllustration ? 'loaded' : 'missing';
 const shell = startShell(root, {
+  titleIllustration,
   onEvents: (events) => {
     audio.handleEvents(events);
   },

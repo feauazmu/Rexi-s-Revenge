@@ -51,6 +51,36 @@ test('boots the production build on the Title without errors and draws it', asyn
   expect(errors).toEqual([]);
 });
 
+test('the Title is drawn over the title illustration', async ({ page }) => {
+  const errors = trackErrors(page);
+  await page.goto('');
+  await expect(page.locator('#app')).toHaveAttribute('data-title-illustration', 'loaded');
+  await expect.poll(() => screenOf(page)).toBe('title');
+  // The painted illustration has far more colors than the code-drawn backdrop.
+  await expect.poll(() => distinctCanvasColors(page)).toBeGreaterThan(500);
+  expect(errors).toEqual([]);
+});
+
+test('serves the icons, manifest and link preview image the page references', async ({
+  page,
+  request,
+}) => {
+  await page.goto('');
+  const hrefs = await page.evaluate(() => [
+    ...Array.from(
+      document.querySelectorAll('link[rel]'),
+      (link) => link.getAttribute('href') ?? '',
+    ),
+    document.querySelector('meta[property="og:image"]')?.getAttribute('content') ?? '',
+  ]);
+  for (const href of hrefs.filter((h) => !h.includes('/assets/'))) {
+    // The og:image is the deployed absolute URL; check the same file on this server.
+    const path = href.replace('https://feauazmu.github.io', '');
+    const response = await request.get(new URL(path, page.url()).href);
+    expect(response.status(), path).toBe(200);
+  }
+});
+
 test('a key press moves from the Title into the Run, and the Run plays', async ({ page }) => {
   const errors = trackErrors(page);
   await asReturningPlayer(page);

@@ -244,8 +244,10 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
 `createRenderer(bitmapFactory, { titleIllustration? }).render(surface, view)` draws one full frame.
 It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; menu screens live in
 `src/render/screens/` (shared panel, keycap, outlined-text and dimmer helpers in `ui.ts`). The Title draws
-`titleIllustration` (a decoded 480×270 bitmap from the platform) when given, else a code-drawn backdrop,
-and the top 10 under the logo (`high-scores.ts`). `verdict.ts` draws the defeat beat (the frozen Run dims
+`titleIllustration` (`public/title.png`, decoded by the platform) when given, else a code-drawn backdrop,
+then, in the left column over the illustration's empty sky, the logo, the top 10 (`high-scores.ts`, a
+solid dark panel), the start prompt on a dark plate and the outlined credits line; Rexi stays uncovered on
+the right. `verdict.ts` draws the defeat beat (the frozen Run dims
 in two dither steps under the HUD, with a banner) and the Veredicto (a court record over the dimmed Run:
 stats counting up, a stamp with the outcome, the ruling and the signature line).
 
@@ -299,6 +301,29 @@ sky, glass, neonPink, fire and foliage. The swatch golden `palette-swatches` sho
   goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
   palette stays at 40 colors or fewer (the palette test enforces it).
 
+## Brand art: logo, icons and share preview
+
+`src/render/brand/` holds the art that represents the game outside a Run, all drawn in code with
+master-palette colors only (a test in `tests/golden/brand.golden.test.ts` checks the sprites).
+
+- **Logo** (`logo.ts`): built once into one sprite (`LOGO`, 236×92). REXI'S (chrome) over REVENGE
+  (sunset gold) in custom letterforms (`logo-glyphs.ts`, a coarse 10-row grid upscaled 2× / 3× with
+  EPX, `mask.ts`), each with a 2 px black outline, an extrusion down and to the right and a shine
+  band; a gavel crossing behind (`gavel.ts`, rasterized from shapes at any angle) and a dumbbell
+  underline. `drawLogo(surface, sprites, x, y, tick)` adds a shine sweep and a twinkle every
+  `SHINE_PERIOD` ticks as small overlay sprites; the Title drives it with `screenAge`.
+- **Icons** (`icons.ts`): the favicon (a gavel on the 45° pixel lattice, crisp at 16, 32 and 48 px)
+  and the app icon art (48×48: the gavel over a striped sun, opaque).
+- **Share card** (`share-card.ts`): the link preview at game resolution (480×252): the title
+  illustration, the logo with its twinkle and the tagline (`strings.share`).
+- **Files**: `npm run share-preview` (`scripts/share-preview/`) renders these in Node with the game's
+  renderer and writes `public/favicon.ico`, `favicon-{16,32,48}.png`, `apple-touch-icon.png` (180),
+  `icon-{192,512}.png` (manifest) and `og-image.png` (the card at 2.5×, nearest-neighbor, 1200×630).
+  `index.html` links them, with the Spanish description and Open Graph / Twitter tags; the image URL is
+  absolute (`https://feauazmu.github.io/Rexi-s-Revenge/og-image.png`). `tests/content/share-preview.test.ts`
+  checks the tags, that every referenced file exists, and that the committed images match the renderer:
+  after changing the logo, icons, card or `public/title.png`, re-run `npm run share-preview`.
+
 ## Text: bitmap fonts, metrics and the strings catalog
 
 All text is drawn with code-defined bitmap fonts (`src/render/text/`), never canvas text.
@@ -342,6 +367,9 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 `data-touch-controls`).
 `ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there (`src/main.ts`).
 `Shell.view` exposes the Game's view so adapters can read their starting state (the persisted mute).
+`src/main.ts` decodes the title illustration (`loadTitleIllustration`, from the base URL) before starting
+the shell and passes it as `ShellOptions.titleIllustration`; if it cannot be loaded, the Title uses its
+code-drawn backdrop.
 
 ### Touch controls
 
@@ -525,6 +553,8 @@ await expectGolden('my-scene', renderView(game.view));
 ```
 
 - Build views only by driving the real core (`tests/support/driver.ts`), never by hand.
+- Title frames: pass `{ titleIllustration: await loadTitleIllustration() }` as `renderView`'s third
+  argument to draw over `public/title.png`, as the browser does; without it, the code-drawn backdrop.
 - Run `npm run golden:update` to create/replace PNGs in `tests/golden/__goldens__/`, inspect them, and commit.
   Missing goldens fail; they are never written automatically.
 - On mismatch the test fails and writes `<name>.actual|expected|diff.png` to `test-results/golden/`
@@ -555,6 +585,7 @@ await expectGolden('my-scene', renderView(game.view));
 | `npm run lint`          | ESLint + Prettier check (`npm run format` fixes)                  |
 | `npm test`              | Vitest: unit, core and golden tests                               |
 | `npm run golden:update` | Re-render and overwrite golden PNGs                               |
+| `npm run share-preview` | Re-render the favicons, app icons and link preview in `public/`   |
 | `npm run build`         | Production build to `dist/`                                       |
 | `npm run smoke`         | Build, serve and run Playwright (`SMOKE_PORT` to change the port) |
 | `npm run check`         | All of the above, as CI does                                      |

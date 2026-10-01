@@ -13,7 +13,7 @@ import {
   ROTATE_PROMPT_WIDTH,
   type TouchOverlayView,
 } from '../render';
-import { createCanvasBitmap } from './bitmaps';
+import { createCanvasBitmap, loadBitmap } from './bitmaps';
 import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
 import { createKeyboardMouseInput } from './keyboard-mouse';
@@ -26,6 +26,19 @@ export interface ShellOptions {
   readonly seed?: number;
   /** Receives each tick's events (audio and other reactive adapters plug in here). */
   readonly onEvents?: (events: readonly GameEvent[]) => void;
+  /**
+   * The decoded 480×270 title illustration (see {@link loadTitleIllustration}). Without it the
+   * Title draws its code-drawn backdrop.
+   */
+  readonly titleIllustration?: HTMLCanvasElement | null;
+}
+
+/** File name of the title illustration under the site's base URL (`public/title.png`). */
+export const TITLE_ILLUSTRATION_FILE = 'title.png';
+
+/** Loads the title illustration; resolves to null (code-drawn backdrop) if it is unavailable. */
+export function loadTitleIllustration(baseUrl: string): Promise<HTMLCanvasElement | null> {
+  return loadBitmap(`${baseUrl}${TITLE_ILLUSTRATION_FILE}`, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 export interface Shell {
@@ -94,7 +107,9 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   });
   const input =
     device === 'touch' ? touchAdapter(root, () => viewport) : keyboardMouseAdapter(root);
-  const renderer = createRenderer(createCanvasBitmap);
+  const renderer = createRenderer(createCanvasBitmap, {
+    titleIllustration: options.titleIllustration ?? null,
+  });
   const surface = canvasSurface<HTMLCanvasElement>(canvas.ctx);
   const rotateSurface = rotateCanvas && canvasSurface<HTMLCanvasElement>(rotateCanvas.ctx);
   const stepper = createFixedStepper();

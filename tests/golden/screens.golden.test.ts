@@ -8,7 +8,7 @@ import { memoryStorage, saveHighScores, type DeviceKind } from '../../src/core';
 import { drive, driveFromTitle, type Driver } from '../support/driver';
 import { holdStill } from '../support/fixtures';
 import { driveToRunEnd } from '../support/run-end';
-import { renderView } from '../support/render-node';
+import { loadTitleIllustration, renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
 /** Advances until the screen accepts start, then to the start of a blink-on phase. */
@@ -28,11 +28,25 @@ function howToPlay(device: DeviceKind): Driver {
 }
 
 describe('Screen goldens', () => {
-  it('title: logo, empty top 10, start prompt and credits over the code-drawn backdrop', async () => {
+  it('title: logo, empty top 10, start prompt and credits over the title illustration', async () => {
     const game = driveFromTitle();
     untilPromptShows(game);
     expect(game.view.screen).toBe('title');
-    await expectGolden('title', renderView(game.view));
+    const titleIllustration = await loadTitleIllustration();
+    await expectGolden('title', renderView(game.view, null, { titleIllustration }));
+  });
+
+  it('title-backdrop: the code-drawn backdrop when the illustration is missing', async () => {
+    const game = driveFromTitle();
+    untilPromptShows(game);
+    await expectGolden('title-backdrop', renderView(game.view));
+  });
+
+  it('title-logo-drop: the logo falling in and the top 10 still off screen', async () => {
+    const game = driveFromTitle();
+    game.ticks(10);
+    const titleIllustration = await loadTitleIllustration();
+    await expectGolden('title-logo-drop', renderView(game.view, null, { titleIllustration }));
   });
 
   it('how-to-play-desktop: keyboard and mouse controls', async () => {
@@ -72,7 +86,8 @@ describe('Screen goldens', () => {
     const game = driveFromTitle({ storage });
     untilPromptShows(game);
     expect(game.view.highScores).toHaveLength(10);
-    await expectGolden('title-high-scores', renderView(game.view));
+    const titleIllustration = await loadTitleIllustration();
+    await expectGolden('title-high-scores', renderView(game.view, null, { titleIllustration }));
   });
 
   it('defeat-beat: the frozen, dimming Run with the adjournment banner', async () => {

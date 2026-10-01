@@ -1,40 +1,51 @@
 /**
- * Title screen: backdrop, the "Rexi's Revenge" logo in the empty sky at the upper left, the
- * local top 10 below it, the start prompt and the credits line.
+ * Title screen: the title illustration, the "Rexi's Revenge" logo in its empty sky at the upper
+ * left, and below it, in the same left column, the local top 10, the start prompt and the
+ * credits line. Rexi stays uncovered on the right.
  *
- * The backdrop is either the bundled title illustration (a 480×270 bitmap handed to the
- * renderer, per ADR 0001) or, until it is wired in, a code-drawn sunset plaza with the same
- * composition, so the logo and text layout work over both.
+ * The backdrop is the bundled title illustration (a 480×270 bitmap the platform decodes and
+ * hands to the renderer, per ADR 0001) or, when it is missing, a code-drawn sunset plaza with
+ * the same composition, so the layout works over both. Over the illustration, every text sits
+ * on a solid dark plate or has a black outline, so it stays readable over the busy art.
  */
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type GameView } from '../../core';
+import { drawLogo, LOGO_HEIGHT, LOGO_WIDTH } from '../brand/logo';
 import type { DrawContext } from '../draw-context';
+import { masterPalette } from '../palette';
 import { defineSprite } from '../sprite';
 import { strings } from '../strings';
 import type { Bitmap, Color, Surface } from '../surface';
 import { fonts } from '../text';
 import { drawHighScores, HIGH_SCORES_WIDTH } from './high-scores';
-import { buildLogo } from './logo';
-import { blinkOn, drawOutlinedText, fillCircle, ui } from './ui';
+import { blinkOn, drawOutlinedText, fillCircle } from './ui';
 
-const LOGO = buildLogo(
-  strings.title
-    .toUpperCase()
-    .split(' ')
-    .map((text, i) => ({ text, scale: i === 0 ? 4 : 5 })),
-);
-const LOGO_X = 14;
-const LOGO_Y = 12;
+/** Center of the left column (the sky over the courthouse) that holds everything but Rexi. */
+const COLUMN_CENTER_X = 126;
+
+const LOGO_X = COLUMN_CENTER_X - LOGO_WIDTH / 2;
+const LOGO_Y = 5;
 /** The logo drops in from above over this many ticks when the Title appears. */
 const LOGO_DROP_TICKS = 18;
 
 /** The top 10 slides in from the left once the logo has landed. */
-const SCORES_X = 12;
-const SCORES_Y = 92;
+const SCORES_X = COLUMN_CENTER_X - HIGH_SCORES_WIDTH / 2;
+const SCORES_Y = LOGO_Y + LOGO_HEIGHT + 4;
 const SCORES_SLIDE_TICKS = 12;
 
-const PROMPT_CENTER_X = 124;
-const PROMPT_Y = 224;
-const CREDITS_BAND_Y = 254;
+/** Top of the start prompt's text cell, and its plate's padding around the capitals. */
+const PROMPT_Y = 228;
+const PLATE_PAD_X = 6;
+
+/** Top of the credits line's text cell. */
+const CREDITS_Y = 255;
+
+const ink = {
+  outline: masterPalette.outline,
+  plate: masterPalette.night,
+  plateEdge: masterPalette.robeSheen,
+  prompt: masterPalette.gold,
+  credits: masterPalette.grey3,
+} as const satisfies Record<string, Color>;
 
 export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): void {
   const { view } = dc;
@@ -42,8 +53,9 @@ export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): v
   else drawBackdrop(dc.surface, dc, view);
 
   const drop = Math.max(0, LOGO_DROP_TICKS - view.screenAge);
-  const logoY = LOGO_Y - Math.round((drop * drop * (LOGO.height + LOGO_Y)) / LOGO_DROP_TICKS ** 2);
-  dc.surface.drawBitmap(dc.sprites.get(LOGO), LOGO_X, logoY);
+  const logoY = LOGO_Y - Math.round((drop * drop * (LOGO_HEIGHT + LOGO_Y)) / LOGO_DROP_TICKS ** 2);
+  // The shine sweeps start once the logo has landed.
+  drawLogo(dc.surface, dc.sprites, LOGO_X, logoY, view.screenAge - LOGO_DROP_TICKS);
 
   const slide = Math.max(
     0,
@@ -57,47 +69,61 @@ export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): v
   if (view.startReady && blinkOn(view.tick)) {
     const prompt =
       view.device === 'touch' ? strings.titleScreen.tapToStart : strings.titleScreen.pressAnyKey;
-    drawOutlinedText(dc, fonts.regular, prompt, PROMPT_CENTER_X, PROMPT_Y, ui.gold, {
+    drawPlate(dc.surface, fonts.regular.measure(prompt) + PLATE_PAD_X * 2, PROMPT_Y);
+    drawOutlinedText(dc, fonts.regular, prompt, COLUMN_CENTER_X, PROMPT_Y, ink.prompt, {
       align: 'center',
+      outline: ink.outline,
     });
   }
 
-  dc.surface.fillRect(0, CREDITS_BAND_Y, SCREEN_WIDTH, SCREEN_HEIGHT - CREDITS_BAND_Y, ui.ink);
-  dc.surface.fillRect(0, CREDITS_BAND_Y, SCREEN_WIDTH, 1, ui.panelLight);
   drawOutlinedText(
     dc,
     fonts.regular,
     strings.titleScreen.credits,
-    SCREEN_WIDTH / 2,
-    CREDITS_BAND_Y + 2,
-    ui.muted,
-    { align: 'center' },
+    COLUMN_CENTER_X,
+    CREDITS_Y,
+    ink.credits,
+    { align: 'center', outline: ink.outline },
   );
 }
 
+/**
+ * A dark plate behind one line of regular text whose cell top is `textY`, centered on the
+ * column: black outline with cut corners, a lighter top edge and a solid fill.
+ */
+function drawPlate(surface: Surface, width: number, textY: number): void {
+  const capTop = textY + fonts.regular.baseline - 7;
+  const x = Math.round(COLUMN_CENTER_X - width / 2);
+  const y = capTop - 4;
+  const h = 7 + 8;
+  surface.fillRect(x + 1, y, width - 2, h, ink.outline);
+  surface.fillRect(x, y + 1, width, h - 2, ink.outline);
+  surface.fillRect(x + 1, y + 1, width - 2, h - 2, ink.plate);
+  surface.fillRect(x + 2, y + 1, width - 4, 1, ink.plateEdge);
+}
+
 // ---------------------------------------------------------------------------------------------
-// Code-drawn backdrop: 80s sunset over the plaza, striped sun behind the courthouse.
+// Code-drawn backdrop (when the illustration is missing): sunset over the plaza, striped sun
+// behind the skyline, courthouse on the right.
 
 const HORIZON = 198;
 const SKY: readonly (readonly [until: number, color: Color])[] = [
-  [40, '#3a2560'],
-  [72, '#4d2c6c'],
-  [100, '#653373'],
-  [124, '#823b74'],
-  [144, '#a2456f'],
-  [160, '#c25466'],
-  [174, '#df6a5a'],
-  [186, '#f08a50'],
-  [HORIZON, '#f8ae58'],
+  [40, masterPalette.skyIndigo],
+  [72, masterPalette.skyPurple],
+  [124, masterPalette.skyMagenta],
+  [160, masterPalette.skyRose],
+  [174, masterPalette.coral],
+  [186, masterPalette.skyOrange],
+  [HORIZON, masterPalette.gold],
 ];
 
 function skyColorAt(y: number): Color {
-  return SKY.find(([until]) => y < until)?.[1] ?? '#f8ae58';
+  return SKY.find(([until]) => y < until)?.[1] ?? masterPalette.gold;
 }
 
 const SUN = { x: 246, y: HORIZON - 2, r: 38 } as const;
-const SUN_TOP: Color = '#ffe27a';
-const SUN_BOTTOM: Color = '#ff9f4a';
+const SUN_TOP: Color = masterPalette.light;
+const SUN_BOTTOM: Color = masterPalette.gold;
 
 /** Distant skyline: [x, width, height] of each building, left to right. */
 const SKYLINE: readonly (readonly [number, number, number])[] = [
@@ -118,17 +144,17 @@ const SKYLINE: readonly (readonly [number, number, number])[] = [
   [446, 14, 30],
   [458, 22, 48],
 ];
-const SKYLINE_FAR: Color = '#5b2f66';
-const SKYLINE_WINDOW: Color = '#8a4a78';
+const SKYLINE_FAR: Color = masterPalette.skyPurple;
+const SKYLINE_WINDOW: Color = masterPalette.skyMagenta;
 
-const STONE: Color = '#eadfca';
-const STONE_SHADE: Color = '#b9a68e';
-const STONE_DARK: Color = '#7d6a62';
-const ROOF: Color = '#d6c7ae';
+const STONE: Color = masterPalette.marble;
+const STONE_SHADE: Color = masterPalette.stone2;
+const STONE_DARK: Color = masterPalette.stone1;
+const ROOF: Color = masterPalette.grey3;
 
-const GROUND: Color = '#5c4660';
-const GROUND_LIGHT: Color = '#7a5c72';
-const GROUND_LINE: Color = '#48344e';
+const GROUND: Color = masterPalette.stone1;
+const GROUND_LIGHT: Color = masterPalette.stone2;
+const GROUND_LINE: Color = masterPalette.robeSheen;
 
 /** Long thin clouds: [x, y, width]. They drift a few pixels back and forth with the tick. */
 const CLOUDS: readonly (readonly [number, number, number])[] = [
@@ -137,10 +163,10 @@ const CLOUDS: readonly (readonly [number, number, number])[] = [
   [300, 96, 64],
   [40, 120, 46],
 ];
-const CLOUD: Color = '#8a4a86';
-const CLOUD_SHADE: Color = '#6e3c74';
+const CLOUD: Color = masterPalette.skyMagenta;
+const CLOUD_SHADE: Color = masterPalette.skyPurple;
 
-const COPTER = defineSprite({ k: '#2c1838' }, [
+const COPTER = defineSprite({ k: masterPalette.night }, [
   'kkkkkkkkkkkkk',
   '......k......',
   '..kkkkkkkk...',
@@ -178,8 +204,8 @@ function drawBackdrop(surface: Surface, dc: DrawContext, view: GameView): void {
     const t = (view.tick + phase) % 80;
     return Math.round((t < 40 ? t : 80 - t) / 10);
   };
-  surface.drawBitmap(dc.sprites.get(COPTER), 160, 128 + bob(0));
-  surface.drawBitmap(dc.sprites.get(COPTER), 196, 142 + bob(30));
+  surface.drawBitmap(dc.sprites.get(COPTER), 260, 128 + bob(0));
+  surface.drawBitmap(dc.sprites.get(COPTER), 290, 142 + bob(30));
 
   drawCourthouse(surface, 304, HORIZON);
   drawGround(surface);

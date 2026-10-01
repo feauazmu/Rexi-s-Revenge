@@ -11,6 +11,16 @@ export {
 } from './surface';
 export { DIALOGUE_MAX_LINES, DIALOGUE_TEXT_WIDTH, revealedLines } from './dialogue/dialogue-box';
 export { allStrings, strings } from './strings';
+export { drawShareCard, SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from './brand/share-card';
+export {
+  APP_ICON_ART,
+  APP_ICON_BACKGROUND,
+  appIconArt,
+  favicon,
+  FAVICON_SIZES,
+  type FaviconSize,
+} from './brand/icons';
+export { createSpriteBank, rasterizeSprite, type SpriteBank, type SpriteDef } from './sprite';
 export {
   createBitmapFont,
   drawText,

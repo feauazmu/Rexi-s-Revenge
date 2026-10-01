@@ -1,10 +1,13 @@
 /** Renders Game core views in Node with @napi-rs/canvas, exactly as the browser shell does. */
-import { createCanvas, type Canvas } from '@napi-rs/canvas';
+import { createCanvas, loadImage, type Canvas } from '@napi-rs/canvas';
+import { fileURLToPath } from 'node:url';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type GameView } from '../../src/core';
 import {
   canvasSurface,
   createRenderer,
+  type Bitmap,
   type BitmapFactory,
+  type Renderer,
   type Color,
   type Surface,
   type TextTarget,
@@ -26,10 +29,46 @@ const createBitmap: BitmapFactory = (width, height, rgba) => {
 
 const renderer = createRenderer(createBitmap);
 
+/** Path of the bundled title illustration, as the browser shell loads it. */
+export const TITLE_ILLUSTRATION_PATH = fileURLToPath(
+  new URL('../../public/title.png', import.meta.url),
+);
+
+let titleIllustration: Promise<Bitmap> | null = null;
+
+/** Decodes `public/title.png` once into a canvas bitmap, as the shell does in the browser. */
+export function loadTitleIllustration(): Promise<Bitmap> {
+  titleIllustration ??= loadImage(TITLE_ILLUSTRATION_PATH).then((image) => {
+    const canvas = createCanvas(image.width, image.height);
+    canvas.getContext('2d').drawImage(image, 0, 0);
+    return canvas;
+  });
+  return titleIllustration;
+}
+
+const illustratedRenderers = new Map<Bitmap, Renderer>();
+
+export interface RenderViewOptions {
+  /** The decoded title illustration ({@link loadTitleIllustration}); omitted: code backdrop. */
+  readonly titleIllustration?: Bitmap;
+}
+
 /** Renders one frame of `view` (and the touch overlay, if given) to raw RGBA pixels at 480×270. */
-export function renderView(view: GameView, overlay?: TouchOverlayView | null): RgbaImage {
+export function renderView(
+  view: GameView,
+  overlay?: TouchOverlayView | null,
+  options: RenderViewOptions = {},
+): RgbaImage {
+  const { titleIllustration: illustration } = options;
+  let chosen = renderer;
+  if (illustration) {
+    chosen =
+      illustratedRenderers.get(illustration) ??
+      createRenderer(createBitmap, { titleIllustration: illustration });
+    illustratedRenderers.set(illustration, chosen);
+  }
   return renderFrame((surface) => {
-    renderer.render(surface, view, overlay);
+    chosen.render(surface, view, overlay);
   });
 }
 
@@ -46,14 +85,26 @@ export function renderRotatePrompt(tick: number): RgbaImage {
 
 /**
  * Renders a renderer building block (e.g. text) outside a full frame, on a solid
- * `background`, to raw RGBA pixels at 480×270. For specimens of fonts and icons.
+ * `background`, to raw RGBA pixels (480×270 unless another size is given). For specimens of
+ * fonts and icons.
  */
-export function renderPart(background: Color, paint: (target: TextTarget) => void): RgbaImage {
+export function renderPart(
+  background: Color,
+  paint: (target: TextTarget) => void,
+  size: { readonly width: number; readonly height: number } = {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+): RgbaImage {
   const sprites = createSpriteBank(createBitmap);
-  return renderFrame((surface) => {
-    surface.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, background);
-    paint({ surface, sprites });
-  });
+  return renderFrame(
+    (surface) => {
+      surface.fillRect(0, 0, size.width, size.height, background);
+      paint({ surface, sprites });
+    },
+    size.width,
+    size.height,
+  );
 }
 
 function renderFrame(
