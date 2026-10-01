@@ -16,7 +16,8 @@ export type GameEvent =
   | EnemyDestroyedEvent
   | EnemyFiredEvent
   | RexiHitEvent
-  | RunEndedEvent;
+  | RunEndedEvent
+  | MuteToggledEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -84,4 +85,11 @@ export interface RunEndedEvent {
   readonly enemiesDestroyed: number;
   /** Run ticks survived, including the tick of the fatal hit. */
   readonly ticksSurvived: number;
+}
+
+/** "Silenciar música" was chosen in the pause menu. The choice is already persisted. */
+export interface MuteToggledEvent {
+  readonly type: 'mute-toggled';
+  /** The new state: true when the music is now muted. */
+  readonly muted: boolean;
 }

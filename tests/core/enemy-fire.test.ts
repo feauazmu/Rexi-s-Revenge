@@ -235,14 +235,20 @@ describe('End of the Run', () => {
     });
   });
 
-  it('starts a fresh Run shortly afterwards (until the Veredicto screen exists)', () => {
+  it('returns to the Title shortly afterwards (until the Veredicto screen exists)', () => {
     const game = doomed([maletinAt(300, 60)]);
     untilEvent(game, 'run-ended');
-    const { tick } = untilEvent(game, 'run-started', 60 * 5);
+    const { tick } = untilEvent(game, 'screen-changed', 60 * 5);
     expect(tick).toBeGreaterThan(30);
-    const run = runOf(game.view);
-    expect(run).toMatchObject({ ended: false, stats: { score: 0, enemiesDestroyed: 0 } });
-    expect(run.rexi.health).toBe(10);
+    expect(game.view).toMatchObject({ screen: 'title', run: null });
+  });
+
+  it('cannot be paused once over', () => {
+    const game = doomed([maletinAt(300, 60)]);
+    untilEvent(game, 'run-ended');
+    game.ticks(1, { pause: true });
+    game.pause();
+    expect(game.view.screen).toBe('run');
   });
 });
 

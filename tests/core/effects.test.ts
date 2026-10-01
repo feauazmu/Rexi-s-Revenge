@@ -4,9 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
-  createGame,
   defaultTuning,
-  inputFrame,
   secondsToTicks,
   type GameOptions,
   type InputFramePatch,
@@ -228,7 +226,7 @@ describe('Determinism', () => {
   /** A busy scripted fight: several Maletín-cópteros destroyed while Rexi runs and jumps. */
   function fight(seed: number, tuning: TuningOverrides = oneShotKills) {
     const spawns = [maletinAt(300, 60), maletinAt(200, 50, 40), maletinAt(380, 90, 80)];
-    const game = createGame({ seed, overrides: { spawns, tuning } });
+    const game = drive({ seed, overrides: { spawns, tuning } });
     const targets = [centerOf(300, 60), centerOf(200, 50), centerOf(380, 90)];
     const log = [];
     const views: RunView[] = [];
@@ -239,7 +237,7 @@ describe('Determinism', () => {
         move: t % 120 < 60 ? 0.5 : -0.5,
         jump: t % 70 < 2,
       };
-      log.push(...game.tick(inputFrame(input)));
+      log.push(...game.ticks(1, input));
       views.push(runOf(game.view));
     }
     return { log, views };

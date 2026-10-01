@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, inputFrame, type InputFramePatch } from '../../src/core';
-import { drive, eventsOf, runOf } from '../support/driver';
+import { createGame, type InputFramePatch } from '../../src/core';
+import { drive, driveFromTitle, eventsOf, runOf } from '../support/driver';
 
 /** A varied, reproducible input script: run, jump, aim around and fire. */
 function scriptedInput(tick: number): InputFramePatch {
@@ -13,7 +13,7 @@ function scriptedInput(tick: number): InputFramePatch {
 }
 
 function playScript(seed: number, ticks: number) {
-  const game = createGame({
+  const game = drive({
     seed,
     overrides: {
       spawns: [
@@ -22,27 +22,26 @@ function playScript(seed: number, ticks: number) {
       ],
     },
   });
-  const log = [];
-  for (let t = 0; t < ticks; t++) log.push(...game.tick(inputFrame(scriptedInput(t))));
-  return { log, view: game.view };
+  for (let t = 0; t < ticks; t++) game.ticks(1, scriptedInput(t));
+  return { log: game.log, view: game.view };
 }
 
 describe('Game core', () => {
-  it('opens in a Run and announces it on the first tick', () => {
-    const game = drive();
-    const events = game.ticks(1);
-    expect(events.slice(0, 2)).toEqual([
-      { type: 'screen-changed', from: null, to: 'run' },
-      { type: 'run-started' },
-    ]);
-    expect(game.view.screen).toBe('run');
+  it('opens on the Title and announces it on the first tick', () => {
+    const game = driveFromTitle();
+    expect(game.ticks(1)).toEqual([{ type: 'screen-changed', from: null, to: 'title' }]);
+    expect(game.view.screen).toBe('title');
   });
 
-  it('counts ticks in the view', () => {
-    const game = drive();
+  it('counts game ticks and Run ticks in the view', () => {
+    const game = driveFromTitle();
     game.ticks(5);
     expect(game.view.tick).toBe(5);
-    expect(runOf(game.view).tick).toBe(5);
+    const run = drive();
+    const before = run.view.tick;
+    run.ticks(5);
+    expect(run.view.tick).toBe(before + 5);
+    expect(runOf(run.view).tick).toBe(5);
   });
 
   it('reports the device kind it was created with', () => {

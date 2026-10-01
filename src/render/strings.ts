@@ -24,13 +24,35 @@ export const strings = {
   titleScreen: {
     pressAnyKey: 'Presiona cualquier tecla',
     tapToStart: 'Toca para empezar',
+    credits: 'Un juego de Fili — Música generada con IA',
   },
 
   howToPlay: {
     title: 'Cómo jugar',
+    goal: '¡Sobrevive a las demandas de Bufete & Pesas S.A.!',
+    move: 'Moverse',
+    jump: 'Saltar',
+    aim: 'Apuntar',
+    fire: 'Disparar',
+    switchWeapon: 'Cambiar de arma',
+    pause: 'Pausa',
+    /** Joins alternative key sets: "A D o ← →". */
+    or: 'o',
+    keys: {
+      space: 'Espacio',
+      escape: 'Esc',
+    },
+    touch: {
+      aimFire: 'Apuntar y disparar',
+      switchWeapon: 'Toca el arma para cambiarla',
+    },
+    /** Shown once the screen accepts input, by device kind. */
+    continueDesktop: 'Presiona cualquier tecla para empezar',
+    continueTouch: 'Toca para empezar',
   },
 
   pause: {
+    title: 'Pausa',
     resume: 'Continuar',
     muteMusic: 'Silenciar música',
     quit: 'Salir',

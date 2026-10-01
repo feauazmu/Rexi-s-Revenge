@@ -1,6 +1,7 @@
 import type { Craft, EnemyKind, ParticleKind, ProjectileKind, WeaponId } from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
+import type { PauseMenuItem } from './pause-menu';
 
 /**
  * Read-only snapshot of everything needed to draw one frame. The renderer is a pure function
@@ -13,12 +14,33 @@ export interface GameView {
   readonly tick: number;
   readonly device: DeviceKind;
   readonly screen: ScreenKind;
-  /** The current Run, or null when no Run exists (e.g. on the Title screen). */
+  /** Ticks since the current screen was entered (entry animations, blinking prompts). */
+  readonly screenAge: number;
+  /** True when a start input would be accepted now (Title and Cómo jugar, after a short guard). */
+  readonly startReady: boolean;
+  /**
+   * The current Run, or null when no Run exists (Title, Cómo jugar). While paused it is the
+   * frozen Run under the pause menu.
+   */
   readonly run: RunView | null;
+  /** The pause menu, only on the `paused` screen. */
+  readonly pauseMenu: PauseMenuView | null;
+  /** The persisted "Silenciar música" choice. */
+  readonly musicMuted: boolean;
 }
 
-/** Screens of the flow state machine. Title, Cómo jugar, pause and Veredicto arrive later. */
-export type ScreenKind = 'run';
+/**
+ * Screens of the flow state machine:
+ * Title → Cómo jugar (first time only) → Run ⇄ Paused → Title (Salir).
+ * Veredicto arrives with the Run-end ticket.
+ */
+export type ScreenKind = 'title' | 'how-to-play' | 'run' | 'paused';
+
+export interface PauseMenuView {
+  readonly items: readonly PauseMenuItem[];
+  /** Index into `items` of the highlighted entry. */
+  readonly selected: number;
+}
 
 export interface BoxView {
   readonly x: number;

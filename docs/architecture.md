@@ -35,6 +35,7 @@ These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clo
 const game = createGame({ seed, device?, storage?, overrides?: { tuning?, spawns? } });
 const events = game.tick(inputFrame); // exactly one 1/60 s step
 draw(game.view);                       // read-only snapshot, rebuilt lazily after each tick
+game.pause();                          // shell: tab hidden / focus lost (no-op outside a Run)
 ```
 
 - **`InputFrame`** (`src/core/input.ts`): device-agnostic intent. Held fields (move, jump, drop, aim, fire) and
@@ -45,8 +46,24 @@ draw(game.view);                       // read-only snapshot, rebuilt lazily aft
   the seeded `Rng` in `RunContext`; entity ids come from a counter.
 - **Overrides**: `tuning` is deep-merged over `defaultTuning` (unknown keys throw). `spawns` replaces
   automatic spawning entirely (empty list = empty Arena) — this is how tests stage scenarios.
-- **Storage**: `StoragePort` (string get/set). The core owns keys and formats; `src/platform/storage.ts`
-  wraps `localStorage` with an in-memory fallback.
+- **Storage**: `StoragePort` (string get/set). The core owns keys and formats (`src/core/preferences.ts`:
+  "Cómo jugar" seen, music muted) and wraps the port with `resilientStorage`, so even a throwing port
+  only loses persistence. `src/platform/storage.ts` wraps `localStorage` with an in-memory fallback.
+
+### Screen flow
+
+`src/core/game.ts` owns the state machine over `ScreenKind` (`src/core/view.ts`):
+`title` → `how-to-play` (only until the persisted flag is set) → `run` ⇄ `paused` → `title` (Salir).
+Each tick runs exactly one screen's logic, so the tick that changes screens does not also step the Run.
+
+- Title and Cómo jugar accept `start` once `view.startReady` (a 0.5 s guard against double presses).
+- Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
+  The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges; `pause`/`back` resume. "Silenciar música" toggles
+  `view.musicMuted`, persists it and emits `mute-toggled`.
+- `view.screenAge` counts ticks on the current screen (entry animations); `view.tick` keeps running while
+  paused so menus can animate.
+- A new screen: add it to `ScreenKind`, handle it in `stepScreen`, and add its drawer to the renderer's
+  `screens` record (the typecheck fails until you do).
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
 effects → spawning → Rexi → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
@@ -58,7 +75,7 @@ A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and t
 (`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
 hit, at the ground, off-screen or when their lifetime runs out. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
-advancing. Until the Veredicto screen exists, the Game starts a new Run 2 s later.
+advancing (it can no longer be paused). Until the Veredicto screen exists, the Game returns to the Title 2 s later.
 
 ### Combat feedback (effects)
 
@@ -83,7 +100,10 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
 
 ## Seam 2: the renderer
 
-`createRenderer(bitmapFactory).render(surface, view)` draws one full frame.
+`createRenderer(bitmapFactory, { titleIllustration? }).render(surface, view)` draws one full frame.
+It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; menu screens live in
+`src/render/screens/` (shared panel, keycap, outlined-text and dimmer helpers in `ui.ts`). The Title draws
+`titleIllustration` (a decoded 480×270 bitmap from the platform) when given, else a code-drawn backdrop.
 
 - **Determinism rule**: the renderer only uses `Surface.fillRect` (integer-snapped solid rectangles) and
   `Surface.drawBitmap` (unscaled pre-rasterized bitmaps at integer positions). No paths, arcs, gradients or
@@ -92,7 +112,8 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
   `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
 - Layers are listed back to front in `src/render/renderer.ts`: `WORLD_LAYERS` are drawn offset by the
   screen shake, `SCREEN_LAYERS` stay fixed: the HUD
-  (`src/render/hud/`), then the crosshair (and later the Dialogue Box).
+  (`src/render/hud/`), then the crosshair (and later the Dialogue Box). When paused, the world layers are
+  drawn without HUD and crosshair, dimmed with a checkerboard, then the HUD and the pause menu go on top.
 - Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
   rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
@@ -136,6 +157,8 @@ drawText(dc, regular, strings.hud.score, x, y, { color, shadow?, align? });
 letterboxed, snapped to device pixels), and runs a `requestAnimationFrame` loop. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
 Each tick samples the keyboard/mouse adapter once (edges are consumed by the first sample).
+On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
+`#app[data-screen]`, which the smoke tests poll.
 `ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there.
 
 ## How to add…

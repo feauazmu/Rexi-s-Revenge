@@ -1,0 +1,252 @@
+/**
+ * Cómo jugar: one screen with the controls for the device kind, shown before the first Run.
+ * Desktop shows keycaps and the mouse; touch shows the on-screen controls in place.
+ */
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../core';
+import type { DrawContext } from '../draw-context';
+import { weaponIcons } from '../hud/weapon-icons';
+import { defineSprite, type SpriteDef } from '../sprite';
+import { strings } from '../strings';
+import type { Color } from '../surface';
+import { fonts } from '../text';
+import {
+  arrows,
+  blinkOn,
+  drawKey,
+  drawOutlinedText,
+  drawPanel,
+  fillCircle,
+  KEY_HEIGHT,
+  ui,
+  type KeyLabel,
+} from './ui';
+
+const BACKGROUND: Color = '#2e1e4c';
+const STRIPE: Color = '#362456';
+
+const PANEL = { x: 24, y: 62, w: SCREEN_WIDTH - 48, h: 144 } as const;
+const PROMPT_Y = 232;
+const t = strings.howToPlay;
+
+export function drawHowToPlay(dc: DrawContext): void {
+  const { surface, view } = dc;
+  surface.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BACKGROUND);
+  // Slow diagonal stripes for texture, scrolled by the view tick.
+  const shift = (view.tick >> 2) % 24;
+  for (let y = 0; y < SCREEN_HEIGHT; y += 2) {
+    for (let x = -24 + ((shift + y / 2) % 24); x < SCREEN_WIDTH; x += 24) {
+      surface.fillRect(x, y, 8, 2, STRIPE);
+    }
+  }
+
+  drawOutlinedText(dc, fonts.large, t.title, SCREEN_WIDTH / 2, 8, ui.gold, { align: 'center' });
+  drawOutlinedText(dc, fonts.regular, t.goal, SCREEN_WIDTH / 2, 40, ui.text, { align: 'center' });
+
+  drawPanel(surface, PANEL.x, PANEL.y, PANEL.w, PANEL.h);
+  if (view.device === 'touch') drawTouchControls(dc);
+  else drawDesktopControls(dc);
+
+  if (view.startReady && blinkOn(view.tick)) {
+    const prompt = view.device === 'touch' ? t.continueTouch : t.continueDesktop;
+    drawOutlinedText(dc, fonts.regular, prompt, SCREEN_WIDTH / 2, PROMPT_Y, ui.gold, {
+      align: 'center',
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Desktop: three rows of two entries, each a cluster of keys (or the mouse) and a label.
+
+/** An entry's icons: keycap groups joined by "o", or a mouse highlighting one part. */
+type Icons =
+  | { readonly kind: 'keys'; readonly groups: readonly (readonly KeyLabel[])[] }
+  | { readonly kind: 'mouse'; readonly lit: 'none' | 'left' | 'wheel'; readonly keys?: KeyLabel[] };
+
+interface Entry {
+  readonly icons: Icons;
+  readonly label: string;
+}
+
+const DESKTOP_ENTRIES: readonly Entry[] = [
+  {
+    icons: {
+      kind: 'keys',
+      groups: [
+        ['A', 'D'],
+        [arrows.left, arrows.right],
+      ],
+    },
+    label: t.move,
+  },
+  { icons: { kind: 'keys', groups: [['W', arrows.up], [t.keys.space]] }, label: t.jump },
+  { icons: { kind: 'mouse', lit: 'none' }, label: t.aim },
+  { icons: { kind: 'mouse', lit: 'left' }, label: t.fire },
+  { icons: { kind: 'mouse', lit: 'wheel', keys: ['Q', 'E'] }, label: t.switchWeapon },
+  { icons: { kind: 'keys', groups: [[t.keys.escape, 'P']] }, label: t.pause },
+];
+
+const COLUMN_X = [PANEL.x + 18, PANEL.x + 18 + Math.floor((PANEL.w - 18) / 2)] as const;
+const ROW_Y = [PANEL.y + 16, PANEL.y + 60, PANEL.y + 104] as const;
+/** Width reserved for icons before the label starts. */
+const ICON_AREA = 92;
+const KEY_GAP = 2;
+const GROUP_GAP = 5;
+
+function drawDesktopControls(dc: DrawContext): void {
+  DESKTOP_ENTRIES.forEach((entry, i) => {
+    const x = COLUMN_X[i % 2] ?? 0;
+    const y = ROW_Y[Math.floor(i / 2)] ?? 0;
+    // Icons are vertically centered on a 24 px row; labels on the same center line.
+    const center = y + 12;
+    drawIcons(dc, entry.icons, x, center);
+    const font = fonts.regular;
+    const labelTop = center - (font.baseline - 4);
+    drawOutlinedText(dc, font, entry.label, x + ICON_AREA, labelTop, ui.text);
+  });
+}
+
+function drawIcons(dc: DrawContext, icons: Icons, x: number, center: number): void {
+  if (icons.kind === 'mouse') {
+    const sprite = MOUSE[icons.lit];
+    dc.surface.drawBitmap(dc.sprites.get(sprite), x, center - Math.floor(sprite.height / 2));
+    if (icons.keys) {
+      let penX = x + sprite.width + GROUP_GAP + 2;
+      penX = drawOrWord(dc, penX - 2, center);
+      drawKeyGroup(dc, icons.keys, penX, center);
+    }
+    return;
+  }
+  let penX = x;
+  icons.groups.forEach((group, i) => {
+    if (i > 0) penX = drawOrWord(dc, penX, center);
+    penX = drawKeyGroup(dc, group, penX, center);
+  });
+}
+
+/** Draws keys side by side centered on `center`; returns the x after the last one. */
+function drawKeyGroup(
+  dc: DrawContext,
+  keys: readonly KeyLabel[],
+  x: number,
+  center: number,
+): number {
+  let penX = x;
+  const top = center - Math.floor(KEY_HEIGHT / 2);
+  for (const key of keys) penX += drawKey(dc, key, penX, top) + KEY_GAP;
+  return penX - KEY_GAP;
+}
+
+/** The word "o" between alternatives; returns the x where the next group starts. */
+function drawOrWord(dc: DrawContext, x: number, center: number): number {
+  const font = fonts.regular;
+  const left = x + GROUP_GAP;
+  drawOutlinedText(dc, font, t.or, left, center - (font.baseline - 2), ui.muted);
+  return left + font.measure(t.or) + GROUP_GAP;
+}
+
+const MOUSE_PALETTE = { k: ui.ink, w: ui.keyFace, s: ui.keyLip, y: ui.keyLit, Y: ui.goldDeep };
+/** Half-width of the mouse body per row, outline included (the center column is 7). */
+const MOUSE_HALF_WIDTHS = [3, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 5, 3];
+const MOUSE_CENTER = 7;
+/** Row of the line between the buttons and the body. */
+const MOUSE_SPLIT = 8;
+
+/** A 15×21 mouse: two buttons and a wheel on top; `lit` highlights the part in use. */
+function mouseRows(lit: 'none' | 'left' | 'wheel'): string[] {
+  const inside = (x: number, y: number) =>
+    Math.abs(x - MOUSE_CENTER) <= (MOUSE_HALF_WIDTHS[y] ?? -1);
+  return MOUSE_HALF_WIDTHS.map((_, y) => {
+    let row = '';
+    for (let x = 0; x <= MOUSE_CENTER * 2; x++) {
+      const edge = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1);
+      if (!inside(x, y)) row += '.';
+      else if (edge || y === MOUSE_SPLIT) row += 'k';
+      else if (y < MOUSE_SPLIT && x === MOUSE_CENTER) {
+        row += y >= 2 && y <= 5 ? (lit === 'wheel' ? 'y' : 's') : 'k';
+      } else if (y < MOUSE_SPLIT && x < MOUSE_CENTER) {
+        const shade = y === MOUSE_SPLIT - 1 || x === MOUSE_CENTER - 1;
+        row += lit === 'left' ? (shade ? 'Y' : 'y') : shade ? 's' : 'w';
+      } else {
+        const shade = x >= MOUSE_CENTER * 2 - 2 || y >= MOUSE_HALF_WIDTHS.length - 3;
+        row += shade || (y < MOUSE_SPLIT && y === MOUSE_SPLIT - 1) ? 's' : 'w';
+      }
+    }
+    return row;
+  });
+}
+
+const MOUSE: Readonly<Record<'none' | 'left' | 'wheel', SpriteDef>> = {
+  none: defineSprite(MOUSE_PALETTE, mouseRows('none')),
+  left: defineSprite(MOUSE_PALETTE, mouseRows('left')),
+  wheel: defineSprite(MOUSE_PALETTE, mouseRows('wheel')),
+};
+
+// ---------------------------------------------------------------------------------------------
+// Touch: the on-screen controls drawn where they appear, each with its caption.
+
+const STICK_RING: Color = '#6a5a92';
+const STICK_KNOB: Color = '#b8a8d0';
+const BUTTON: Color = '#e8433a';
+const BUTTON_LIGHT: Color = '#ff9a7a';
+
+const JUMP_ARROW = defineSprite({ '#': ui.text, k: ui.ink }, [
+  '...#...',
+  '..###..',
+  '.#####.',
+  '#######',
+  '..###..',
+  '..###..',
+]);
+
+function drawTouchControls(dc: DrawContext): void {
+  const { surface } = dc;
+  const font = fonts.regular;
+  const caption = (text: string, x: number, y: number, align: 'left' | 'center' | 'right') => {
+    const lines = font.wrap(text, 130).join('\n');
+    drawOutlinedText(dc, font, lines, x, y, ui.text, { align });
+  };
+
+  // Weapon icon (top left) and pause button (top right), as in the HUD.
+  const icon = weaponIcons['mazo-automatico'];
+  const iconX = PANEL.x + 16;
+  const iconY = PANEL.y + 14;
+  surface.fillRect(iconX - 3, iconY - 3, icon.width + 6, icon.height + 6, ui.gold);
+  surface.fillRect(iconX - 2, iconY - 2, icon.width + 4, icon.height + 4, ui.panelLight);
+  surface.drawBitmap(dc.sprites.get(icon), iconX, iconY);
+  caption(t.touch.switchWeapon, iconX + icon.width + 8, iconY - 2, 'left');
+
+  // Pause button: a round button with two bars.
+  const pauseX = PANEL.x + PANEL.w - 26;
+  const pauseY = iconY + 4;
+  fillCircle(surface, pauseX, pauseY, 9, ui.ink);
+  fillCircle(surface, pauseX, pauseY, 8, STICK_RING);
+  surface.fillRect(pauseX - 4, pauseY - 4, 3, 9, ui.keyFace);
+  surface.fillRect(pauseX + 2, pauseY - 4, 3, 9, ui.keyFace);
+  caption(t.pause, pauseX - 14, iconY - 2, 'right');
+
+  // Left stick (move), jump button, right stick (aim + fire).
+  const stickY = PANEL.y + 78;
+  drawStick(dc, PANEL.x + 56, stickY, -1);
+  caption(t.move, PANEL.x + 56, stickY + 28, 'center');
+
+  const jumpX = PANEL.x + PANEL.w / 2 - 10;
+  fillCircle(surface, jumpX, stickY + 6, 13, ui.ink);
+  fillCircle(surface, jumpX, stickY + 6, 12, BUTTON);
+  fillCircle(surface, jumpX - 2, stickY + 3, 6, BUTTON_LIGHT);
+  fillCircle(surface, jumpX - 1, stickY + 4, 5, BUTTON);
+  surface.drawBitmap(dc.sprites.get(JUMP_ARROW), jumpX - 3, stickY + 2);
+  caption(t.jump, jumpX, stickY + 28, 'center');
+
+  drawStick(dc, PANEL.x + PANEL.w - 64, stickY, 1);
+  caption(t.touch.aimFire, PANEL.x + PANEL.w - 64, stickY + 28, 'center');
+}
+
+function drawStick(dc: DrawContext, cx: number, cy: number, lean: -1 | 1): void {
+  const { surface } = dc;
+  fillCircle(surface, cx, cy, 20, ui.ink);
+  fillCircle(surface, cx, cy, 19, STICK_RING);
+  fillCircle(surface, cx, cy, 16, ui.panel);
+  fillCircle(surface, cx + lean * 6, cy - 4, 9, ui.ink);
+  fillCircle(surface, cx + lean * 6, cy - 4, 8, STICK_KNOB);
+  fillCircle(surface, cx + lean * 6 - 2, cy - 6, 3, ui.keyFace);
+}
