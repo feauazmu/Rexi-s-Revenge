@@ -36,6 +36,13 @@ describe('Screen goldens', () => {
     await expectGolden('title', renderView(game.view, null, { titleIllustration }));
   });
 
+  it('title-touch: the touch start prompt ("Toca para empezar")', async () => {
+    const game = driveFromTitle({ device: 'touch' });
+    untilPromptShows(game);
+    const titleIllustration = await loadTitleIllustration();
+    await expectGolden('title-touch', renderView(game.view, null, { titleIllustration }));
+  });
+
   it('title-backdrop: the code-drawn backdrop when the illustration is missing', async () => {
     const game = driveFromTitle();
     untilPromptShows(game);

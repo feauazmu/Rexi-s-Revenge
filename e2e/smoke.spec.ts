@@ -56,8 +56,29 @@ test('the Title is drawn over the title illustration', async ({ page }) => {
   await page.goto('');
   await expect(page.locator('#app')).toHaveAttribute('data-title-illustration', 'loaded');
   await expect.poll(() => screenOf(page)).toBe('title');
-  // The painted illustration has far more colors than the code-drawn backdrop.
-  await expect.poll(() => distinctCanvasColors(page)).toBeGreaterThan(500);
+  // Rexi's torso on the right is left uncovered by the Title's panels, so those canvas pixels
+  // are exactly the illustration's (the code-drawn backdrop has only sky there).
+  const matching = () =>
+    page.evaluate(async () => {
+      const canvas = document.querySelector('canvas');
+      const ctx = canvas?.getContext('2d');
+      if (!ctx) return 0;
+      const image = new Image();
+      image.src = 'title.png'; // relative to the page, so under the site base
+      await image.decode();
+      const reference = new OffscreenCanvas(640, 360).getContext('2d');
+      if (!reference) return 0;
+      reference.drawImage(image, 0, 0);
+      const box = [420, 100, 140, 100] as const;
+      const shown = ctx.getImageData(...box).data;
+      const expected = reference.getImageData(...box).data;
+      let same = 0;
+      for (let i = 0; i < shown.length; i += 4) {
+        if (shown[i] === expected[i] && shown[i + 1] === expected[i + 1]) same++;
+      }
+      return same / (shown.length / 4);
+    });
+  await expect.poll(matching).toBe(1);
   expect(errors).toEqual([]);
 });
 
@@ -104,6 +125,59 @@ test('a key press moves from the Title into the Run, and the Run plays', async (
   await page.keyboard.up('KeyD');
 
   expect(await distinctCanvasColors(page)).toBeGreaterThan(8);
+  expect(errors).toEqual([]);
+});
+
+test('a whole Run end to end: Rexi falls, the Veredicto is signed, the Title keeps the score', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const errors = trackErrors(page);
+  await asReturningPlayer(page);
+  // A fake clock drives requestAnimationFrame, so a minute of play runs as fast as it renders,
+  // and the fixed seed makes the Run the same every time.
+  await page.clock.install({ time: 0 });
+  await page.goto('?seed=1');
+  await expect.poll(() => screenOf(page)).toBe('title');
+  await page.clock.runFor(700);
+  await page.keyboard.press('Enter');
+  await page.clock.runFor(100);
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  // Hold the trigger and sweep the sky with the Mazo Automático until Rexi falls.
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('canvas has no layout box');
+  await page.mouse.down();
+  for (let i = 0; i < 240 && (await screenOf(page)) === 'run'; i++) {
+    const angle = Math.PI * (0.1 + 0.8 * ((i * 0.37) % 1));
+    await page.mouse.move(
+      box.x + box.width * (0.5 + 0.45 * Math.cos(angle)),
+      box.y + box.height * (0.6 - 0.5 * Math.sin(angle)),
+    );
+    await page.clock.runFor(500);
+  }
+  await page.mouse.up();
+  await expect.poll(() => screenOf(page)).toBe('verdict');
+
+  // The Veredicto reads out the stats, then the default initials are signed letter by letter.
+  await page.clock.runFor(1500);
+  for (let letter = 0; letter < 3; letter++) {
+    await page.keyboard.press('Enter');
+    await page.clock.runFor(100);
+  }
+  const table = await page.evaluate(() => localStorage.getItem('rexis-revenge:high-scores'));
+  const { version, entries } = JSON.parse(table ?? '{}') as {
+    version?: number;
+    entries?: { initials: string; score: number }[];
+  };
+  expect(version).toBe(1);
+  expect(entries?.map(({ initials }) => initials)).toEqual(['AAA']);
+  expect(entries?.[0]?.score).toBeGreaterThan(0);
+
+  await page.clock.runFor(600);
+  await page.keyboard.press('Enter');
+  await page.clock.runFor(100);
+  await expect.poll(() => screenOf(page)).toBe('title');
   expect(errors).toEqual([]);
 });
 
