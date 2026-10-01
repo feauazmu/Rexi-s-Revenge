@@ -201,6 +201,14 @@ describe('Pause', () => {
     expect(selected()).toBe(2);
   });
 
+  it('emits menu-moved when the selection moves (for the navigation sound)', () => {
+    const game = staged();
+    game.ticks(1, { pause: true });
+    expect(game.ticks(1, { menu: { down: true } })).toEqual([{ type: 'menu-moved', selected: 1 }]);
+    expect(game.ticks(1, { menu: { up: true } })).toEqual([{ type: 'menu-moved', selected: 0 }]);
+    expect(eventsOf(game.ticks(1, { menu: { up: true, down: true } }), 'menu-moved')).toEqual([]);
+  });
+
   it('applies a move and a confirm that land in the same tick in that order', () => {
     const game = staged();
     game.ticks(1, { pause: true });

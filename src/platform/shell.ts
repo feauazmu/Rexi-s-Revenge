@@ -1,4 +1,4 @@
-import { createGame, SCREEN_HEIGHT, SCREEN_WIDTH, type GameEvent } from '../core';
+import { createGame, SCREEN_HEIGHT, SCREEN_WIDTH, type GameEvent, type GameView } from '../core';
 import { canvasSurface, createRenderer } from '../render';
 import { createCanvasBitmap } from './bitmaps';
 import { createFixedStepper } from './fixed-step';
@@ -14,6 +14,8 @@ export interface ShellOptions {
 }
 
 export interface Shell {
+  /** The Game's current view (adapters read their starting state from it, e.g. mute). */
+  readonly view: GameView;
   stop(): void;
 }
 
@@ -85,6 +87,9 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   frame = requestAnimationFrame(loop);
 
   return {
+    get view() {
+      return game.view;
+    },
     stop() {
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', layout);

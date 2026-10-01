@@ -20,7 +20,7 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
 | `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Enemies, projectiles, spawning, effects).    |                    |
 | `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                |                    |
 | `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                | `src/core` (index) |
-| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, storage, bitmaps.         | core, render       |
+| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, storage, bitmaps, audio.  | core, render       |
 | `src/main.ts`       | Entry point: starts the shell.                                                              |                    |
 | `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.     |                    |
 | `e2e/`              | Playwright smoke tests against the production build.                                        |                    |
@@ -58,7 +58,7 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
 
 - Title and Cómo jugar accept `start` once `view.startReady` (a 0.5 s guard against double presses).
 - Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
-  The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges; `pause`/`back` resume. "Silenciar música" toggles
+  The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
   `view.musicMuted`, persists it and emits `mute-toggled`.
 - `view.screenAge` counts ticks on the current screen (entry animations); `view.tick` keeps running while
   paused so menus can animate.
@@ -159,7 +159,38 @@ converts frame times into whole ticks (clamped to 5 per frame), so speed is iden
 Each tick samples the keyboard/mouse adapter once (edges are consumed by the first sample).
 On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
 `#app[data-screen]`, which the smoke tests poll.
-`ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there.
+`ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there (`src/main.ts`).
+`Shell.view` exposes the Game's view so adapters can read their starting state (the persisted mute).
+
+## Audio
+
+`src/platform/audio/` turns Game events into synthesized sound effects. No audio files: every sound
+is code, like the art.
+
+- **Synth** (`synth.ts`, pure): a small sfxr-style synthesizer. A `SynthPatch` is a few layers
+  (square/saw/triangle/sine/noise, exponential pitch slide, steps, vibrato/tremolo, attack-hold-punch-decay
+  envelope, swept state-variable filter, delay), mixed, optionally soft-clipped (`drive`) and normalized to
+  `peak`. `renderPatch` renders it offline to samples; it is deterministic and tested in Node.
+- **Presets** (`presets.ts`): the sound catalog, `SOUND_PRESETS[id]` = patch + voice rules (`maxVoices`,
+  `priority`, `minGap`), `pitchJitter` and noise `variants`. Some presets wait for events later tickets add
+  (stamp, dumbbell, Código Penal, Citaciones, Sentencia Firme, cannon, Crate, Power-ups, Dialogue blip).
+- **Sound map** (`sound-map.ts`, pure): `soundForEvent(event)` → `{ sound, pan? }` or null. A
+  `Record<GameEventType, …>` rule per event kind, plus `WEAPON_SOUNDS` (`Record<WeaponId, …>`),
+  `ENEMY_FIRE_SOUNDS` (`Record<EnemyKind, …>`) and `EXPLOSION_SOUNDS` (by the Enemy's tuned `explosion`
+  size). Explosions pan with the Enemy's x.
+- **Voice limiter** (`voices.ts`, pure): per-sound voice caps (the oldest voice of the same sound is
+  stolen), a global cap (the oldest voice of the lowest priority is stolen; a new voice that matters less
+  than everything playing is dropped) and a `minGap` that drops same-tick duplicates.
+- **Engine** (`engine.ts`): creates the `AudioContext` only in a user gesture (`listenForAudioUnlock`
+  keeps listening, so a context the browser suspends later resumes on the next gesture), renders every
+  preset into an `AudioBuffer` once, and plays each cue as a buffer source → gain (→ panner) → effects bus.
+  Mix: effects bus and music bus → master → compressor → speakers. "Silenciar música" (`mute-toggled`,
+  and the persisted flag at start) fades only the **music bus**.
+- **Music**: `engine.connectMusic((context, musicBus) => …)` hands the music player the context and the
+  music bus once audio is unlocked; connect a looping `AudioBufferSourceNode` to `musicBus` and mute just
+  works.
+- The shell mirrors the engine status to `#app[data-audio]` (`locked` → `running`, or `suspended`,
+  `unavailable`) and `#app[data-music]` (`on`/`muted`) for the smoke tests.
 
 ## How to add…
 
@@ -173,10 +204,12 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 4. Register it in `src/core/run/enemies/index.ts` (one line).
 5. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
    the drawer and chunks in `src/render/enemies/index.ts`.
-6. Test through the public interface: stage it with `overrides.spawns`, drive inputs, assert events/view.
+6. Give it a firing sound in `ENEMY_FIRE_SOUNDS` (`src/platform/audio/sound-map.ts`); its explosion sound
+   follows its tuned `explosion` size.
+7. Test through the public interface: stage it with `overrides.spawns`, drive inputs, assert events/view.
    Add a golden if it has a look.
 
-`Record<EnemyKind, …>` catalogs make the typecheck fail until steps 2, 4 and 5 are done.
+`Record<EnemyKind, …>` catalogs make the typecheck fail until steps 2, 4, 5 and 6 are done.
 
 ### A Weapon
 
@@ -189,6 +222,8 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 5. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
 6. Draw its HUD icon in `src/render/hud/weapon-icons.ts` and add its Spanish name to `strings.weapons`.
+7. Give it a firing sound in `WEAPON_SOUNDS` (`src/platform/audio/sound-map.ts`); most v1 Weapons already
+   have a preset waiting in `src/platform/audio/presets.ts`.
 
 ### A platform
 
@@ -200,6 +235,13 @@ ledge, so no other code changes. Keep each one less than a full jump above the s
 ### An event
 
 Add an interface and one line to the `GameEvent` union in `src/core/events.ts`; emit it with `ctx.emit`.
+Then decide its sound: a rule in `EVENT_SOUNDS` (`src/platform/audio/sound-map.ts`, null for silence) and a
+row in the table test (`tests/platform/audio/sound-map.test.ts`); both fail to typecheck until you do.
+
+### A sound
+
+Add a preset to `SOUND_PRESETS` (`src/platform/audio/presets.ts`) and point an entry of the sound map at it.
+Tune by ear in the dev server; the preset tests check it renders clean, click-free and within the mix levels.
 
 ### A golden-image test
 
@@ -226,7 +268,8 @@ await expectGolden('my-scene', renderView(game.view));
   `eventsOf`, `runOf`.
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
-- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping).
+- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping, audio
+  synth/sound map/voice limiter); the audio engine runs against a fake `AudioContext`.
 
 ## Commands
 

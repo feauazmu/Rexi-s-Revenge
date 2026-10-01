@@ -149,6 +149,7 @@ export function createGame(options: GameOptions): Game {
         if (input.menu.up !== input.menu.down) {
           const step = input.menu.down ? 1 : -1;
           menuSelected = moveSelection(menuSelected, step, PAUSE_MENU_ITEMS.length);
+          emit({ type: 'menu-moved', selected: menuSelected });
         }
         if (input.menu.confirm) choose(PAUSE_MENU_ITEMS[menuSelected] ?? 'resume');
         return;

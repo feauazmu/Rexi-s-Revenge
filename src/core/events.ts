@@ -17,6 +17,7 @@ export type GameEvent =
   | EnemyFiredEvent
   | RexiHitEvent
   | RunEndedEvent
+  | MenuMovedEvent
   | MuteToggledEvent;
 
 export type GameEventType = GameEvent['type'];
@@ -85,6 +86,13 @@ export interface RunEndedEvent {
   readonly enemiesDestroyed: number;
   /** Run ticks survived, including the tick of the fatal hit. */
   readonly ticksSurvived: number;
+}
+
+/** The selection of an on-screen menu moved (pause menu). */
+export interface MenuMovedEvent {
+  readonly type: 'menu-moved';
+  /** Index of the newly selected entry. */
+  readonly selected: number;
 }
 
 /** "Silenciar música" was chosen in the pause menu. The choice is already persisted. */
