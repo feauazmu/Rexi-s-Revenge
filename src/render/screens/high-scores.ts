@@ -1,14 +1,15 @@
 /**
- * The local top 10 on the Title ("Jurisprudencia"): a smoked-glass panel with a heading strip
- * and one row per entry (place, initials, score). The top three get medal colors.
+ * The local top 10 on the Title ("Jurisprudencia"): a dark panel with a heading strip and one
+ * row per entry (place, initials, score). The top three get medal colors. The body is solid so
+ * the rows stay readable over the busy title illustration. Master-palette colors only.
  */
 import { HIGH_SCORE_LIMIT, type HighScoreEntry } from '../../core';
 import type { DrawContext } from '../draw-context';
-import { defineSprite, type SpriteDef } from '../sprite';
+import { masterPalette } from '../palette';
 import { strings } from '../strings';
 import type { Color } from '../surface';
 import { drawText, fonts } from '../text';
-import { drawOutlinedText, ui } from './ui';
+import { drawOutlinedText } from './ui';
 
 export const HIGH_SCORES_WIDTH = 150;
 const HEADER_H = 15;
@@ -17,9 +18,19 @@ const PAD = 4;
 /** Capitals sit 3 px below the cell top (room for accents): shift text up to center them. */
 const CAP_OFFSET = fonts.regular.baseline - 7;
 
-const MEDALS: readonly Color[] = [ui.gold, '#d8dcef', '#e0a070'];
-const RANK: Color = ui.muted;
-const SCORE: Color = ui.text;
+const ink = {
+  frame: masterPalette.outline,
+  edge: masterPalette.robeSheen,
+  header: masterPalette.robe,
+  body: masterPalette.night,
+  heading: masterPalette.gold,
+  rank: masterPalette.grey2,
+  text: masterPalette.grey3,
+  score: masterPalette.white,
+} as const satisfies Record<string, Color>;
+
+/** Gold, silver and bronze; the other initials are dimmer than the scores. */
+const MEDALS: readonly Color[] = [masterPalette.gold, masterPalette.white, masterPalette.skin3];
 
 /** Height of the panel for a table of `count` entries (an empty table shows one line). */
 export function highScoresHeight(count: number): number {
@@ -37,53 +48,48 @@ export function drawHighScores(
   const w = HIGH_SCORES_WIDTH;
   const h = highScoresHeight(entries.length);
 
-  // Frame, smoked-glass body (the backdrop shows through a dither) and a solid heading strip.
-  surface.fillRect(x, y, w, h, ui.ink);
-  surface.fillRect(x + 1, y + 1, w - 2, HEADER_H - 1, ui.panel);
-  surface.fillRect(x + 1, y + 1, w - 2, 1, ui.panelEdge);
-  surface.fillRect(x + 1, y + HEADER_H, w - 2, 1, ui.panelEdge);
-  surface.drawBitmap(dc.sprites.get(glass(w - 2, h - HEADER_H - 2)), x + 1, y + HEADER_H + 1);
+  // Black frame with cut corners, a heading strip with a lit top edge, and a solid body.
+  surface.fillRect(x + 1, y, w - 2, h, ink.frame);
+  surface.fillRect(x, y + 1, w, h - 2, ink.frame);
+  surface.fillRect(x + 1, y + 1, w - 2, HEADER_H - 1, ink.header);
+  surface.fillRect(x + 2, y + 1, w - 4, 1, ink.edge);
+  surface.fillRect(x + 1, y + HEADER_H, w - 2, 1, ink.edge);
+  surface.fillRect(x + 1, y + HEADER_H + 1, w - 2, h - HEADER_H - 2, ink.body);
 
   drawText(dc, fonts.regular, strings.titleScreen.highScores, x + w / 2, y + 4 - CAP_OFFSET, {
-    color: ui.gold,
-    shadow: ui.ink,
+    color: ink.heading,
+    shadow: ink.frame,
     align: 'center',
   });
 
   const top = y + HEADER_H + PAD - CAP_OFFSET;
+  const outline = { outline: ink.frame };
   if (entries.length === 0) {
-    drawOutlinedText(dc, fonts.regular, strings.titleScreen.noHighScores, x + w / 2, top, RANK, {
-      align: 'center',
-    });
+    drawOutlinedText(
+      dc,
+      fonts.regular,
+      strings.titleScreen.noHighScores,
+      x + w / 2,
+      top,
+      ink.rank,
+      {
+        ...outline,
+        align: 'center',
+      },
+    );
     return;
   }
   entries.slice(0, HIGH_SCORE_LIMIT).forEach((entry, i) => {
     const rowTop = top + i * ROW_H;
     const medal = MEDALS[i];
-    drawOutlinedText(dc, fonts.regular, `${i + 1}.`, x + 22, rowTop, medal ?? RANK, {
+    drawOutlinedText(dc, fonts.regular, `${i + 1}.`, x + 22, rowTop, medal ?? ink.rank, {
+      ...outline,
       align: 'right',
     });
-    drawOutlinedText(dc, fonts.regular, entry.initials, x + 30, rowTop, medal ?? ui.text);
-    drawOutlinedText(dc, fonts.regular, String(entry.score), x + w - 8, rowTop, SCORE, {
+    drawOutlinedText(dc, fonts.regular, entry.initials, x + 30, rowTop, medal ?? ink.text, outline);
+    drawOutlinedText(dc, fonts.regular, String(entry.score), x + w - 8, rowTop, ink.score, {
+      ...outline,
       align: 'right',
     });
   });
-}
-
-const glassSprites = new Map<string, SpriteDef>();
-
-/** A 50% checkerboard of the panel color, `w`×`h`, memoized per size. */
-function glass(w: number, h: number): SpriteDef {
-  const key = `${w}x${h}`;
-  let sprite = glassSprites.get(key);
-  if (!sprite) {
-    const even = 'p.'.repeat(Math.ceil(w / 2)).slice(0, w);
-    const odd = '.p'.repeat(Math.ceil(w / 2)).slice(0, w);
-    sprite = defineSprite(
-      { p: ui.panel },
-      Array.from({ length: h }, (_, row) => (row % 2 ? odd : even)),
-    );
-    glassSprites.set(key, sprite);
-  }
-  return sprite;
 }

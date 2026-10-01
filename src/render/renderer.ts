@@ -41,8 +41,8 @@ const SCREEN_LAYERS: readonly RunLayer[] = [drawHud, drawDialogueBox, drawCrossh
 
 export interface RendererOptions {
   /**
-   * The bundled 480×270 title illustration, already decoded by the platform. Without it the
-   * Title screen draws its code-drawn backdrop.
+   * The bundled 480×270 title illustration (`public/title.png`), already decoded by the
+   * platform. Without it the Title screen draws its code-drawn backdrop.
    */
   readonly titleIllustration?: Bitmap | null;
 }

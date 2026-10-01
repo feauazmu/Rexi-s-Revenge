@@ -28,6 +28,7 @@ npx playwright install chromium   # once, for the smoke test
 npm run dev                       # http://localhost:5173/Rexi-s-Revenge/
 npm run check                     # typecheck, lint, test, build, smoke (what CI runs)
 npm run golden:update             # re-render golden images after an intended visual change
+npm run share-preview             # re-render the favicons, app icons and link preview in public/
 ```
 
 See [docs/architecture.md](docs/architecture.md) for the module layout, seams and how to add

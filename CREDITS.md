@@ -1,6 +1,6 @@
 # Credits and asset provenance
 
-Generated media for Rexi's Revenge. Per [ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), the images in `reference/` are concept references for the sprites drawn in code. They are kept out of the production bundle. The only generated image that ships is `public/title.png`.
+Generated media for Rexi's Revenge. Per [ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), the images in `reference/` are concept references for the sprites drawn in code. They are kept out of the production bundle. The only generated image that ships is `public/title.png` (also inside the link preview `public/og-image.png`, composed in code). The logo and the site icons are drawn in code.
 
 All images were generated through OpenRouter with the creation-tool, using the default model `google/gemini-3.1-flash-image` (1376×768, 16:9, pixel-art style prompts). Each file in `reference/` has a JSON sidecar next to it with the full prompt, model, parameters and cost.
 
@@ -21,6 +21,7 @@ All images were generated through OpenRouter with the creation-tool, using the d
 | `reference/title-source.png`                | google/gemini-3.1-flash-image | Sleeve correction: edit of `title-source-v1.png` with the new character sheet as a second Reference, changing only the tattoo to a shoulder-to-elbow sleeve                                                                                              | 0.0684     |
 | (discarded)                                 | google/gemini-3.1-flash-image | Title sleeve edit made before the character sheet was corrected (referenced the old sheet); superseded by the one above, not inspected for use                                                                                                           | 0.0684     |
 | `public/title.png`                          | (derived)                     | `title-source.png` center-cropped to 16:9 and downscaled to 480×270 with `sips`; no extra generation                                                                                                                                                     | 0.0000     |
+| `public/og-image.png`                       | (derived)                     | `public/title.png` with the code-drawn logo and tagline over it, scaled 2.5× nearest-neighbor by `npm run share-preview`; no extra generation                                                                                                            | 0.0000     |
 
 The first eight images met their brief on the first attempt. The sleeve correction (left-arm tattoo as a shoulder-to-elbow sleeve) regenerated the character sheet and the title source; the earlier versions are kept as `*-v1.png`.
 

@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "golden:update": "UPDATE_GOLDENS=1 vitest run tests/golden",
     "smoke": "playwright test",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run smoke"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run smoke",
+    "share-preview": "node scripts/share-preview/make-share-preview.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
