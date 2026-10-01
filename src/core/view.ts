@@ -1,4 +1,11 @@
-import type { Craft, EnemyKind, ParticleKind, ProjectileKind, WeaponId } from './ids';
+import type {
+  Craft,
+  CrateContents,
+  EnemyKind,
+  ParticleKind,
+  ProjectileKind,
+  WeaponId,
+} from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
 import type { PauseMenuItem } from './pause-menu';
@@ -57,6 +64,7 @@ export interface RunView {
   readonly enemies: readonly EnemyView[];
   readonly projectiles: readonly ProjectileView[];
   readonly effects: EffectsView;
+  readonly crates: readonly CrateView[];
   readonly stats: RunStatsView;
   /** True once Rexi has been defeated: the Run is over and no longer advances. */
   readonly ended: boolean;
@@ -97,17 +105,33 @@ export interface RexiView extends BoxView {
   readonly aimDirection: Vec2;
   /** Ticks since the last shot (capped at a few seconds), for recoil animation. */
   readonly shotAge: number;
-  readonly weapon: WeaponView;
   /** Ticks left of the hurt reaction after a hit (0 = not hurt). Drives the hurt animation. */
   readonly hurtTicks: number;
   /** Ticks left during which hits are ignored (0 = vulnerable). Drives the flicker. */
   readonly invulnerableTicks: number;
+  /** The selected Weapon. */
+  readonly weapon: WeaponView;
+  /** Every Weapon Rexi carries, in slot order (the Mazo Automático is always first). */
+  readonly inventory: readonly WeaponView[];
 }
 
 export interface WeaponView {
   readonly id: WeaponId;
   /** Remaining ammo, or null for unlimited (Mazo Automático). */
   readonly ammo: number | null;
+}
+
+export interface CrateView extends BoxView {
+  readonly id: number;
+  readonly contents: CrateContents;
+  /** False while it falls under its parachute. */
+  readonly landed: boolean;
+  /** Ticks until it expires once landed; null while falling. */
+  readonly ticksLeft: number | null;
+  /** True during the last part of its lifetime (the renderer picks the blink cadence). */
+  readonly blinking: boolean;
+  /** Ticks since it was dropped (animation phase). */
+  readonly age: number;
 }
 
 export interface EnemyView extends BoxView {

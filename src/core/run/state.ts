@@ -1,4 +1,4 @@
-import type { EnemyKind, ProjectileKind, WeaponId } from '../ids';
+import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponId } from '../ids';
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
 import type { EffectsState } from './effects';
@@ -12,11 +12,14 @@ export interface RunState {
   projectiles: ProjectileState[];
   /** Cosmetic effects (particles, screen shake); never read by gameplay. */
   effects: EffectsState;
+  crates: CrateState[];
   stats: RunStats;
   /** True once Rexi's health reached zero; the Run no longer advances. */
   ended: boolean;
   /** Scripted spawns not yet released, sorted by tick. Null when spawning is automatic. */
   scriptedSpawns: ScriptedSpawn[] | null;
+  /** Run tick of the next automatic Crate drop; null when spawning is scripted. */
+  nextCrateDrop: number | null;
 }
 
 export interface Body extends Box {
@@ -32,15 +35,31 @@ export interface RexiState extends Body {
   readonly maxHealth: number;
   facing: 1 | -1;
   aim: Vec2;
-  /** Ticks until the current Weapon may fire again. */
-  fireCooldown: number;
   /** Ticks since the last shot (capped), for recoil animation. */
   shotAge: number;
-  weapon: WeaponId;
   /** Ticks left during which hits are ignored (0 = can be hurt). */
   invulnerableTicks: number;
   /** Ticks left of the hurt reaction (0 = not hurt). */
   hurtTicks: number;
+  inventory: InventoryState;
+}
+
+/** HA3-style Weapon inventory. The Mazo Automático is always carried and has no ammo entry. */
+export interface InventoryState {
+  selected: WeaponId;
+  /** Ammo of each special Weapon carried; a special Weapon is carried while it has an entry. */
+  readonly ammo: Map<SpecialWeaponId, number>;
+  /** Ticks until each Weapon may fire again (missing or 0: ready). */
+  readonly cooldowns: Map<WeaponId, number>;
+}
+
+export interface CrateState extends Body {
+  readonly id: number;
+  readonly contents: CrateContents;
+  /** Ticks left before it expires; null until it lands. */
+  ttl: number | null;
+  /** Ticks since it was dropped. */
+  age: number;
 }
 
 export interface EnemyState extends Box {

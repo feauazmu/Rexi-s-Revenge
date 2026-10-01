@@ -23,6 +23,13 @@ export function center(box: Readonly<Box>): Vec2 {
   return { x: box.x + box.w / 2, y: box.y + box.h / 2 };
 }
 
+/** `v` rotated by `radians` (positive turns clockwise on screen, where y points down). */
+export function rotate(v: Vec2, radians: number): Vec2 {
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return { x: v.x * cos - v.y * sin, y: v.x * sin + v.y * cos };
+}
+
 /** Unit vector from `from` toward `to`, or `fallback` when the points coincide. */
 export function directionTo(from: Vec2, to: Vec2, fallback: Vec2): Vec2 {
   const dx = to.x - from.x;

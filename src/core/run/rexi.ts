@@ -5,6 +5,7 @@ import type { Tuning } from '../tuning';
 import type { RunContext } from './context';
 import { stepBody, type World } from './physics';
 import type { RexiState } from './state';
+import { createInventory } from './weapons/inventory';
 
 /** `shotAge` stops counting here; animation only cares about the first few ticks. */
 const SHOT_AGE_CAP = 600;
@@ -24,11 +25,10 @@ export function createRexi(tuning: Tuning): RexiState {
     maxHealth: rexi.maxHealth,
     facing: 1,
     aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
-    fireCooldown: 0,
     shotAge: SHOT_AGE_CAP,
-    weapon: 'mazo-automatico',
     invulnerableTicks: 0,
     hurtTicks: 0,
+    inventory: createInventory(),
   };
 }
 

@@ -41,6 +41,11 @@ export const rexiPalette = {
   G: '#5e3418',
   y: '#f0c858',
   Y: '#a87a28',
+  // Lluvia de Sellos: red rubber stamp, blue ink pad.
+  x: '#ff7a64',
+  z: '#d42a2a',
+  Z: '#8a1a1a',
+  u: '#3a4ec0',
 } as const satisfies Record<string, Color>;
 
 export type RexiInk = keyof typeof rexiPalette;

@@ -7,12 +7,14 @@ import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
 import type { RunContext } from './context';
 import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effects';
+import { firstCrateDrop, stepCrates, viewCrate } from './crates/system';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, shoulderOf, stepRexi } from './rexi';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
+import { viewInventory } from './weapons/inventory';
 import { stepWeapons } from './weapons/system';
 
 export interface RunDeps {
@@ -41,9 +43,11 @@ export function createRun(deps: RunDeps): Run {
     enemies: [],
     projectiles: [],
     effects: createEffects(deps.effectsSeed),
+    crates: [],
     stats: { score: 0, enemiesDestroyed: 0 },
     ended: false,
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
+    nextCrateDrop: deps.spawns === null ? firstCrateDrop(deps.tuning) : null,
   };
   let events: GameEvent[] = [];
   const ctx: RunContext = {
@@ -61,6 +65,7 @@ export function createRun(deps: RunDeps): Run {
       stepEffects(ctx);
       stepSpawning(ctx);
       stepRexi(ctx, input);
+      stepCrates(ctx);
       stepWeapons(ctx, input);
       stepEnemies(ctx);
       stepProjectiles(ctx);
@@ -112,9 +117,9 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
       shotAge: rexi.shotAge,
-      weapon: { id: rexi.weapon, ammo: null },
       hurtTicks: rexi.hurtTicks,
       invulnerableTicks: rexi.invulnerableTicks,
+      ...viewInventory(rexi.inventory),
     },
     enemies: state.enemies.map((e) => ({
       id: e.id,
@@ -142,6 +147,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       age: p.age,
     })),
     effects: viewEffects(state.effects, tuning, state.tick),
+    crates: state.crates.map((crate) => viewCrate(crate, tuning)),
     stats: {
       score: state.stats.score,
       enemiesDestroyed: state.stats.enemiesDestroyed,

@@ -37,7 +37,25 @@ const mazoAutomatico: HeldWeapon = {
   },
 };
 
+/** Lluvia de Sellos: a rubber stamp held by its wooden handle, inked face toward the aim. */
+const lluviaDeSellos: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const block = 2.8;
+    if (u >= 3.5 && u <= 8 && Math.abs(v) <= block) {
+      if (u >= 7) return 'u';
+      return barrel(v, block, 'x', 'z', 'Z');
+    }
+    // Wooden handle and knob, gripped by the fist.
+    if (u >= -1.5 && u < 3.5 && Math.abs(v) <= (u < -0.2 ? 1.8 : 1.1)) {
+      return barrel(v, 1.8, 'g', 'o', 'G');
+    }
+    return null;
+  },
+};
+
 /** One held look per Weapon (one line per entry). */
 export const heldWeapons: Readonly<Record<WeaponId, HeldWeapon>> = {
   'mazo-automatico': mazoAutomatico,
+  'lluvia-de-sellos': lluviaDeSellos,
 };

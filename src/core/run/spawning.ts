@@ -1,8 +1,12 @@
 import type { ScriptedSpawn } from '../options';
 import type { RunContext } from './context';
+import { spawnCrate } from './crates/system';
 import { spawnEnemy } from './enemies/system';
 
-/** Releases Enemies for the current Run tick: scripted spawns if given, otherwise automatic. */
+/**
+ * Releases Enemies (and scripted Crates) for the current Run tick: scripted spawns if given,
+ * otherwise automatic. Automatic Crate drops run in the Crate system.
+ */
 export function stepSpawning(ctx: RunContext): void {
   const { state } = ctx;
   if (state.scriptedSpawns === null) {
@@ -12,7 +16,8 @@ export function stepSpawning(ctx: RunContext): void {
   let next = state.scriptedSpawns[0];
   while (next && (next.atTick ?? 0) <= state.tick) {
     state.scriptedSpawns.shift();
-    spawnEnemy(ctx, next.kind, next.x, next.y);
+    if (next.kind === 'crate') spawnCrate(ctx, next.contents, next.x, next.y);
+    else spawnEnemy(ctx, next.kind, next.x, next.y);
     next = state.scriptedSpawns[0];
   }
 }

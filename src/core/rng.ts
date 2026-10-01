@@ -13,6 +13,11 @@ export interface Rng {
   chance(probability: number): boolean;
   /** Uniformly chosen element of a non-empty list. */
   pick<T>(items: readonly T[]): T;
+  /**
+   * An item chosen with probability proportional to its weight. Items with weight ≤ 0 are
+   * never chosen; throws when no item has a positive weight.
+   */
+  weighted<T>(entries: readonly (readonly [item: T, weight: number])[]): T;
 }
 
 export function createRng(seed: number): Rng {
@@ -34,6 +39,17 @@ export function createRng(seed: number): Rng {
     pick: <T>(items: readonly T[]): T => {
       if (items.length === 0) throw new Error('Rng.pick needs a non-empty list');
       return items[Math.floor(next() * items.length)] as T;
+    },
+    weighted: <T>(entries: readonly (readonly [T, number])[]): T => {
+      const positive = entries.filter(([, weight]) => weight > 0);
+      const total = positive.reduce((sum, [, weight]) => sum + weight, 0);
+      let roll = next() * total;
+      // Floating-point leftovers land on the last entry.
+      const chosen = positive.find(([, weight]) => (roll -= weight) < 0) ?? positive.at(-1);
+      if (chosen === undefined) {
+        throw new Error('Rng.weighted needs an entry with a positive weight');
+      }
+      return chosen[0];
     },
   };
 }

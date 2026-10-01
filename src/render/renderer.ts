@@ -4,6 +4,7 @@ import { drawEffects } from './effects';
 import { drawEnemies } from './enemies';
 import { drawHud } from './hud/hud';
 import { drawArena } from './layers/arena';
+import { drawCrates } from './layers/crates';
 import { drawCrosshair } from './layers/crosshair';
 import { drawRexi } from './layers/rexi';
 import { palette } from './palette';
@@ -23,6 +24,7 @@ export type RunLayer = (dc: DrawContext, run: RunView) => void;
  */
 const WORLD_LAYERS: readonly RunLayer[] = [
   drawArena,
+  drawCrates,
   drawEnemies,
   drawProjectiles,
   drawRexi,
