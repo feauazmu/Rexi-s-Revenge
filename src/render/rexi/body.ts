@@ -104,7 +104,7 @@ const FRONT_CAP: Rows = [
 ];
 
 /**
- * Rexi's sleeve tattoo covers his left upper arm from the shoulder to the elbow: the lion's
+ * Rexi's sleeve tattoo covers his right upper arm from the shoulder to the elbow: the lion's
  * golden mane at the top flowing into the courthouse's pediment and columns toward the elbow.
  * These are the inked versions of the far arm and the deltoid cap (same silhouettes).
  */
@@ -272,7 +272,7 @@ function backArmFrames(arm: Rows) {
 }
 
 export const BACK_ARM_FRAMES = backArmFrames(BACK_ARM);
-/** The far arm is Rexi's left arm when he faces left, so it wears the sleeve. */
+/** The far arm is Rexi's right arm when he faces right, so it wears the sleeve. */
 const BACK_ARM_INKED_FRAMES = backArmFrames(BACK_ARM_INKED);
 
 export type BackArmFrame = keyof typeof BACK_ARM_FRAMES;
@@ -334,7 +334,8 @@ function legId(frame: LegFrame): number {
 /**
  * The composed body for a pose and facing, built and cached on first use (the renderer's
  * SpriteBank then rasterizes it once). `flash` gives the hurt-blink colors. Facing left is the
- * mirror image, except that the far arm is then Rexi's left arm and wears the sleeve.
+ * mirror image, except for the sleeve: facing right it is on the far arm (his right arm),
+ * facing left on the aiming arm and its cap.
  */
 export function bodySprite(pose: BodyPose, facing: 1 | -1, flash: boolean): SpriteDef {
   const key = [
@@ -353,7 +354,7 @@ export function bodySprite(pose: BodyPose, facing: 1 | -1, flash: boolean): Spri
   if (!sprite) {
     const right = defineSprite(
       flash ? rexiFlashPalette : rexiPalette,
-      bodyRows(pose, facing === -1),
+      bodyRows(pose, facing === 1),
     );
     sprite = facing === 1 ? right : mirrorSprite(right);
     bodyCache.set(key, sprite);
@@ -362,14 +363,14 @@ export function bodySprite(pose: BodyPose, facing: 1 | -1, flash: boolean): Spri
 }
 
 /**
- * Deltoid cap variants. The aiming arm is Rexi's left arm when he faces right, so that cap wears
- * the sleeve; facing left the aiming arm is his right arm (the plain cap, mirrored).
+ * Deltoid cap variants. The aiming arm is Rexi's left arm when he faces right (the plain cap);
+ * facing left it is his right arm, so that cap wears the sleeve (mirrored).
  */
 const caps = {
-  right: defineSprite(rexiPalette, FRONT_CAP_INKED),
-  left: mirrorSprite(defineSprite(rexiPalette, FRONT_CAP)),
-  flashRight: defineSprite(rexiFlashPalette, FRONT_CAP_INKED),
-  flashLeft: mirrorSprite(defineSprite(rexiFlashPalette, FRONT_CAP)),
+  right: defineSprite(rexiPalette, FRONT_CAP),
+  left: mirrorSprite(defineSprite(rexiPalette, FRONT_CAP_INKED)),
+  flashRight: defineSprite(rexiFlashPalette, FRONT_CAP),
+  flashLeft: mirrorSprite(defineSprite(rexiFlashPalette, FRONT_CAP_INKED)),
 } as const;
 
 /** Deltoid cap over the aiming arm's root, and its canvas position (facing applied). */

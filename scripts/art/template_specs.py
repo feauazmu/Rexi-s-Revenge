@@ -60,8 +60,7 @@ def build(project, name, spec):
 
 
 def run(project, only=(), log=print):
-    specs = {k: v for k, v in project.manifest.get("templates", {}).items() if not k.startswith("_")}
-    for name, spec in specs.items():
+    for name, spec in project.section("templates").items():
         if only and name not in only:
             continue
         for path in build(project, name, spec):

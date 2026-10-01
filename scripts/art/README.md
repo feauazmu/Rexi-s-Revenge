@@ -68,7 +68,7 @@ An art root is a directory with a `sheets.json` manifest. `--root` defaults to `
 - **One character per sheet**, 3–4 copies in a row. The extra copies are free extra samples: pick the best.
 - **Names:** sprites are named in reading order (rows by bottom edge, then left to right). `null` skips a size anchor or a reject.
 - **Canvases:** `char` sheets put each sprite on a fixed `canvas` with the soles on row `feet` and the torso (or its template slot, `slots`) on column `cx`. `icon` sheets centre on a fixed `canvas`.
-- **Palette classes** (`palette.py`): `character` (no sky, glass, neon or foliage ramps), `enemy` (no sky or foliage), `prop` (no sky), `icon` and `scene` (everything). A sheet may instead give `{"ramps": [...]}` or `{"colors": [...]}`. The prototype pins its 26 original colours.
+- **Palette classes** (`palette.py`): `character` (no sky, glass, neon or foliage ramps), `enemy` (no sky or foliage), `prop` (no sky), `icon` and `scene` (everything). A `sprite` sheet defaults to `prop`, so an Enemy sheet sets `"palette": "enemy"`. A sheet may instead give `{"ramps": [...]}` or `{"colors": [...]}`. The prototype pins its 26 original colours.
 - **Facing:** draw facing right. Facing left is a mirror, plus code that moves asymmetric details. Rexi's sleeve is on his **right** arm, so facing right it is on the far (aiming) arm, and facing left on the near arm (`characters/rexi_common.py`, `TATTOO_SIDE`).
 - **Money:** one image per call. `gen` refuses any call that would pass the $10 cap (`ledger.py` has the per-model estimates). Every render gets a new name, so the record stays complete.
 

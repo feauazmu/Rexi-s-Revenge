@@ -35,6 +35,7 @@ ESTIMATES = {
     ("openai/gpt-image-2", None): 0.10,
 }
 DEFAULT_ESTIMATE = 0.25
+HARD_CAP = 10.00       # the owner's cap (#24); CREDITS.md may state a lower one, never a higher one
 
 TOTAL_RE = re.compile(r"\|\s*\*\*Running total\*\*\s*\|\s*\*\*([0-9.]+) of ([0-9.]+)\*\*[^|]*\|")
 
@@ -52,7 +53,7 @@ def credits_total(path=CREDITS):
     m = TOTAL_RE.search(open(path).read())
     if not m:
         raise BudgetError(f"no '**Running total** | **T of CAP**' row in {path}")
-    return float(m.group(1)), float(m.group(2))
+    return float(m.group(1)), min(float(m.group(2)), HARD_CAP)
 
 
 def rows(path=LEDGER):
@@ -102,8 +103,8 @@ def _money(x):
 
 def credit(credits=CREDITS, ledger=LEDGER, fmt=True):
     """Fold the ledger into CREDITS.md: the per-generation table between the art-ledger markers,
-    the Budget table's "Art pipeline (N generations)" row and the running total (the sum of
-    every Budget item row, recomputed). Marks every ledger row credited. Returns the new total."""
+    the Budget table's "Art pipeline (N generations)" row and the running total (moved by the
+    change in that row). Marks every ledger row credited. Returns the new total."""
     all_rows = rows(ledger)
     text = open(credits).read()
     table = ["| # | Time | Root | Name | Model | Cost (USD) | Note |",
@@ -123,24 +124,27 @@ def credit(credits=CREDITS, ledger=LEDGER, fmt=True):
         text = text.replace("## Budget", section + "## Budget", 1)
     pipeline = sum(float(r["cost_usd"] or 0) for r in all_rows)
     # Budget table: replace or insert the pipeline row, then recompute the running total.
-    lines = text.split("\n")
-    total_i = next(i for i, l in enumerate(lines) if TOTAL_RE.search(l))
-    head_i = max(i for i in range(total_i) if lines[i].startswith("| Item"))
+    lines = text.rstrip("\n").split("\n")
+    total_i = next((i for i, l in enumerate(lines) if TOTAL_RE.search(l)), None)
+    heads = [i for i in range(total_i or 0) if lines[i].startswith("| Item")]
+    if total_i is None or not heads:
+        raise BudgetError(f"{credits}: the Budget table needs an '| Item' header and a Running total row")
+    head_i = heads[-1]
     row = f"| {BUDGET_ROW} ({len(all_rows)} generations) | {_money(pipeline)} |"
     existing = [i for i in range(head_i, total_i) if lines[i].startswith(f"| {BUDGET_ROW} (")]
+    old_pipeline = float(lines[existing[0]].strip().strip("|").split("|")[1]) if existing else 0.0
     if existing:
         lines[existing[0]] = row
     elif all_rows:
         lines.insert(total_i, row)
         total_i += 1
-    items = 0.0
-    for l in lines[head_i + 2:total_i]:
-        cells = [c.strip() for c in l.strip().strip("|").split("|")]
-        items += float(cells[1])
-    _, cap = credits_total(credits)
+    # Adjust the stated total by the pipeline row's change instead of re-adding the rounded rows:
+    # the image subtotal comes from unrounded sidecar costs (see CREDITS.md), so a re-sum could drift.
+    old_total, cap = credits_total(credits)
+    items = round(old_total - old_pipeline + pipeline, 6)
     lines[total_i] = (f"| **Running total** | **{_money(items)} of {cap:.2f}** "
                       f"({_money(cap - items)} remaining) |")
-    open(credits, "w").write("\n".join(lines))
+    open(credits, "w").write("\n".join(lines) + "\n")
     if all_rows:
         with open(ledger, "w", newline="") as f:
             w = csv.DictWriter(f, FIELDS, delimiter="\t", lineterminator="\n")
@@ -148,5 +152,7 @@ def credit(credits=CREDITS, ledger=LEDGER, fmt=True):
             for r in all_rows:
                 w.writerow({**r, "credited": "yes"})
     if fmt:
-        subprocess.run(["npx", "prettier", "--write", credits], cwd=ROOT, capture_output=True)
+        res = subprocess.run(["npx", "prettier", "--write", credits], cwd=ROOT, capture_output=True, text=True)
+        if res.returncode != 0:
+            print(f"warning: prettier failed on {credits}; run `npm run format`:\n{res.stderr}")
     return items

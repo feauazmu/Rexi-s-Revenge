@@ -56,17 +56,21 @@ class Project:
         return self.path(cfg.get("out", "sprites"))
 
     # ------------------------------------------------------------------ entries
+    def section(self, name):
+        """A manifest section without its `_`-prefixed (comment or disabled) entries."""
+        return {k: v for k, v in self.manifest.get(name, {}).items() if not k.startswith("_")}
+
     @property
     def sheets(self):
-        return {k: v for k, v in self.manifest["sheets"].items() if not k.startswith("_")}
+        return self.section("sheets")
 
     @property
     def parts(self):
-        return {k: v for k, v in self.manifest["parts"].items() if not k.startswith("_")}
+        return self.section("parts")
 
     @property
     def exports(self):
-        return {k: v for k, v in self.manifest["exports"].items() if not k.startswith("_")}
+        return self.section("exports")
 
     def palette_spec(self, cfg):
         return cfg.get("palette", KIND_PALETTE[cfg["kind"]])

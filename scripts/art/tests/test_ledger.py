@@ -76,3 +76,16 @@ def test_credit_folds_rows_into_credits_and_recomputes_the_total(files):
 def test_estimates_cover_the_measured_flash_cost():
     assert ledger.estimate("google/gemini-3.1-flash-image", "2K") >= 0.1027
     assert ledger.estimate("unknown/model") == ledger.DEFAULT_ESTIMATE
+
+
+def test_the_cap_never_rises_above_ten_dollars(files):
+    c, _ = files
+    open(c, "w").write(CREDITS.replace("of 10.00", "of 50.00"))
+    assert ledger.credits_total(c) == (1.5, 10.0)
+
+
+def test_credit_needs_the_budget_table(files):
+    c, l = files
+    open(c, "w").write(CREDITS.replace("| Item | Cost (USD) |", "| Thing | Cost (USD) |"))
+    with pytest.raises(ledger.BudgetError, match="Item"):
+        ledger.credit(c, l, fmt=False)

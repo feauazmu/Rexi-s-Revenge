@@ -18,7 +18,7 @@ export const masterPalette = {
   robeMid: '#3a3658',
   robeSheen: '#4a4a74',
 
-  // Cool greys toward warm white: steel, trousers, smoke, marble, tank top.
+  // Cool greys toward warm white: trousers, smoke, marble, tank top (steel has its own ramp below).
   grey1: '#6a6c86',
   grey2: '#9496aa',
   grey3: '#c2c2cc',

@@ -71,6 +71,8 @@ def encode_rle(idx):
 
 def decode_rle(data, width, height):
     raw = base64.b64decode(data)
+    if len(raw) % 2:
+        raise ExportError("RLE data ends in the middle of a run")
     flat = []
     for v, n in zip(raw[0::2], raw[1::2]):
         flat += [v] * (n + 1)

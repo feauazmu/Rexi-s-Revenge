@@ -10,7 +10,7 @@ Gameplay art is generated pixel art made through the committed pipeline in `scri
 1. **Resolution and scale:** the game renders at **640×360** and is shown at an integer zoom with nearest-neighbour filtering only (2× at 720p, 3× at 1080p). One art pixel is always one game pixel. Nothing is scaled by a non-integer factor, in the game or in the pipeline.
 2. **View:** characters are drawn in a **¾ side view** (Metal Slug style): they face right, with the head and chest turned a little toward the camera so both eyes show. They are drawn facing right and mirrored for facing left. Asymmetric details are moved in code so they stay on the correct side, for example Rexi's right-arm sleeve. Rexi is about 64 px tall, and every other sprite is sized against him.
 3. **Palette:** one master palette of at most 56 colours (`src/render/palette.ts`), grouped into hue-shifted ramps (`paletteRamps`). Shadows lean purple-blue and highlights lean warm.
-   - Every asset snaps to the ramps of its class (`scripts/art/palette.py`). Characters never use the Arena's sky, glass, neon or foliage ramps. Enemies and props may use neon but not sky or foliage. Scenes and icons may use everything.
+   - Every asset snaps to the ramps of its class (`scripts/art/palette.py`). Characters never use the Arena's sky, glass, neon or foliage ramps. Enemies may use neon but not sky or foliage. Props (Crates, plaza furniture, planters) may also use foliage, but not sky. Scenes and icons may use everything.
    - A new colour joins a ramp only when no step works, with a mock-up showing why. The palette grew from 40 to 56 for the art pass: a mid robe step, a warm skin midtone, and extra steel, sky, foliage, fire and neon steps.
 4. **Pixels:** a **1 px outline** on characters, Enemies, props and icons. Scene layers are outlined only where a shape meets open sky.
    - No anti-aliasing and no gradients.
@@ -35,6 +35,5 @@ Gameplay art is generated pixel art made through the committed pipeline in `scri
 - The workflow, commands and manifest format are in [`scripts/art/README.md`](../../scripts/art/README.md). The version C prototype stays reproducible as a second art root (`reference/manu-pipeline/`).
 - The pipeline needs Python with `uv` (Pillow, NumPy) on the artist's machine. The game build and CI do not, because they consume only the exported TypeScript.
 - Until each area is redrawn, the existing code-drawn sprites remain. They predate this ADR and the 56-colour palette.
-  - The current code-drawn Rexi still puts his sleeve on the left arm, which is wrong per CONTEXT.md. The art pass replaces him.
-  - The reference images `reference/rexi-character-sheet.png` and `reference/title-source.png` also show a left-arm sleeve.
+  - The code-drawn Rexi now wears the sleeve on his right arm (CONTEXT.md), but the reference images `reference/rexi-character-sheet.png` and `reference/title-source.png` (and `public/title.png`) still show it on the left. They stay as concept references until the art pass replaces them.
 - A hand pass in a pixel editor remains allowed on top of the pipeline's output. It is recorded as pixel-text patches or committed sprite edits, never as untracked changes.

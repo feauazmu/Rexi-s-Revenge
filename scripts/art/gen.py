@@ -80,14 +80,21 @@ def run(a):
         return 0
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
+        # The call may still have been billed: record the estimate so the cap stays conservative
+        # (edit the row if the provider's dashboard shows otherwise).
+        ledger.record(project.rel, a.name, model, cost_estimate, "", f"FAILED call, estimated cost. {a.note}")
         print(res.stdout, res.stderr)
         return 1
     out = json.loads(res.stdout)
     item = out[0] if isinstance(out, list) else out
     first = (item.get("assets") or [item])[0]
     path = first.get("path", out_png)
-    cost = item.get("cost_usd") or first.get("cost_usd") or 0
-    ledger.record(project.rel, a.name, model, cost, os.path.basename(path), a.note)
+    cost = item.get("cost_usd") or first.get("cost_usd")
+    note = a.note
+    if cost is None:
+        cost, note = cost_estimate, f"cost not reported, estimated. {a.note}"
+        print(f"warning: no cost reported; recorded the estimate ${cost_estimate:.2f}")
+    ledger.record(project.rel, a.name, model, cost, os.path.basename(path), note)
     total = ledger.status()
     sidecar = os.path.splitext(path)[0] + ".json"
     if os.path.exists(sidecar):

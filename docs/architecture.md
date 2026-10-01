@@ -292,11 +292,10 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
   for the hurt pose, `invulnerableTicks` for the red blink, `shotAge`) and the Run tick. The aiming
   arm (`arm.ts`) is rasterized from shapes in 16 directions around `RexiView.shoulder`, holding the current Weapon's look from `held-weapons.ts` (a
   `Record<WeaponId, …>`, so a new Weapon must add its held look there).
-  The code-drawn sprite draws the sleeve tattoo into whichever part is his **left** arm for the
-  facing (the deltoid cap and aiming arm facing right, the far arm facing left), so those parts are
-  built per facing, not just mirrored. That side is wrong: the sleeve is on his **right** arm
-  (CONTEXT.md). This sprite is replaced by the pipeline's Rexi in the art pass, whose rig puts the
-  sleeve on the aiming arm facing right and on the near arm facing left; it is not patched here.
+  Rexi's sleeve tattoo (right upper arm, shoulder to elbow; CONTEXT.md) is drawn into whichever
+  part is his right arm for the facing: the far arm facing right, the deltoid cap and aiming arm
+  facing left. So those parts are built per facing, not just mirrored. (The Dialogue Box portrait
+  still flexes the inked arm on the viewer's side it was drawn with; the art pass redraws it.)
 
 ## Palette
 

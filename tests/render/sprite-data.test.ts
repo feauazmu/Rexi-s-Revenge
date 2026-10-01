@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { masterPalette, type PaletteColorName } from '../../src/render/palette';
 import { defineSprite, rasterizeSprite } from '../../src/render/sprite';
-import { decodeSprite, encodeSprite, type EncodedSprite } from '../../src/render/sprite-data';
+import { decodeSprite, type EncodedSprite } from '../../src/render/sprite-data';
+import { encodeSprite } from '../support/sprite-data';
 
 interface Fixture {
   readonly encoded: EncodedSprite;
@@ -46,5 +47,6 @@ describe('sprite data (generated art)', () => {
       /pixels, expected/,
     );
     expect(() => encodeSprite(defineSprite({ x: '#123456' }, ['x']))).toThrow(/master-palette/);
+    expect(() => decodeSprite({ ...fixture.encoded, data: 'AAAA' })).toThrow(/middle of a run/);
   });
 });

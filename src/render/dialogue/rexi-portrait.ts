@@ -3,8 +3,9 @@ import { defineSprite } from '../sprite';
 
 /**
  * Rexi's Dialogue Box portrait (40×40), after reference/rexi-character-sheet.png: light-brown
- * flat-top, confident grin, sleeveless judge's robe over a white tank top, and his left arm
- * flexed to show the sleeve tattoo covering the upper arm from the shoulder to the elbow: a
+ * flat-top, confident grin, sleeveless judge's robe over a white tank top, and one arm flexed
+ * to show the sleeve tattoo (drawn as his left arm, after the old sheet; the sleeve belongs on
+ * his right arm per CONTEXT.md, and the art pass redraws this portrait) covering the upper arm from the shoulder to the elbow: a
  * lion head by the shoulder whose mane flows into a columned courthouse by the elbow, the gaps
  * filled with ink shading so it reads as one piece.
  */
