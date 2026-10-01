@@ -1,4 +1,5 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { readHighScores, SWEEP_STEP_MS, SWEEP_STEPS, sweepAngle, trackErrors } from './support';
 
 // Emulated phones: a coarse touch pointer, so the shell picks the touch controls.
 // `defaultBrowserType` cannot be set inside a describe block; the project's browser is used.
@@ -73,6 +74,75 @@ test.describe('phone in landscape', () => {
     await expect(app(page)).toHaveAttribute('data-screen', 'title');
 
     expect(await distinctColors(page, '.game-canvas')).toBeGreaterThan(8);
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('phone in landscape, a whole Run', () => {
+  test.use(phoneLandscape);
+
+  test('fires with the aim stick until Rexi falls, then signs the Veredicto with ✓', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    const errors = trackErrors(page);
+    // A fake clock drives requestAnimationFrame (a minute of play runs as fast as it renders);
+    // the fixed seed makes the Run the same every time.
+    await page.clock.install({ time: 0 });
+    await page.goto('?seed=1');
+    await expect(app(page)).toHaveAttribute('data-screen', 'title');
+    for (const next of ['how-to-play', 'run']) {
+      await page.clock.runFor(700);
+      await tapGame(page, 320, 180);
+      await page.clock.runFor(100);
+      await expect(app(page)).toHaveAttribute('data-screen', next);
+    }
+
+    // A real touch drag (through CDP, so the browser makes pointer events with capture): hold
+    // the right-hand aim stick and sweep it across the sky.
+    const box = await page.locator('.game-canvas').boundingBox();
+    if (!box) throw new Error('game canvas has no layout box');
+    const client = (x: number, y: number) => ({
+      x: box.x + (x * box.width) / 640,
+      y: box.y + (y * box.height) / 360,
+    });
+    const cdp = await page.context().newCDPSession(page);
+    const origin = { x: 500, y: 250 };
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ ...client(origin.x, origin.y), id: 1 }],
+    });
+    for (
+      let i = 0;
+      i < SWEEP_STEPS && (await app(page).getAttribute('data-screen')) === 'run';
+      i++
+    ) {
+      const angle = sweepAngle(i);
+      const point = client(origin.x + 40 * Math.cos(angle), origin.y - 40 * Math.sin(angle));
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ ...point, id: 1 }],
+      });
+      await page.clock.runFor(SWEEP_STEP_MS);
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(app(page)).toHaveAttribute('data-screen', 'verdict');
+    await expect(app(page)).toHaveAttribute('data-touch-controls', 'menu');
+
+    // After the read-out, ✓ signs the default initials letter by letter.
+    await page.clock.runFor(1500);
+    for (let letter = 0; letter < 3; letter++) {
+      await tapGame(page, 576, 280);
+      await page.clock.runFor(100);
+    }
+    const { entries } = await readHighScores(page);
+    expect(entries?.map(({ initials }) => initials)).toEqual(['AAA']);
+    expect(entries?.[0]?.score).toBeGreaterThan(0);
+
+    await page.clock.runFor(600);
+    await tapGame(page, 320, 180);
+    await page.clock.runFor(100);
+    await expect(app(page)).toHaveAttribute('data-screen', 'title');
     expect(errors).toEqual([]);
   });
 });

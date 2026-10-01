@@ -212,7 +212,8 @@ from the gameplay `rng`, and gameplay never reads them — tuning effects can't 
   culled when their life ends or they leave the screen; debris settles on the ground, rests, then blinks out.
 - Screen shake is trauma-based: events add trauma (0..1), it decays linearly, and the view's
   `effects.shake` is `maxOffset × scale × trauma² × noise(t)` rounded to whole pixels
-  (`tuning.effects.shake.scale = 0` disables it).
+  (`tuning.effects.shake.scale = 0` disables it). The renderer clamps it to the Arena's bleed
+  (`ARENA_BLEED`, 12 px; see "Seam 2"), so the screen edge never uncovers the letterbox.
 - All numbers live in `src/core/tuning/effects.ts`; per-Enemy `explosion` and `debrisPieces` live in its
   Enemy tuning.
 
@@ -249,11 +250,9 @@ platforms, spawn and altitude bands) was multiplied by 4/3 and rounded to the ne
 jump speed were rounded so a full jump stays 4/3 as high (about 78 px), and the platform
 reachability tests still hold. The catalog holds the resulting literal numbers, not a multiplier.
 
-**Interim art (until the art pass redraws the sprites).** The icons and the other code-drawn
-sprites keep their old pixel size, so they look small inside their larger 640×360 hitboxes.
-Gameplay is unchanged; only the art is small. The Enemies, projectiles and debris are redrawn
-through the pipeline (#27): each Enemy's sprite fills its real hitbox, placed by its hitbox offset
-from the exported art layout (`placeBody`). Rexi is redrawn (#26): 64 px tall, with a 22×60 hitbox
+**Sprite sizes.** Every sprite is drawn at 640×360 scale (#26–#29). The Enemies, projectiles and
+debris are pipeline art (#27): each Enemy's sprite fills its real hitbox, placed by its hitbox
+offset from the exported art layout (`placeBody`). The icons are 16×16 (#29). Rexi is redrawn (#26): 64 px tall, with a 22×60 hitbox
 (`tuning.rexi`) whose shoulder matches the drawn arm and whose `muzzleReach` (38 px) is the
 Mazo Automático's tip. Shots of every Weapon leave from there; the shorter held looks (the
 dumbbell, the book) draw their muzzle flash at their own tip (`rexiArt.arms[...].reach`).
@@ -263,7 +262,8 @@ dumbbell, the book) draw their muzzle flash at their own tip (`rexiArt.arms[...]
 `createRenderer(bitmapFactory, { titleIllustration? }).render(surface, view)` draws one full frame.
 It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; menu screens live in
 `src/render/screens/` (shared panel, keycap, outlined-text and dimmer helpers in `ui.ts`). The Title draws
-`titleIllustration` (`public/title.png`, decoded by the platform) when given, else a code-drawn backdrop,
+`titleIllustration` (`public/title.png`, decoded by the platform; snapped to the master palette by
+`scripts/art/characters/rexi_refs.py title`) when given, else a code-drawn backdrop,
 then, in the left column over the illustration's empty sky, the logo, the top 10 (`high-scores.ts`, a
 solid dark panel), the start prompt on a dark plate and the outlined credits line; Rexi stays uncovered on
 the right. `verdict.ts` draws the defeat beat (the frozen Run dims
@@ -282,10 +282,13 @@ uses the pipeline only where generated art helps (icons, the court record).
 - **Sprites are palette-indexed data** (ADR 0002): `defineSprite(palette, rows)` is a palette-indexed
   pixel grid; `decodeSprite` (`sprite-data.ts`) turns the art pipeline's compact run-length data into
   the same `SpriteDef`. The `SpriteBank` rasterizes each sprite once on first use through the
-  platform's `BitmapFactory`. Existing sprites are still drawn in code (they predate ADR 0002) until
-  the art pass replaces them with exported pipeline art.
+  platform's `BitmapFactory`. Characters, Enemies, projectiles, icons, the Arena and the court
+  record are exported pipeline art; frames, plates, Crates, the parachute, stamps, the crosshair
+  and the touch controls are small hand-authored palette data, and effects are code.
 - Layers are listed back to front in `src/render/renderer.ts`: `WORLD_LAYERS` are drawn offset by the
-  screen shake, `SCREEN_LAYERS` stay fixed: the HUD (`src/render/hud/`), then the Dialogue Box
+  screen shake (clamped to `ARENA_BLEED`: the Arena's four layers extend 12 px past every screen
+  edge, mirrored about it, so a shaken frame shows more Arena instead of the letterbox),
+  `SCREEN_LAYERS` stay fixed: the HUD (`src/render/hud/`), then the Dialogue Box
   (`src/render/dialogue/`), then the crosshair. When paused, the world layers and the frozen Dialogue
   Box are drawn without HUD and crosshair, dimmed with a checkerboard, then the HUD and the pause menu
   go on top.
@@ -340,12 +343,23 @@ from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of i
 - **Checking**: `src/render/palette-audit.ts` finds off-palette colors in rendered pixels
   (`findOffPaletteColors`) or sprite definitions (`findOffPaletteSpriteColors`), each with its
   nearest palette color. Tests use `expectOnPalette` and `loadGoldens` from `tests/support/palette.ts`.
-  The check over every golden (`tests/render/palette.test.ts`) is **skipped**: the art predates the
-  palette. The art pass remaps all sprites and drawers, then enables it. Until then, the UI layers
-  redrawn in #29 are checked on their own: `tests/render/ui-palette.test.ts` draws the HUD, Crates,
-  Dialogue Box frame, touch controls, pause menu and Veredicto alone over a palette color, and
-  `palette.test.ts` checks the goldens drawn only by the UI layer (Cómo jugar, the rotate prompt,
-  the code-drawn Title backdrop) plus the icon and court record sprites.
+  `tests/render/palette.test.ts` checks every exported pipeline sprite module and **every golden
+  frame** (#30), the Title over its illustration included: an off-palette pixel anywhere fails with
+  a report naming the color, where it first appears and its nearest palette color.
+  `tests/render/ui-palette.test.ts` also draws the HUD, Crates, Dialogue Box frame, touch controls,
+  pause menu and Veredicto alone over a palette color, and `tests/render/arena.test.ts` checks the
+  Arena's sprites and rectangles.
+- **Consistency pass (#30)**: every asset was reviewed side by side in the goldens and on a
+  sheet of every Enemy shot drawn over each part of the Arena (sky bands, marble courthouse,
+  night skyline, glass tower, Boissons, plaza). Outline weight is 1 px black everywhere (Rexi,
+  Enemies, projectiles, icons, ledges), the key light comes from the upper left on every
+  sprite against the backlit sunset, and the saturated sunset scene matches the saturated
+  characters, so none of those needed changes. Readability did: the Caminadora's bullet
+  tracer (thin dotted pixels lost over the orange sunset band) is now an unbroken 2 px
+  white-hot streak, the Banca's rocket (a dark body lost over the skyline and the blue glass)
+  gets a bigger exhaust with a white-hot core, and the crosshair (light strokes lost over the
+  marble) is now fully outlined. Rexi, the Enemies, papers and drawers read everywhere thanks
+  to their outlines. The title illustration was snapped to the palette (`rexi_refs.py title`).
 - **A new color**: first try the nearest ramp step (`nearestPaletteColor` suggests one). If no
   step works, ask the owner, with a mock-up showing why. An accepted color gets a semantic name,
   goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
@@ -542,6 +556,53 @@ effects are code, like the art; the only audio file is the music loop, `public/m
   `unavailable`), `#app[data-music]` (`on`/`muted`) and the soundtrack to `#app[data-music-track]`
   (`loading` → `playing`, or `failed`) for the smoke tests.
 
+## Balance
+
+Every balance number is in the tuning catalog (`src/core/tuning/`), so balancing is a data
+change. `npm run balance` (`scripts/balance/`) measures it with **simulated play**: a scripted
+player (`bot.ts`) plays real Runs through the public interface (input frames in, views out), from
+the Title to the Veredicto, on fixed seeds, and `stats.ts` summarizes them. The bot plays like a
+person with limits. It sees Enemy shots `reactionTicks` late, notices each one only with chance
+`awareness`, decides every `decisionTicks` by simulating six move/jump plans against the shots'
+predicted paths, aims with a wandering error and a partial lead, and may pick Weapons for the
+situation. Three profiles set those limits: `casual`, `decent` (the one the balance targets) and
+`expert`. Same seeds + same tuning = same numbers. `--tuning` tries overrides before you edit
+the catalog, and `tests/scripts/balance.test.ts` keeps the harness honest.
+
+**Target:** the median Run lasts about four minutes for the decent player, with skill showing
+(casual about three minutes, expert five or more). The first minute should be a learning
+stretch, and the difficulty should climb steadily rather than hit a cliff.
+
+**Balance pass (#30)**, 100 seeds per profile, median survival (quartiles) and median score:
+
+| Profile | Before                   | After                    |
+| ------- | ------------------------ | ------------------------ |
+| casual  | 2:37 (2:28–2:51), 7 250  | 3:07 (2:45–3:23), 8 700  |
+| decent  | 3:00 (2:43–3:15), 10 150 | 3:50 (3:31–4:11), 14 750 |
+| expert  | 3:50 (3:23–4:06), 14 600 | 5:08 (4:39–5:40), 21 850 |
+
+- **Banca Artillada** (`tuning.enemies`): before, its rockets dealt 60–65 % of all damage the
+  decent and expert players took. Most Runs ended within a minute of its arrival at about 2:00,
+  so skill barely mattered (casual 2:37, expert 3:50). The rockets homed until about 0.25 s
+  before impact, too late to outrun at Rexi's 160 px/s. Now they home for 0.5 s (was 1), so the
+  last ~0.8 s of flight is straight and dodgeable. Volleys hold 3 rockets (was 4) every 6 s
+  (was 5), and the first volley waits 4 s (was 3), so its arrival reads as a set piece. Rockets
+  are now 35–40 % of the damage, in line with papers and bullets.
+- **Ramp** (`tuning.director`): the middle stages raise the fire rate more gently (1.05, 1.1,
+  1.2, 1.3 at 1, 2, 3 and 4 minutes; was 1.1, 1.2, 1.3, 1.45), and the spawn interval eases from
+  2.6 to 2.4, 2.2 and 2 s. The first minute is unchanged: an idle player still falls in 40–55 s.
+  `growth` is unchanged, so every Run still ends.
+- **Receso** (`tuning.crates.recesoBoost`): ×3 weight below 50 % health (was ×2 below 40 %),
+  so collecting Crates while hurt pays off.
+- **Mancuernas** (`tuning.weapons`): measured in play it dealt about 4 damage a throw and less
+  damage per second than the Mazo Automático (5.3 against 6.6), which made picking it up a
+  downgrade. It now throws every 0.75 s (was 0.94), with splash 6 over 44 px (was 4 over 37),
+  and 18/36 ammo (was 15/30) to keep about 13 s of fire.
+- **Unchanged, by measurement:** the other Weapons out-damage the Mazo while held (11–19
+  damage/s against 6.6) and last 7–15 s each. Crate weights give 62 % Weapons, 38 % Power-ups,
+  and about 40 % of drops are picked up. Quips trigger about 3.3–3.4 times a minute (chance 0.25,
+  cooldown 4 s), and Hit-stop (0.5 s, the spec's value) takes about 3 % of Run time.
+
 ## How to add…
 
 ### An Enemy
@@ -673,6 +734,11 @@ await expectGolden('my-scene', renderView(game.view));
   views from `drive()`); the audio engine runs against a fake `AudioContext`.
 - Touch goldens (`tests/golden/touch.golden.test.ts`) feed the controller's frames into the core and render
   the view with its overlay, as the shell does.
+- Smoke tests (`e2e/`) run the production build in Chromium, on desktop and on an emulated phone.
+  Each one plays a whole Run, from the Title to the Veredicto, signs it and returns to the Title.
+  `page.clock` fakes `requestAnimationFrame`, so a minute of play runs as fast as it renders, and
+  `?seed=1` fixes the Run. The phone test drags the aim stick with real touch input through CDP
+  (`Input.dispatchTouchEvent`).
 
 ## Commands
 
@@ -684,6 +750,7 @@ await expectGolden('my-scene', renderView(game.view));
 | `npm test`              | Vitest: unit, core and golden tests                               |
 | `npm run golden:update` | Re-render and overwrite golden PNGs                               |
 | `npm run share-preview` | Re-render the favicons, app icons and link preview in `public/`   |
+| `npm run balance`       | Simulated play over seeded Runs (see "Balance")                   |
 | `npm run art -- <cmd>`  | The art pipeline (`scripts/art/README.md`; needs `uv`)            |
 | `npm run art:test`      | The art pipeline's Python tests                                   |
 | `npm run build`         | Production build to `dist/`                                       |

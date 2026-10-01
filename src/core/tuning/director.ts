@@ -69,13 +69,15 @@ export interface DirectorTuning {
 export const directorTuning = {
   firstSpawnDelay: 1,
   // Maletín-cóptero only for the first minute (max 3 on screen), then the cap, pace and fire
-  // rate climb; later Enemy kinds join through the roster below.
+  // rate climb; later Enemy kinds join through the roster below. Balance pass (#30): the
+  // middle stages climb more gently (fire rate 1.05 → 1.3 rather than 1.1 → 1.45), so the
+  // two- to four-minute stretch is a climb and not a cliff; `growth` still ends every Run.
   stages: [
     { from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 1 },
-    { from: 60, onScreenCap: 4, spawnInterval: 2.6, fireRate: 1.1 },
-    { from: 120, onScreenCap: 5, spawnInterval: 2.3, fireRate: 1.2 },
-    { from: 180, onScreenCap: 6, spawnInterval: 2, fireRate: 1.3 },
-    { from: 240, onScreenCap: 7, spawnInterval: 2, fireRate: 1.45 },
+    { from: 60, onScreenCap: 4, spawnInterval: 2.6, fireRate: 1.05 },
+    { from: 120, onScreenCap: 5, spawnInterval: 2.4, fireRate: 1.1 },
+    { from: 180, onScreenCap: 6, spawnInterval: 2.2, fireRate: 1.2 },
+    { from: 240, onScreenCap: 7, spawnInterval: 2, fireRate: 1.3 },
   ],
   growth: {
     every: 60,

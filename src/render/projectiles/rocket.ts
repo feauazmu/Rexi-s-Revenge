@@ -6,7 +6,8 @@ import type { Color } from '../surface';
 import { rocketTurns } from './art';
 import { drawAimed } from './turned';
 
-const FLAME: readonly Color[] = [P.light, P.sunYellow, P.skyOrange];
+/** The exhaust's outer tongue flickers through these; its core is always white-hot. */
+const FLAME: readonly Color[] = [P.sunYellow, P.skyPeach, P.skyOrange];
 const SMOKE: readonly Color[] = [P.grey3, P.grey2, P.grey1];
 
 /** How far behind its centre the rocket's tail is, px. */
@@ -36,10 +37,13 @@ export function drawRocket(dc: DrawContext, projectile: ProjectileView): void {
       SMOKE[i - 1] ?? P.grey2,
     );
   }
-  // Exhaust flame, flickering between a long and a short tongue.
+  // Exhaust flame, flickering between a long and a short tongue around a white-hot core: the
+  // brightest point of the rocket, so it reads over the dark skyline and the blue glass too
+  // (consistency pass, #30).
   const long = projectile.age % 4 < 2;
   const flame = FLAME[projectile.age % FLAME.length] ?? P.sunYellow;
-  fillDisc(surface, cx + back.x * TAIL, cy + back.y * TAIL, long ? 2 : 1, flame);
+  fillDisc(surface, cx + back.x * (TAIL + 1), cy + back.y * (TAIL + 1), long ? 3 : 2, flame);
+  fillDisc(surface, cx + back.x * TAIL, cy + back.y * TAIL, 1, P.light);
 
   drawAimed(dc, rocketTurns, projectile.vx, projectile.vy, cx, cy);
 }

@@ -23,8 +23,10 @@ title-hint
 title-source
        reference/title-source.png: ref_title_v8 (the hint cleaned up into a sleeve) with the arm
        holding the gavel pasted back from ref_title_v4, because the edit inked that arm too.
-title  public/title.png: reference/title-source.png centre-cropped to 16:9 and downscaled to
-       640x360 with Lanczos smoothing (the title illustration is the one decoded image, ADR 0002).
+title  public/title.png: reference/title-source.png centre-cropped to 16:9, resampled to 640x360
+       by cell-centre medians and snapped to the master palette, with the sky flattened into one
+       colour per row (the title illustration is the one decoded image, ADR 0002; #30 put it on
+       the palette so the golden palette check covers the Title too).
 """
 import os
 import sys
@@ -128,12 +130,43 @@ def title_source(edit=os.path.join(RAW, "ref_title_v8.png"), clean=os.path.join(
     return path
 
 
+SKY_BOTTOM = 226          # title rows above the sun's top and the skyline: open sky only
+SKY_MATCH = 14.0          # CIELAB distance from a row's sky colour that still counts as sky
+SKY_SAMPLE = (0, 300)     # columns of pure sky (left of Rexi, the logo goes there) for each row
+
+
 def title(src=os.path.join(REF, "title-source.png"), out=os.path.join(ROOT, "public", "title.png")):
-    im = Image.open(src).convert("RGB")
-    w, h = im.size
+    """Centre-crop to 16:9, take each 640x360 cell's centre median (no smoothing across cell
+    edges, so outlines stay hard) and snap it to the master palette in CIELAB. The sky is then
+    flattened into one palette colour per row: the source's soft gradient noise would otherwise
+    snap into speckles between neighbouring ramp steps. A sky cell is one that is close to its
+    row's sky colour and connected to the open sky, so Rexi, the gavel and the Enemies keep
+    their pixels."""
+    from pixelize import label, snap, to_lab
+
+    a = np.asarray(Image.open(src).convert("RGB")).astype(float)
+    h, w = a.shape[:2]
     cw, ch = (w, round(w * 9 / 16)) if w * 9 <= h * 16 else (round(h * 16 / 9), h)
-    box = ((w - cw) // 2, (h - ch) // 2, (w - cw) // 2 + cw, (h - ch) // 2 + ch)
-    im.crop(box).resize((640, 360), Image.LANCZOS).convert("RGBA").save(out, optimize=True)
+    a = a[(h - ch) // 2:(h - ch) // 2 + ch, (w - cw) // 2:(w - cw) // 2 + cw]
+    s, r = cw / 640, cw / 640 * 0.3
+    grid = np.zeros((360, 640, 4), np.uint8)
+    grid[..., 3] = 255
+    for j in range(360):
+        cy = (j + 0.5) * s
+        for i in range(640):
+            cx = (i + 0.5) * s
+            cell = a[int(cy - r):int(cy + r) + 1, int(cx - r):int(cx + r) + 1]
+            grid[j, i, :3] = np.median(cell.reshape(-1, 3), axis=0)
+    rows = np.median(grid[:SKY_BOTTOM, SKY_SAMPLE[0]:SKY_SAMPLE[1], :3], axis=1)   # (rows, 3)
+    near = np.sqrt(((to_lab(grid[:SKY_BOTTOM, :, :3].astype(float))
+                     - to_lab(rows)[:, None, :]) ** 2).sum(-1)) < SKY_MATCH
+    lab, _ = label(near, conn8=False)
+    open_sky = set(np.unique(lab[:, SKY_SAMPLE[0]:SKY_SAMPLE[1]])) - {0}
+    sky = np.isin(lab, list(open_sky))
+    flat = grid[:SKY_BOTTOM].copy()
+    flat[..., :3] = np.repeat(rows[:, None, :], 640, axis=1)
+    grid[:SKY_BOTTOM][sky] = flat[sky]
+    Image.fromarray(snap(grid)).save(out, optimize=True)
     return out
 
 

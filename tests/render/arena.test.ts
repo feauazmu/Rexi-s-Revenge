@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { RunView } from '../../src/core';
+import { defaultTuning, SCREEN_HEIGHT, SCREEN_WIDTH, type RunView } from '../../src/core';
 import { sprites as art } from '../../src/render/art/generated/arena';
 import type { DrawContext } from '../../src/render/draw-context';
-import { drawArena, ledgeSprite, neonState } from '../../src/render/layers/arena';
+import { ARENA_BLEED, drawArena, ledgeSprite, neonState } from '../../src/render/layers/arena';
 import { arenaSigns } from '../../src/render/layers/arena-signs';
 import { findOffPaletteSpriteColors, isPaletteColor } from '../../src/render/palette-audit';
 import type { SpriteDef } from '../../src/render/sprite';
 import type { Bitmap } from '../../src/render/surface';
-import { drive } from '../support/driver';
+import { drive, eventsOf } from '../support/driver';
+import { holdStill } from '../support/fixtures';
+import { renderView } from '../support/render-node';
+import type { RgbaImage } from '../golden/golden';
 
 type Op =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; color: string }
@@ -83,4 +86,77 @@ describe('Arena', () => {
       }
     }
   });
+
+  it('bleeds past every screen edge by more than the default screen shake can move it', () => {
+    const { maxOffset, scale } = defaultTuning.effects.shake;
+    expect(maxOffset * scale).toBeLessThanOrEqual(ARENA_BLEED);
+    const layers = record(runAt(1)).filter(
+      (op) => op.kind === 'bitmap' && op.sprite.width > SCREEN_WIDTH,
+    );
+    expect(layers).toHaveLength(4);
+    for (const op of layers) {
+      expect(op).toMatchObject({ x: -ARENA_BLEED, y: -ARENA_BLEED });
+      if (op.kind !== 'bitmap') continue;
+      expect([op.sprite.width, op.sprite.height]).toEqual([
+        SCREEN_WIDTH + 2 * ARENA_BLEED,
+        SCREEN_HEIGHT + 2 * ARENA_BLEED,
+      ]);
+    }
+  });
+
+  it('never shows the letterbox at the edges of a shaken frame, even past the bleed', () => {
+    // Full trauma and four times the shake, so the offset passes the bleed and the renderer
+    // has to clamp it.
+    const game = drive({
+      seed: 3,
+      overrides: {
+        spawns: [{ kind: 'maletin-coptero', x: 320, y: 120 }],
+        tuning: holdStill({
+          effects: { shake: { scale: 4 }, explosions: { large: { trauma: 1 } } },
+          weapons: { 'mazo-automatico': { damage: 999 } },
+          enemies: { 'maletin-coptero': { explosion: 'large' } },
+        }),
+      },
+    });
+    // A frame shaken past the bleed on each axis; the strip the world moved away from would
+    // be letterbox black without the bleed.
+    const frames: { x?: RgbaImage; y?: RgbaImage } = {};
+    const shakes = { x: 0, y: 0 };
+    for (let t = 0; t < 240 && !(frames.x && frames.y); t++) {
+      game.ticks(1, {
+        aim: { x: 335, y: 132 },
+        fire: eventsOf(game.log, 'enemy-destroyed').length === 0,
+      });
+      const shake = game.view.run?.effects.shake ?? { x: 0, y: 0 };
+      for (const axis of ['x', 'y'] as const) {
+        if (!frames[axis] && Math.abs(shake[axis]) > ARENA_BLEED) {
+          frames[axis] = renderView(game.view);
+          shakes[axis] = shake[axis];
+        }
+      }
+    }
+    if (!frames.x || !frames.y) throw new Error('the shake never passed the bleed on both axes');
+    const B = ARENA_BLEED;
+    const columns = shakes.x > 0 ? [0, B] : [SCREEN_WIDTH - B, SCREEN_WIDTH];
+    const rows = shakes.y > 0 ? [0, B] : [SCREEN_HEIGHT - B, SCREEN_HEIGHT];
+    // Rows clear of the HUD corners and the Dialogue Box; columns clear of the HUD corners.
+    expect(blackShare(frames.x, columns, [40, SCREEN_HEIGHT - 60])).toBeLessThan(0.2);
+    expect(blackShare(frames.y, [160, SCREEN_WIDTH - 160], rows)).toBeLessThan(0.2);
+  });
 });
+
+/** Share of pure-black pixels in the box [x0, x1) × [y0, y1) of `image`. */
+function blackShare(
+  image: RgbaImage,
+  [x0 = 0, x1 = 0]: number[],
+  [y0 = 0, y1 = 0]: number[],
+): number {
+  let black = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const i = (y * image.width + x) * 4;
+      if (image.data[i] === 0 && image.data[i + 1] === 0 && image.data[i + 2] === 0) black++;
+    }
+  }
+  return black / ((x1 - x0) * (y1 - y0));
+}

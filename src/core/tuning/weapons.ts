@@ -157,11 +157,14 @@ export const weaponsTuning = {
     maxAmmo: 12,
   },
   // After HA3's Grenade Launcher (75 + 35 splash against a 10-damage Pistol), on our scale.
+  // Balance pass (#30): against flying Enemies the lob landed about 4 damage a throw, less
+  // damage per second than the Mazo Automático, so picking it up was a downgrade. Quicker
+  // throws and a wider, harder splash make near misses count; ammo grows to keep ~13 s of fire.
   mancuernas: {
-    fireInterval: 0.9375,
+    fireInterval: 0.75,
     damage: 8,
-    splashDamage: 4,
-    splashRadius: 37,
+    splashDamage: 6,
+    splashRadius: 44,
     splashEdge: 0.5,
     explosion: 'small',
     launchSpeed: 400,
@@ -170,8 +173,8 @@ export const weaponsTuning = {
     restitution: 0.55,
     fuse: 2.5,
     projectileSize: 9,
-    pickupAmmo: 15,
-    maxAmmo: 30,
+    pickupAmmo: 18,
+    maxAmmo: 36,
   },
   // After HA3's Rocket Launcher (100 + 35 splash), with the RPG's slow start.
   'codigo-penal': {

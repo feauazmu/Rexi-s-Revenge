@@ -35,5 +35,6 @@ Gameplay art is generated pixel art made through the committed pipeline in `scri
 - The workflow, commands and manifest format are in [`scripts/art/README.md`](../../scripts/art/README.md). The version C prototype stays reproducible as a second art root (`reference/manu-pipeline/`).
 - The pipeline needs Python with `uv` (Pillow, NumPy) on the artist's machine. The game build and CI do not, because they consume only the exported TypeScript.
 - Until each area is redrawn, the existing code-drawn sprites remain. They predate this ADR and the 56-colour palette.
+  - Since #30 every area is redrawn: the golden palette check (rule 11) runs over every golden, and the title illustration is snapped to the palette too.
   - Rexi is pipeline art since #26, wearing the sleeve on his right arm in every facing (facing right it is the near arm, and he aims with the far arm). The reference images `reference/rexi-character-sheet.png` and `reference/title-source.png` (and `public/title.png`) were regenerated with the right-arm sleeve in #26; the earlier versions are kept as `-v1` and `-v2`.
 - A hand pass in a pixel editor remains allowed on top of the pipeline's output. It is recorded as pixel-text patches or committed sprite edits, never as untracked changes.

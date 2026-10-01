@@ -9,8 +9,13 @@ import {
   nearestPaletteColor,
 } from '../../src/render/palette-audit';
 import { defineSprite } from '../../src/render/sprite';
+import { sprites as arena } from '../../src/render/art/generated/arena';
+import { sprites as enemies } from '../../src/render/art/generated/enemies';
 import { sprites as icons } from '../../src/render/art/generated/icons';
+import { sprites as projectiles } from '../../src/render/art/generated/projectiles';
 import { sprites as record } from '../../src/render/art/generated/record';
+import { sprites as rexiPortrait } from '../../src/render/art/generated/rexi-portrait';
+import { sprites as rexi } from '../../src/render/art/generated/rexi';
 import { expectOnPalette, loadGoldens, SWATCH_LABEL_WIDTH } from '../support/palette';
 
 function luma(color: string): number {
@@ -74,28 +79,20 @@ describe('palette audit', () => {
     expect(nearestPaletteColor('#fefefe')).toBe(masterPalette.white);
   });
 
-  it('UI art redrawn in the art pass (#29) uses only master-palette colors', async () => {
-    // Pipeline icons and court record ornaments.
-    expect(findOffPaletteSpriteColors(Object.values(icons))).toEqual([]);
-    expect(findOffPaletteSpriteColors(Object.values(record))).toEqual([]);
-    // Screens drawn entirely by the UI layer (the others still show older art).
-    const uiOnly = new Set([
-      'how-to-play-desktop',
-      'how-to-play-touch',
-      'rotate-prompt',
-      'rotate-prompt-sideways',
-      'title-backdrop',
-    ]);
-    const goldens = (await loadGoldens()).filter(({ name }) => uiOnly.has(name));
-    expect(goldens.map(({ name }) => name).sort()).toEqual([...uiOnly].sort());
-    for (const { name, image } of goldens) expectOnPalette(name, image);
+  it('every exported pipeline sprite uses only master-palette colors', () => {
+    const modules = { arena, enemies, icons, projectiles, record, rexiPortrait, rexi };
+    for (const [name, sprites] of Object.entries(modules)) {
+      expect(findOffPaletteSpriteColors(Object.values(sprites)), name).toEqual([]);
+    }
   });
 
-  // TODO(art pass, #24): the existing art predates the master palette, so this is skipped.
-  // The art pass remaps every sprite and drawer to `masterPalette` and then enables it
-  // (`it.skip` → `it`): any off-palette color in a golden frame then fails with a report
-  // naming the color, where it first appears and its nearest palette color.
-  it.skip('every golden frame uses only master-palette colors', async () => {
-    for (const { name, image } of await loadGoldens()) expectOnPalette(name, image);
+  // What reaches the screen: every golden frame, including the Title over the decoded
+  // illustration (`public/title.png` is snapped to the palette by `rexi_refs.py title`). Code
+  // drawers name `masterPalette` colors, so an off-palette pixel here is a regression: the
+  // report names the color, where it first appears and its nearest palette color.
+  it('every golden frame uses only master-palette colors', async () => {
+    const goldens = await loadGoldens();
+    expect(goldens.length).toBeGreaterThan(0);
+    for (const { name, image } of goldens) expectOnPalette(name, image);
   });
 });

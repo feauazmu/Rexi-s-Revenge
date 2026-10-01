@@ -7,8 +7,8 @@ import type { Color } from './surface';
  * (e.g. `coral` is both the gym-red highlight and a sunset band), so pick by ramp
  * from {@link paletteRamps}, not by eyeballing hex values.
  *
- * The existing art is not remapped yet: the art pass will move every sprite and drawer onto
- * these names and enable the palette test in tests/render/palette.test.ts.
+ * Every sprite, drawer and the title illustration use only these colors;
+ * tests/render/palette.test.ts checks every exported sprite and every golden frame.
  */
 export const masterPalette = {
   // Outline and robe blacks (purple-blue sheen; robeMid is the fold step between robe and robeSheen).

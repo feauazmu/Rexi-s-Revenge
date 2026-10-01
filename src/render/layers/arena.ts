@@ -14,6 +14,9 @@ import { arenaSigns, type NeonState } from './arena-signs';
  * sky → drifting clouds → far skyline → buildings → plaza → lettering, neon and billboard
  * bulbs → one-way platforms.
  *
+ * The four layers bleed {@link ARENA_BLEED} px past every screen edge, so the screen shake
+ * (which moves the world layers) never uncovers the letterbox behind them.
+ *
  * Every animation phase comes from the Run tick, so the scene is deterministic and freezes
  * while paused. The HUD band (top) is flat dark sky and the Dialogue Box band (bottom) is flat
  * pavement, so both stay calm.
@@ -24,12 +27,12 @@ export function drawArena(dc: DrawContext, run: RunView): void {
     surface.drawBitmap(sprites.get(sprite), x, y);
   };
 
-  draw(art['layers/sky'], 0, 0);
+  draw(bleedLayer('layers/sky'), -ARENA_BLEED, -ARENA_BLEED);
   const t = run.tick / TICKS_PER_SECOND;
   for (const cloud of CLOUDS) draw(cloud.sprite, cloudX(cloud, t), cloud.y);
-  draw(art['layers/far'], 0, 0);
-  draw(art['layers/buildings'], 0, 0);
-  draw(art['layers/plaza'], 0, 0);
+  draw(bleedLayer('layers/far'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/buildings'), -ARENA_BLEED, -ARENA_BLEED);
+  draw(bleedLayer('layers/plaza'), -ARENA_BLEED, -ARENA_BLEED);
 
   const signs = arenaSigns();
   const neon = signs.neon[neonState(run.tick)];
@@ -37,6 +40,44 @@ export function drawArena(dc: DrawContext, run: RunView): void {
   drawBillboardBulbs(surface, run.tick);
 
   for (const { x, y, w } of run.arena.platforms) draw(ledgeSprite(w), x, y - 1);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Bleed
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * How far the Arena's layers extend past each screen edge, px. The renderer clamps the screen
+ * shake to it, and a test checks the default shake tuning fits inside it.
+ */
+export const ARENA_BLEED = 12;
+
+type ArenaLayer = 'layers/sky' | 'layers/far' | 'layers/buildings' | 'layers/plaza';
+const bleedCache = new Map<ArenaLayer, SpriteDef>();
+
+/**
+ * A 640×360 layer grown by {@link ARENA_BLEED} on every side, mirrored about its edges: the
+ * flat sky band and the pavement continue, and the buildings cut by the screen edge carry on
+ * with their own windows and columns for the few pixels a shake reveals.
+ */
+function bleedLayer(name: ArenaLayer): SpriteDef {
+  let sprite = bleedCache.get(name);
+  if (!sprite) {
+    const { palette, rows, width, height } = art[name];
+    const mirror = (i: number, n: number) => (i < 0 ? -1 - i : i >= n ? 2 * n - 1 - i : i);
+    const span = (n: number) =>
+      Array.from({ length: n + 2 * ARENA_BLEED }, (_, i) => i - ARENA_BLEED);
+    const columns = span(width).map((x) => mirror(x, width));
+    sprite = defineSprite(
+      palette,
+      span(height).map((y) => {
+        const row = rows[mirror(y, height)] ?? '';
+        return columns.map((x) => row[x]).join('');
+      }),
+    );
+    bleedCache.set(name, sprite);
+  }
+  return sprite;
 }
 
 // ---------------------------------------------------------------------------------------------
