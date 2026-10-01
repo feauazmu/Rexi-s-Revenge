@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { DIALOGUE_TEXT_WIDTH, fonts } from '../../src/render';
 import { drive, eventsOf, runOf, type Driver } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
@@ -16,7 +17,7 @@ function talkingGame(seed: number): Driver {
     seed,
     overrides: {
       spawns: [{ kind: 'maletin-coptero', x: 300, y: 150 }],
-      tuning: { quips: { chance: 1 }, enemies: { 'maletin-coptero': { health: 1 } } },
+      tuning: holdStill({ quips: { chance: 1 }, enemies: { 'maletin-coptero': { health: 1 } } }),
     },
   });
   for (let i = 0; i < 120; i++) {

@@ -7,12 +7,14 @@ import type { Rng } from '../rng';
 import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
 import type { RunContext } from './context';
+import { createDirector } from './director';
 import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effects';
 import { firstCrateDrop, stepCrates, viewCrate } from './crates/system';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, shoulderOf, stepRexi } from './rexi';
+import { advanceRampClock } from './ramp';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
 import { viewInventory } from './weapons/inventory';
@@ -45,6 +47,7 @@ export interface Run {
 export function createRun(deps: RunDeps): Run {
   const state: RunState = {
     tick: 0,
+    rampTicks: 0,
     rexi: createRexi(deps.tuning),
     enemies: [],
     projectiles: [],
@@ -54,6 +57,7 @@ export function createRun(deps: RunDeps): Run {
     ended: false,
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
     nextCrateDrop: deps.spawns === null ? firstCrateDrop(deps.tuning) : null,
+    director: createDirector(deps.tuning),
   };
   let events: GameEvent[] = [];
   const ctx: RunContext = {
@@ -73,25 +77,33 @@ export function createRun(deps: RunDeps): Run {
   });
   const frozenInput = createFrozenInputBuffer();
 
+  /**
+   * One tick of Run simulation: the single notion of "the Run is advancing". Anything that
+   * freezes the Run (pause, Hit-stop) skips this whole call, so effects, Crate timers, the
+   * Director and the ramp clock all stay where they were.
+   */
+  const simulate = (input: InputFrame): void => {
+    stepEffects(ctx);
+    stepSpawning(ctx);
+    stepRexi(ctx, input);
+    stepCrates(ctx);
+    stepWeapons(ctx, input);
+    stepEnemies(ctx);
+    stepProjectiles(ctx);
+    state.tick += 1;
+    advanceRampClock(state);
+  };
+
   return {
     step(input) {
       events = [];
       if (state.ended) return events;
-      // The Dialogue Box runs on every tick; the simulation (effects and Crate timers included)
-      // sits out a Hit-stop.
+      // The Dialogue Box runs on every tick; the simulation sits out a Hit-stop.
       if (quips.advance()) {
         frozenInput.hold(input);
         return events;
       }
-      const live = frozenInput.release(input);
-      stepEffects(ctx);
-      stepSpawning(ctx);
-      stepRexi(ctx, live);
-      stepCrates(ctx);
-      stepWeapons(ctx, live);
-      stepEnemies(ctx);
-      stepProjectiles(ctx);
-      state.tick += 1;
+      simulate(frozenInput.release(input));
       if (state.rexi.health <= 0) {
         // No Quip (and no Hit-stop) for kills in the fatal tick: the Run is over.
         endRun(ctx);
@@ -163,6 +175,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector)
   const { rexi } = state;
   return {
     tick: state.tick,
+    rampTicks: state.rampTicks,
     arena: {
       width: SCREEN_WIDTH,
       height: SCREEN_HEIGHT,

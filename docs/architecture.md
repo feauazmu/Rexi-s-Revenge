@@ -45,7 +45,7 @@ game.pause();                          // shell: tab hidden / focus lost (no-op 
 - **Determinism**: same seed + same input frames ⇒ identical event log and view. All randomness goes through
   the seeded `Rng` in `RunContext`; entity ids come from a counter.
 - **Overrides**: `tuning` is deep-merged over `defaultTuning` (unknown keys throw). `spawns` replaces
-  automatic spawning of Enemies and Crates entirely (empty list = empty Arena) — this is how tests stage
+  the spawn Director and automatic Crate drops entirely (empty list = empty Arena) — this is how tests stage
   scenarios. A spawn is an Enemy (`{ kind: 'maletin-coptero', x, y }`) or a Crate
   (`{ kind: 'crate', contents, x, y? }`, `y` defaulting to just above the screen).
 - **Storage**: `StoragePort` (string get/set). The core owns keys and formats (`src/core/preferences.ts`:
@@ -68,8 +68,9 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
   `screens` record (the typecheck fails until you do).
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
-effects → spawning → Rexi → Crates → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
-(`tuning`, `rng`, `state`, `emit`, `nextId`). Crates run before Weapons, so a Weapon picked up this tick
+effects → spawning → Rexi → Crates → Weapons → Enemies → projectiles, then the Run tick and the ramp
+clock advance. That sequence is the Run's `simulate` step; a Hit-stop (checked first) or pause skips it
+whole. Subsystems share a `RunContext` (`tuning`, `rng`, `state`, `emit`, `nextId`). Crates run before Weapons, so a Weapon picked up this tick
 can fire this tick.
 
 ### Weapons and the inventory
@@ -91,6 +92,28 @@ It never looks inside a Crate: `src/core/run/crates/contents.ts` derives the pos
 pickup hands Weapons to the inventory and Power-ups to their `PowerUpDef.collect`
 (`src/core/run/power-ups/`). The renderer (`src/render/layers/crates.ts`) shows the contents' icon on a
 family-colored Crate and picks the blink cadence.
+
+### Spawn Director and the ramp clock
+
+The Director (`src/core/run/director.ts`) sends Enemies continuously, HA3-style, from the ramp table in
+`src/core/tuning/director.ts`:
+
+- `stages`: rows of `{ from, onScreenCap, spawnInterval, fireRate }`; the row whose `from` (seconds of ramp
+  clock) last passed applies. After the last row, `growth` keeps raising the cap and fire rate and shortening
+  the interval every `growth.every` seconds, up to its limits.
+- `roster`: one entry per Enemy kind (`Record<EnemyKind, RosterEntry>`): when it may start appearing
+  (`from`), its relative `weight`, its own on-screen limit (`maxOnScreen`, null for none), and where it enters
+  (`edges`: just outside the left/right edge within `minY..maxY`, or above the top). Behaviors then fly
+  the Enemy into the Arena on their own.
+- Every `spawnInterval` it picks a kind by weight among those allowed and sends it, unless the Arena is at
+  the cap (that spawn is skipped). All picks use the seeded gameplay `rng`.
+- `fireRate` scales Enemy attacks: behaviors run their attack cooldowns at `dt * enemyFireRate(ctx)`
+  (`src/core/run/ramp.ts`).
+
+The **ramp clock** (`RunState.rampTicks`, exposed as `RunView.rampTicks`) counts Run time excluding pause and
+Hit-stop. It advances only inside the Run's `simulate` step (`advanceRampClock`), so anything that freezes
+the simulation — the pause screen not stepping the Run, Hit-stop skipping `simulate` — leaves the ramp
+where it was. Scripted spawns replace the Director's spawning, but the ramp clock and fire rate still run.
 
 Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's projectiles hurt Enemies;
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
@@ -218,15 +241,20 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 1. Add the id to `ENEMY_KINDS` in `src/core/ids.ts`.
 2. Add its numbers to `src/core/tuning/enemies.ts` (interface entry extending `EnemyTuningBase` + values,
    including its death `explosion` preset and `debrisPieces`).
-3. Write its behavior in `src/core/run/enemies/<kind>.ts` with `defineEnemy({ kind, craft, init, update })`.
-   Use the `dt` argument for all time-based motion (Pre-entreno scales Enemy time) and `ctx.rng` for randomness.
-4. Register it in `src/core/run/enemies/index.ts` (one line).
-5. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
-   the drawer and chunks in `src/render/enemies/index.ts`.
-6. Test through the public interface: stage it with `overrides.spawns`, drive inputs, assert events/view.
-   Add a golden if it has a look.
+3. Add its roster entry to `roster` in `src/core/tuning/director.ts` (start time, weight, own on-screen
+   limit, entry edges and altitude band): this is how it joins the ramp.
+4. Write its behavior in `src/core/run/enemies/<kind>.ts` with `defineEnemy({ kind, craft, init, update })`.
+   Use the `dt` argument for all time-based motion (Pre-entreno scales Enemy time), count attack cooldowns
+   down by `dt * enemyFireRate(ctx)` so the ramp raises its fire rate, and use `ctx.rng` for randomness.
+   It may spawn just outside the Arena: it must fly itself in.
+5. Register it in `src/core/run/enemies/index.ts` (one line).
+6. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
+   the drawer and chunks in `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face
+   Rexi).
+7. Test through the public interface: stage it with `overrides.spawns`, drive inputs, assert events/view.
+   Test its Director arrival time by overriding `director` tuning. Add a golden if it has a look.
 
-`Record<EnemyKind, …>` catalogs make the typecheck fail until steps 2, 4 and 5 are done.
+`Record<EnemyKind, …>` catalogs make the typecheck fail until steps 2, 3, 5 and 6 are done.
 
 ### A Weapon
 
@@ -291,7 +319,9 @@ await expectGolden('my-scene', renderView(game.view));
 - Test external behavior through a seam: input frames in → events/view out; view in → pixels out.
   Never import from `src/core/run/` or mutate internals.
 - `tests/support/driver.ts`: `drive()` / `driveEmptyArena()`, `ticks`, `seconds`, `holdFireToward`,
-  `eventsOf`, `runOf`.
+  `eventsOf`, `runOf`. `drive()` without `spawns` runs the real Director.
+- `tests/support/fixtures.ts`: `holdStill(tuning)` keeps Enemies hovering where they were placed, for
+  scenarios that aim at fixed points.
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
 - Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping).

@@ -1,12 +1,18 @@
 import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponId } from '../ids';
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
+import type { DirectorState } from './director';
 import type { EffectsState } from './effects';
 
 /** Mutable simulation state of one Run. Private to src/core/run; exposed only via RunView. */
 export interface RunState {
   /** Simulated Run ticks. */
   tick: number;
+  /**
+   * The ramp clock: Run ticks that count toward the Director's difficulty ramp. It advances
+   * only with the simulation (`advanceRampClock`), so pause and Hit-stop never move it.
+   */
+  rampTicks: number;
   rexi: RexiState;
   enemies: EnemyState[];
   projectiles: ProjectileState[];
@@ -16,10 +22,11 @@ export interface RunState {
   stats: RunStats;
   /** True once Rexi's health reached zero; the Run no longer advances. */
   ended: boolean;
-  /** Scripted spawns not yet released, sorted by tick. Null when spawning is automatic. */
+  /** Scripted spawns not yet released, sorted by tick. Null when the Director spawns. */
   scriptedSpawns: ScriptedSpawn[] | null;
   /** Run tick of the next automatic Crate drop; null when spawning is scripted. */
   nextCrateDrop: number | null;
+  director: DirectorState;
 }
 
 export interface Body extends Box {

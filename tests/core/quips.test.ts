@@ -13,6 +13,7 @@ import {
   type TuningOverrides,
 } from '../../src/core';
 import { drive, eventsOf, runOf, weaponCrate, type Driver } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 
 const SPOT = { x: 300, y: 150 };
 /** Aim at the middle of a Maletín-cóptero parked at SPOT. */
@@ -44,7 +45,7 @@ function quipGame({ quips = {}, alwaysQuip, spawns = [maletin()] }: Setup = {}):
       'maletin-coptero': { health: 1, ...(alwaysQuip === undefined ? {} : { alwaysQuip }) },
     },
   };
-  return drive({ seed: 7, overrides: { tuning, spawns } });
+  return drive({ seed: 7, overrides: { tuning: holdStill(tuning), spawns } });
 }
 
 /** Fires at SPOT one tick at a time until an Enemy is destroyed; returns that tick's events. */

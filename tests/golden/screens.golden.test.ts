@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DeviceKind } from '../../src/core';
 import { drive, driveFromTitle, type Driver } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
@@ -43,7 +44,7 @@ describe('Screen goldens', () => {
   it('pause-menu: music muted, Silenciar música selected, over the frozen Run', async () => {
     const game = drive({
       seed: 1,
-      overrides: { spawns: [{ kind: 'maletin-coptero', x: 320, y: 70 }] },
+      overrides: { spawns: [{ kind: 'maletin-coptero', x: 320, y: 70 }], tuning: holdStill() },
     });
     game.seconds(0.5, { aim: { x: 332, y: 79 } });
     game.ticks(1, { pause: true });

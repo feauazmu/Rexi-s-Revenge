@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultTuning, type ScriptedSpawn } from '../../src/core';
 import { drive, ON_REXI, runOf, weaponCrate } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
@@ -13,13 +14,13 @@ const atMaletin = { x: 332, y: 79 };
 
 describe('Run goldens', () => {
   it('run-idle: Rexi standing, aiming at a hovering Maletín-cóptero', async () => {
-    const game = drive({ seed: 1, overrides: { spawns: [maletin] } });
+    const game = drive({ seed: 1, overrides: { spawns: [maletin], tuning: holdStill() } });
     game.seconds(0.5, { aim: atMaletin });
     await expectGolden('run-idle', renderView(game.view));
   });
 
   it('run-firing: Mazo Automático gavels in flight toward the Maletín-cóptero', async () => {
-    const game = drive({ seed: 1, overrides: { spawns: [maletin] } });
+    const game = drive({ seed: 1, overrides: { spawns: [maletin], tuning: holdStill() } });
     game.seconds(0.3, { move: 1, aim: atMaletin });
     game.holdFireToward(atMaletin, 0.45);
     await expectGolden('run-firing', renderView(game.view));
@@ -38,7 +39,7 @@ describe('Run goldens', () => {
   });
 
   it('run-jump-aim-left: Rexi airborne, aiming up and to the left', async () => {
-    const game = drive({ seed: 1, overrides: { spawns: [maletin] } });
+    const game = drive({ seed: 1, overrides: { spawns: [maletin], tuning: holdStill() } });
     const aim = { x: 40, y: 30 };
     game.ticks(1, { jump: true, aim });
     game.seconds(0.25, { aim, move: -1, fire: true, jump: true });
@@ -48,7 +49,10 @@ describe('Run goldens', () => {
   it('run-hud: HUD after destroying a Maletín-cóptero, a minute into the Run', async () => {
     const game = drive({
       seed: 1,
-      overrides: { spawns: [maletin, { kind: 'maletin-coptero', x: 200, y: 50, atTick: 600 }] },
+      overrides: {
+        spawns: [maletin, { kind: 'maletin-coptero', x: 200, y: 50, atTick: 600 }],
+        tuning: holdStill(),
+      },
     });
     game.holdFireToward(atMaletin, 3);
     game.seconds(62.25, { aim: { x: 212, y: 59 } });
@@ -60,14 +64,39 @@ describe('Run goldens', () => {
       seed: 1,
       overrides: {
         spawns: [maletin],
-        tuning: { enemies: { 'maletin-coptero': { fireIntervalMin: 0.7, fireIntervalMax: 0.9 } } },
+        tuning: holdStill({
+          enemies: { 'maletin-coptero': { fireIntervalMin: 0.7, fireIntervalMax: 0.9 } },
+        }),
       },
     });
-    game.seconds(6.4, { aim: atMaletin });
+    game.seconds(5, { aim: atMaletin });
+    // Catch Rexi just after his next hit, while he still flickers.
+    for (let t = 0; !game.ticks(1, { aim: atMaletin }).some((e) => e.type === 'rexi-hit'); t++) {
+      if (t > 600) throw new Error('Rexi was never hit');
+    }
+    game.ticks(10, { aim: atMaletin });
     const { rexi } = game.view.run ?? {};
     expect(rexi?.health).toBeLessThan(rexi?.maxHealth ?? 0);
     expect(rexi?.invulnerableTicks).toBeGreaterThan(0);
     await expectGolden('run-hurt', renderView(game.view));
+  });
+
+  it('enemy-maletin-coptero: final sprite facing Rexi from both sides, rotors spinning', async () => {
+    const game = drive({
+      seed: 2,
+      overrides: {
+        spawns: [
+          { kind: 'maletin-coptero', x: 60, y: 120 },
+          { kind: 'maletin-coptero', x: 250, y: 90 },
+          { kind: 'maletin-coptero', x: 380, y: 50, atTick: 1 },
+        ],
+        tuning: holdStill({
+          enemies: { 'maletin-coptero': { fireIntervalMin: 9, fireIntervalMax: 9 } },
+        }),
+      },
+    });
+    game.seconds(0.5, { aim: { x: 262, y: 99 } });
+    await expectGolden('enemy-maletin-coptero', renderView(game.view));
   });
 });
 
@@ -104,6 +133,7 @@ describe('Crate goldens', () => {
       seed: 1,
       overrides: {
         spawns: [weaponCrate('lluvia-de-sellos', ON_REXI.x, { y: ON_REXI.y }), maletin],
+        tuning: holdStill(),
       },
     });
     const aim = { x: 190, y: 150 };

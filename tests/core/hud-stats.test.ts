@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultTuning, TICKS_PER_SECOND, type ScriptedSpawn } from '../../src/core';
 import { drive, driveEmptyArena, eventsOf, runOf } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 
 const maletin = defaultTuning.enemies['maletin-coptero'];
 
@@ -25,7 +26,7 @@ describe('HUD score', () => {
     const game = drive({
       overrides: {
         spawns: [maletinAt(300, 60)],
-        tuning: { enemies: { 'maletin-coptero': { points: 275 } } },
+        tuning: holdStill({ enemies: { 'maletin-coptero': { points: 275 } } }),
       },
     });
     const events = game.holdFireToward(centerOf(300, 60), 5);
@@ -34,7 +35,9 @@ describe('HUD score', () => {
   });
 
   it('adds up the points of every Enemy destroyed', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60), maletinAt(100, 40, 240)] } });
+    const game = drive({
+      overrides: { spawns: [maletinAt(300, 60), maletinAt(100, 40, 240)], tuning: holdStill() },
+    });
     game.holdFireToward(centerOf(300, 60), 3);
     expect(runOf(game.view).stats.score).toBe(maletin.points);
     game.holdFireToward(centerOf(100, 40), 3);

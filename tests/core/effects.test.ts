@@ -14,6 +14,7 @@ import {
   type TuningOverrides,
 } from '../../src/core';
 import { drive, eventsOf, runOf, type Driver } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 
 const fx = defaultTuning.effects;
 const maletin = defaultTuning.enemies['maletin-coptero'];
@@ -40,7 +41,7 @@ function arena(
   tuning: TuningOverrides = oneShotKills,
   options: Partial<GameOptions> = {},
 ): Driver {
-  return drive({ ...options, overrides: { spawns, tuning } });
+  return drive({ ...options, overrides: { spawns, tuning: holdStill(tuning) } });
 }
 
 /** Fires at `target` tick by tick until an Enemy is destroyed; returns the ticks it took. */
@@ -226,7 +227,7 @@ describe('Determinism', () => {
   /** A busy scripted fight: several Maletín-cópteros destroyed while Rexi runs and jumps. */
   function fight(seed: number, tuning: TuningOverrides = oneShotKills) {
     const spawns = [maletinAt(300, 60), maletinAt(200, 50, 40), maletinAt(380, 90, 80)];
-    const game = drive({ seed, overrides: { spawns, tuning } });
+    const game = drive({ seed, overrides: { spawns, tuning: holdStill(tuning) } });
     const targets = [centerOf(300, 60), centerOf(200, 50), centerOf(380, 90)];
     const log = [];
     const views: RunView[] = [];

@@ -21,6 +21,18 @@ export interface EnemyTuningBase {
 }
 
 export interface MaletinCopteroTuning extends EnemyTuningBase {
+  /** Top speed while drifting toward its current target point, px/s. */
+  readonly driftSpeed: number;
+  /** It slows down within this distance of its target, px, so it settles into a hover. */
+  readonly arriveDistance: number;
+  /** Time before picking a new target point, seconds: drawn uniformly from [min, max]. */
+  readonly retargetMin: number;
+  readonly retargetMax: number;
+  /** Roaming area for target points: this far from the side edges, px. */
+  readonly roamMarginX: number;
+  /** Roaming area for target points: altitude band of the hitbox top, px. */
+  readonly roamMinY: number;
+  readonly roamMaxY: number;
   /** Vertical hover amplitude, px. */
   readonly hoverAmplitude: number;
   /** Duration of one hover cycle, seconds. */
@@ -54,7 +66,14 @@ export const enemiesTuning = {
     explosion: 'small',
     debrisPieces: 4,
     alwaysQuip: false,
-    hoverAmplitude: 6,
+    driftSpeed: 50,
+    arriveDistance: 24,
+    retargetMin: 1.5,
+    retargetMax: 3,
+    roamMarginX: 16,
+    roamMinY: 30,
+    roamMaxY: 140,
+    hoverAmplitude: 3,
     hoverPeriod: 2,
     fireIntervalMin: 2.5,
     fireIntervalMax: 3.5,

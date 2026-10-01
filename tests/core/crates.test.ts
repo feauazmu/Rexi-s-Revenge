@@ -41,7 +41,8 @@ describe('Automatic Crate drops', () => {
   });
 
   it('keeps dropping Crates every interval ± jitter', () => {
-    const game = drive({ seed: 5 });
+    // Rexi must survive the Director's Enemies for the whole two minutes.
+    const game = drive({ seed: 5, overrides: { tuning: { rexi: { maxHealth: 1_000_000_000 } } } });
     const ticks: number[] = [];
     for (let t = 0; t < 120 * TICKS_PER_SECOND; t++) {
       if (eventsOf(game.ticks(1), 'crate-spawned').length > 0) ticks.push(t);
