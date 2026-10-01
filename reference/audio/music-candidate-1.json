@@ -1,0 +1,18 @@
+{
+  "modality": "music",
+  "experimental": true,
+  "prompt": "Instrumental only, no vocals. Energetic 1980s workout synth-rock at a steady 140 BPM in 4/4, constant tempo throughout, no intro fade, no ending, no breakdown. Driving gated-reverb drums, punchy analog bass synth, chugging overdriven rock guitar, and a bright playful chiptune square-wave lead melody (8-bit NES style). Comedic, upbeat, aerobics-video energy, arcade game loop music.",
+  "model": "google/lyria-3-clip-preview",
+  "parameters": {},
+  "seed": null,
+  "cost_usd": 0.04,
+  "generation_id": "gen-1790845422-DJH6pkYnsOah3sYzW8mk",
+  "transcript": null,
+  "text": "<instrumental>",
+  "created_at": "2026-10-01T09:03:42.607Z",
+  "asset": {
+    "file": "music-candidate-1.mp3",
+    "media_type": "audio/mpeg",
+    "duration_seconds": 30.772
+  }
+}

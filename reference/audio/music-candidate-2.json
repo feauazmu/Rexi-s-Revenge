@@ -1,0 +1,18 @@
+{
+  "modality": "music",
+  "experimental": true,
+  "prompt": "Instrumental, no vocals. Comedic 80s aerobics workout synth-rock, locked steady tempo of 140 BPM, 4/4, the same groove repeating the whole time with no intro, no fade-out and no breakdown. Four-on-the-floor gated snare drums, octave-jumping synth bass, power-chord rock guitar, and a catchy cheeky chiptune square-wave lead (8-bit video game style). High energy, loopable video game background music.",
+  "model": "google/lyria-3-clip-preview",
+  "parameters": {},
+  "seed": null,
+  "cost_usd": 0.04,
+  "generation_id": "gen-1790845437-o2c48c6z0n2UGQrOHx6k",
+  "transcript": null,
+  "text": "<instrumental>",
+  "created_at": "2026-10-01T09:03:57.103Z",
+  "asset": {
+    "file": "music-candidate-2.mp3",
+    "media_type": "audio/mpeg",
+    "duration_seconds": 30.772
+  }
+}
