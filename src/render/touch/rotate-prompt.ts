@@ -3,6 +3,7 @@
  * own small portrait surface (the platform scales it up like the game image): a phone that
  * turns from upright to sideways, an arrow, and the caption.
  */
+import { masterPalette } from '../palette';
 import { defineSprite } from '../sprite';
 import { strings } from '../strings';
 import type { Color, Surface } from '../surface';
@@ -12,11 +13,11 @@ import { drawOutlinedText, ui } from '../screens/ui';
 export const ROTATE_PROMPT_WIDTH = 192;
 export const ROTATE_PROMPT_HEIGHT = 340;
 
-const BACKGROUND: Color = '#2e1e4c';
-const STRIPE: Color = '#362456';
-const PHONE_BODY: Color = '#3d2f5c';
-const PHONE_SCREEN: Color = '#6a5a92';
-const PHONE_GLARE: Color = '#8a7ab2';
+const BACKGROUND: Color = ui.backdrop;
+const STRIPE: Color = ui.backdropStripe;
+const PHONE_BODY: Color = masterPalette.steel1;
+const PHONE_SCREEN: Color = masterPalette.glass2;
+const PHONE_GLARE: Color = masterPalette.glass3;
 
 /** Ticks per animation cycle: upright for the first half, sideways for the second. */
 const CYCLE = 120;

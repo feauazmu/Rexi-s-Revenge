@@ -11,11 +11,11 @@ import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color } from '../surface';
 import { TOUCH_LAYOUT as L, type TouchButton, type TouchOverlayView } from './layout';
 
-const RING: Color = '#6a5a92';
-const KNOB: Color = '#b8a8d0';
-const GHOST: Color = '#d8ccec';
-const RED: Color = '#e8433a';
-const RED_LIGHT: Color = '#ff9a7a';
+const RING: Color = ui.panelEdge;
+const KNOB: Color = ui.knob;
+const GHOST: Color = ui.ghost;
+const RED: Color = ui.red;
+const RED_LIGHT: Color = ui.redLight;
 
 export function drawTouchOverlay(dc: DrawContext, overlay: TouchOverlayView): void {
   const pressed = (button: TouchButton) => overlay.pressed.includes(button);

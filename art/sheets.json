@@ -15,8 +15,17 @@
     },
     "icon_cells": {
       "type": "icongrid",
-      "n": 11,
-      "cell": 16
+      "n": 12,
+      "cell": 16,
+      "cols": 6,
+      "anchor": "hand/icon_anchor.png"
+    },
+    "record_cells": {
+      "type": "icongrid",
+      "n": 4,
+      "cell": 32,
+      "cols": 4,
+      "anchor": "sprites/icons/inmunidad-judicial.png"
     },
     "arena_draft": {
       "type": "draft",
@@ -31,6 +40,45 @@
     }
   },
   "sheets": {
+    "icons": {
+      "kind": "icon",
+      "prompt": "prompts/icons.txt",
+      "style": true,
+      "refs": ["templates/icon_cells.png"],
+      "palette": "icon",
+      "canvas": [40, 40],
+      "out": "sprites/icons-clean",
+      "_names": "The model drew the icons at 2x (about 32 px) and repeated the bottom row: the large icons are cleaned here, then scripts/art/ui/icons.py picks a copy, reduces it 2:1 to 16x16 and applies the hand pass.",
+      "names": [
+        null,
+        "mazo-automatico",
+        "lluvia-de-sellos",
+        "mancuernas",
+        "codigo-penal",
+        "citaciones-teledirigidas",
+        "sentencia-firme",
+        "pre-entreno",
+        "receso",
+        "inmunidad-judicial",
+        "dia-de-pierna",
+        "creatina",
+        "sentencia-firme_b",
+        "pre-entreno_b",
+        "receso_b",
+        "inmunidad-judicial_b",
+        "dia-de-pierna_b",
+        "creatina_b"
+      ]
+    },
+    "record": {
+      "kind": "sprite",
+      "prompt": "prompts/record.txt",
+      "style": true,
+      "refs": ["templates/record_cells.png"],
+      "palette": "icon",
+      "out": "sprites/record-clean",
+      "names": [null, "seal", "gavel", "wax"]
+    },
     "_example_arena": {
       "kind": "scene",
       "prompt": "prompts/_example_arena_tile.txt",
@@ -49,5 +97,20 @@
     }
   },
   "parts": {},
-  "exports": {}
+  "exports": {
+    "icons": {
+      "sprites": ["sprites/icons/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
+    },
+    "record": {
+      "sprites": ["sprites/record/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
+    }
+  },
+  "audit": {
+    "sprites/icons/*.png": "icon",
+    "sprites/record/*.png": "icon"
+  }
 }

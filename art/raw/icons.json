@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nThis template is a grid of 12 square icon cells, 2 rows of 6, each 16x16 art pixels inside a light grey guide frame. Cell 1 (top row, far left) already holds a finished icon: a supplement tub. Keep it exactly as it is: it shows the pixel size, the outline and the shading every other icon must match. Draw one game HUD icon inside each of the 11 empty cells, filling most of its cell (14 to 16 pixels across) but never crossing its frame, centred, on the plain white background. Every icon is a bold, chunky, instantly readable silhouette with a clean 1-pixel near-black outline, 3-4 flat tones per material, light from the upper left, warm highlights and purple-blue shadows. No text and no letters except where asked. Keep the white gaps between cells empty.\n\nTop row, left to right:\n1) (keep: the supplement tub)\n2) a judge's wooden gavel seen diagonally: a big brown barrel-shaped mallet head with two gold bands at upper left, its handle running down to the lower right, and two short white motion lines.\n3) a red rubber stamp: a red rounded handle on top, a short neck, a wide dark-red stamping block, with a small blue ink pad edge underneath.\n4) an iron dumbbell lying horizontally: two thick dark steel-blue weight plates and a short grip bar, with a short fuse sticking up from the right plate and a bright yellow-orange spark at its tip.\n5) a thick red hardcover law book seen at an angle, with a gold scales-of-justice emblem on its cover and cream page edges, a bright orange-yellow rocket flame bursting from its lower left corner.\n6) a cream paper envelope with a dark flap line, and a red circular target reticle (crosshair) over its lower right corner.\n\nBottom row, left to right:\n7) an unrolled cream parchment scroll at the bottom, with a thick bright golden-yellow beam of light shooting from it up to the upper right corner.\n8) a gym shaker bottle: blue lid with a spout, a translucent body full of orange drink, with a small white clock face with black hands at its upper right.\n9) a brown paper coffee cup with a white lid and a cream sleeve, and a bold red medical health cross (plus sign) with a white outline at its lower right.\n10) a golden heraldic shield with a dark-brown scales-of-justice emblem in the middle and a bright highlight along its upper left edge.\n11) a bent muscular bare leg in profile, knee raised forward, the thigh and calf big and shaded, wearing a white sneaker, with a big bright orange and yellow rocket flame blasting straight down from under the sneaker's sole, like a jet boot.\n12) the same supplement tub as cell 1, redrawn by you in the same style (steel-blue lid, white tub, gold label with a red \"x3\").",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a728b10ab158a8ef2/art/templates/icon_cells.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.101786,
+  "created_at": "2026-10-01T11:18:50.375Z",
+  "asset": {
+    "file": "icons.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/icons.txt",
+    "style": true,
+    "references": ["art/templates/icon_cells.png"],
+    "note": "Refs #29",
+    "spent_after_usd": 1.915186
+  }
+}

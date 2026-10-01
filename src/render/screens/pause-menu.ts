@@ -21,7 +21,7 @@ const HEADER_H = 46;
 const PANEL_Y = 104;
 
 /** A small gavel pointing at the selected entry. */
-const CURSOR = defineSprite({ k: ui.ink, g: ui.gold, G: ui.goldDeep, h: '#8a5a2a' }, [
+const CURSOR = defineSprite({ k: ui.ink, g: ui.gold, G: ui.goldDeep, h: ui.wood }, [
   '.kkk.....',
   'kgggk....',
   'kgGgkkkkk',

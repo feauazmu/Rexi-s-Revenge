@@ -61,9 +61,10 @@ Generations made with `scripts/art` (see its README), folded in from `art/ledger
 
 <!-- art-ledger:start -->
 
-| #   | Time | Root | Name       | Model | Cost (USD) | Note |
-| --- | ---- | ---- | ---------- | ----- | ---------- | ---- |
-|     |      |      | (none yet) |       | 0.0000     |      |
+| #   | Time                | Root  | Name     | Model                         | Cost (USD) | Note     |
+| --- | ------------------- | ----- | -------- | ----------------------------- | ---------- | -------- |
+| 1   | 2026-10-01T13:19:09 | `art` | `icons`  | google/gemini-3.1-flash-image | 0.1018     | Refs #29 |
+| 2   | 2026-10-01T13:31:31 | `art` | `record` | google/gemini-3.1-flash-image | 0.1016     | Refs #29 |
 
 <!-- art-ledger:end -->
 
@@ -76,6 +77,7 @@ Shared cap for all generated media (images + music): **$10.00** (raised from $5.
 | Images (12 generations)               | 0.8115                                 |
 | Music (2 generations)                 | 0.0800                                 |
 | Rexi version C images (9 generations) | 0.9219                                 |
-| **Running total**                     | **1.8134 of 10.00** (8.1866 remaining) |
+| Art pipeline (2 generations)          | 0.2034                                 |
+| **Running total**                     | **2.0168 of 10.00** (7.9832 remaining) |
 
 The image subtotal is summed from the unrounded costs in the JSON sidecars (and the post-processing note for the discarded sheet attempt), so it can differ by $0.0001 from the sum of the rounded table rows.

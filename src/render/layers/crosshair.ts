@@ -1,9 +1,9 @@
 import type { RunView } from '../../core';
 import { drawSpriteCentered, type DrawContext } from '../draw-context';
-import { palette } from '../palette';
+import { masterPalette } from '../palette';
 import { defineSprite } from '../sprite';
 
-const CROSSHAIR = defineSprite({ c: palette.crosshair, k: palette.outline }, [
+const CROSSHAIR = defineSprite({ c: masterPalette.light, k: masterPalette.outline }, [
   '....k....',
   '....c....',
   '....c....',

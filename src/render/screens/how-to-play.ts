@@ -21,8 +21,8 @@ import {
   type KeyLabel,
 } from './ui';
 
-const BACKGROUND: Color = '#2e1e4c';
-const STRIPE: Color = '#362456';
+const BACKGROUND: Color = ui.backdrop;
+const STRIPE: Color = ui.backdropStripe;
 
 /** The controls panel: full width for touch (it mirrors the overlay), narrower for the keys. */
 const PANEL_Y = 98;
@@ -44,6 +44,7 @@ export function drawHowToPlay(dc: DrawContext): void {
   }
 
   drawOutlinedText(dc, fonts.large, t.title, SCREEN_WIDTH / 2, 22, ui.gold, { align: 'center' });
+  drawTitleRule(dc, SCREEN_WIDTH / 2, 54, 96);
   drawOutlinedText(dc, fonts.regular, t.goal, SCREEN_WIDTH / 2, 64, ui.text, { align: 'center' });
 
   const panel = view.device === 'touch' ? PANEL_TOUCH : PANEL_DESKTOP;
@@ -56,6 +57,21 @@ export function drawHowToPlay(dc: DrawContext): void {
     drawOutlinedText(dc, fonts.regular, prompt, SCREEN_WIDTH / 2, PROMPT_Y, ui.gold, {
       align: 'center',
     });
+  }
+}
+
+/** A brass rule with ink edges and a gold diamond in the middle, under the heading. */
+function drawTitleRule(dc: DrawContext, cx: number, y: number, half: number): void {
+  const { surface } = dc;
+  surface.fillRect(cx - half - 1, y - 1, half * 2 + 3, 3, ui.ink);
+  surface.fillRect(cx - half, y, half * 2 + 1, 1, ui.goldDeep);
+  for (let i = 0; i <= 3; i++) {
+    surface.fillRect(cx - i - 1, y - 4 + i, i * 2 + 3, 1, ui.ink);
+    surface.fillRect(cx - i - 1, y + 4 - i, i * 2 + 3, 1, ui.ink);
+  }
+  for (let i = 0; i <= 2; i++) {
+    surface.fillRect(cx - i, y - 3 + i, i * 2 + 1, 1, ui.gold);
+    surface.fillRect(cx - i, y + 3 - i, i * 2 + 1, 1, i === 2 ? ui.gold : ui.goldDeep);
   }
 }
 
@@ -192,10 +208,10 @@ const MOUSE: Readonly<Record<'none' | 'left' | 'wheel', SpriteDef>> = {
 // ---------------------------------------------------------------------------------------------
 // Touch: the on-screen controls drawn where they appear, each with its caption.
 
-const STICK_RING: Color = '#6a5a92';
-const STICK_KNOB: Color = '#b8a8d0';
-const BUTTON: Color = '#e8433a';
-const BUTTON_LIGHT: Color = '#ff9a7a';
+const STICK_RING: Color = ui.panelEdge;
+const STICK_KNOB: Color = ui.knob;
+const BUTTON: Color = ui.red;
+const BUTTON_LIGHT: Color = ui.redLight;
 
 const JUMP_ARROW = defineSprite({ '#': ui.text, k: ui.ink }, [
   '...#...',

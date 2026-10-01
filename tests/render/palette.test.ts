@@ -9,6 +9,8 @@ import {
   nearestPaletteColor,
 } from '../../src/render/palette-audit';
 import { defineSprite } from '../../src/render/sprite';
+import { sprites as icons } from '../../src/render/art/generated/icons';
+import { sprites as record } from '../../src/render/art/generated/record';
 import { expectOnPalette, loadGoldens, SWATCH_LABEL_WIDTH } from '../support/palette';
 
 function luma(color: string): number {
@@ -70,6 +72,23 @@ describe('palette audit', () => {
     ]);
     expect(isPaletteColor('#D42C2C')).toBe(true);
     expect(nearestPaletteColor('#fefefe')).toBe(masterPalette.white);
+  });
+
+  it('UI art redrawn in the art pass (#29) uses only master-palette colors', async () => {
+    // Pipeline icons and court record ornaments.
+    expect(findOffPaletteSpriteColors(Object.values(icons))).toEqual([]);
+    expect(findOffPaletteSpriteColors(Object.values(record))).toEqual([]);
+    // Screens drawn entirely by the UI layer (the others still show older art).
+    const uiOnly = new Set([
+      'how-to-play-desktop',
+      'how-to-play-touch',
+      'rotate-prompt',
+      'rotate-prompt-sideways',
+      'title-backdrop',
+    ]);
+    const goldens = (await loadGoldens()).filter(({ name }) => uiOnly.has(name));
+    expect(goldens.map(({ name }) => name).sort()).toEqual([...uiOnly].sort());
+    for (const { name, image } of goldens) expectOnPalette(name, image);
   });
 
   // TODO(art pass, #24): the existing art predates the master palette, so this is skipped.
