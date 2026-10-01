@@ -13,7 +13,8 @@ export type GameEvent =
   | WeaponFiredEvent
   | EnemySpawnedEvent
   | EnemyHitEvent
-  | EnemyDestroyedEvent;
+  | EnemyDestroyedEvent
+  | RexiHitEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -57,4 +58,9 @@ export interface EnemyDestroyedEvent {
   /** Center of the Enemy when it was destroyed, in game coordinates. */
   readonly x: number;
   readonly y: number;
+}
+
+/** Rexi was hit (Enemy contact or Enemy projectile) and starts his hurt reaction. */
+export interface RexiHitEvent {
+  readonly type: 'rexi-hit';
 }

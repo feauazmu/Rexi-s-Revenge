@@ -66,6 +66,11 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
   `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
 - Layers are listed back to front in `RUN_LAYERS` (`src/render/renderer.ts`).
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
+- **Rexi** (`src/render/rexi/`): body parts drawn facing right (`body.ts`) are composed per pose and
+  mirrored for facing left; `pose.ts` picks the pose from `RexiView` (grounded/vx/vy, `hurtTicks`,
+  `shotAge`) and the Run tick. The aiming arm (`arm.ts`) is rasterized from shapes in 16 directions
+  around `RexiView.shoulder`, holding the current Weapon's look from `held-weapons.ts` (a
+  `Record<WeaponId, …>`, so a new Weapon must add its held look there).
 
 ## Platform shell
 

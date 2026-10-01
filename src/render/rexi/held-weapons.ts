@@ -1,0 +1,43 @@
+import type { WeaponId } from '../../core';
+import type { RexiInk } from './palette';
+
+/**
+ * How a Weapon looks in Rexi's fist. Drawn procedurally in Weapon space so the same shape is
+ * rasterized crisply for every arm direction: `u` runs from the fist center toward the aim and
+ * `v` runs across it (positive = the Weapon's underside).
+ */
+export interface HeldWeapon {
+  /** Distance from the fist center to the muzzle along the aim, px. */
+  readonly length: number;
+  /** Ink at Weapon-space point (u, v), or null where the Weapon is not. */
+  paint(u: number, v: number): RexiInk | null;
+}
+
+/** Shades a round barrel: light on top, dark underneath. */
+function barrel(v: number, radius: number, light: RexiInk, mid: RexiInk, dark: RexiInk): RexiInk {
+  if (v < -radius * 0.45) return light;
+  if (v > radius * 0.45) return dark;
+  return mid;
+}
+
+/** Mazo Automático: a gavel head used as the barrel, with brass rings and the handle as grip. */
+const mazoAutomatico: HeldWeapon = {
+  length: 8,
+  paint(u, v) {
+    const head = 2.3;
+    if (u >= -1 && u <= 8 && Math.abs(v) <= head) {
+      if (u >= 7) return barrel(v, head, 'y', 'y', 'Y');
+      if (u >= 2.2 && u < 3.2) return barrel(v, head, 'y', 'Y', 'Y');
+      if (u < 0) return barrel(v, head, 'o', 'G', 'G');
+      return barrel(v, head, 'g', 'o', 'G');
+    }
+    // Handle hanging below the head, gripped by the fist.
+    if (u >= 0.4 && u <= 2.2 && v > head && v <= 5.6) return v > 4.6 ? 'G' : 'o';
+    return null;
+  },
+};
+
+/** One held look per Weapon (one line per entry). */
+export const heldWeapons: Readonly<Record<WeaponId, HeldWeapon>> = {
+  'mazo-automatico': mazoAutomatico,
+};

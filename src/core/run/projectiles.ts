@@ -3,6 +3,7 @@ import type { ProjectileKind } from '../ids';
 import { overlaps, type Vec2 } from '../math';
 import type { RunContext } from './context';
 import { damageEnemy } from './enemies/system';
+import { hurtRexi } from './rexi';
 import type { ProjectileState } from './state';
 
 /** How far outside the screen a projectile may travel before it is discarded, px. */
@@ -60,6 +61,9 @@ export function stepProjectiles(ctx: RunContext): void {
         damageEnemy(ctx, target, p.damage);
         return false;
       }
+    } else if (overlaps(p, state.rexi)) {
+      hurtRexi(ctx);
+      return false;
     }
 
     return p.ttl > 0 && p.y + p.h < groundY && isNearScreen(p);

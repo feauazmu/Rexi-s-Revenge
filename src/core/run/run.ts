@@ -9,7 +9,14 @@ import type { RunContext } from './context';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
-import { aimDirectionOf, createRexi, muzzleOf, stepRexi } from './rexi';
+import {
+  aimDirectionOf,
+  createRexi,
+  muzzleOf,
+  shoulderOf,
+  stepRexi,
+  stepRexiContacts,
+} from './rexi';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
 import { stepWeapons } from './weapons/system';
@@ -55,6 +62,7 @@ export function createRun(deps: RunDeps): Run {
       stepWeapons(ctx, input);
       stepEnemies(ctx);
       stepProjectiles(ctx);
+      stepRexiContacts(ctx);
       state.tick += 1;
       return events;
     },
@@ -77,8 +85,11 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       grounded: rexi.grounded,
       facing: rexi.facing,
       aim: rexi.aim,
+      shoulder: shoulderOf(rexi, tuning),
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
+      shotAge: rexi.shotAge,
+      hurtTicks: rexi.hurtTicks,
       weapon: { id: rexi.weapon, ammo: null },
     },
     enemies: state.enemies.map((e) => ({

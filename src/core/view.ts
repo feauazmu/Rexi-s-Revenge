@@ -52,10 +52,16 @@ export interface RexiView extends BoxView {
   readonly facing: 1 | -1;
   /** Aim target in game coordinates. */
   readonly aim: Vec2;
-  /** Where shots leave from. */
+  /** Pivot of the aiming arm; the arm and held Weapon rotate around it. */
+  readonly shoulder: Vec2;
+  /** Where shots leave from: the tip of the held Weapon. */
   readonly muzzle: Vec2;
-  /** Unit vector from the muzzle toward the aim target. */
+  /** Unit vector from the shoulder toward the aim target (shots fly along it). */
   readonly aimDirection: Vec2;
+  /** Ticks since the last shot (capped at a few seconds), for recoil animation. */
+  readonly shotAge: number;
+  /** Ticks left in the hurt reaction; 0 when Rexi is not hurt. */
+  readonly hurtTicks: number;
   readonly weapon: WeaponView;
 }
 

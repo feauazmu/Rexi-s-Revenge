@@ -18,6 +18,7 @@ export function stepWeapons(ctx: RunContext, input: InputFrame): void {
     { origin: muzzleOf(rexi, ctx.tuning), direction: aimDirectionOf(rexi, ctx.tuning) },
     ctx,
   );
+  rexi.shotAge = 0;
   rexi.fireCooldown = Math.max(1, secondsToTicks(ctx.tuning.weapons[rexi.weapon].fireInterval));
   ctx.emit({ type: 'weapon-fired', weapon: rexi.weapon });
 }
