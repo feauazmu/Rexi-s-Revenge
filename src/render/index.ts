@@ -8,3 +8,17 @@ export {
   type Color,
   type Surface,
 } from './surface';
+export { allStrings, strings } from './strings';
+export {
+  createBitmapFont,
+  drawText,
+  fonts,
+  formatElapsed,
+  scaleFont,
+  type BitmapFont,
+  type FontDefinition,
+  type Glyph,
+  type TextAlign,
+  type TextStyle,
+  type TextTarget,
+} from './text';

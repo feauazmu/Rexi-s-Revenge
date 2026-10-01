@@ -1,6 +1,7 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type GameView, type RunView } from '../core';
 import type { DrawContext } from './draw-context';
 import { drawEnemies } from './enemies';
+import { drawHud } from './hud/hud';
 import { drawArena } from './layers/arena';
 import { drawCrosshair } from './layers/crosshair';
 import { drawRexi } from './layers/rexi';
@@ -11,12 +12,13 @@ import type { BitmapFactory, Surface } from './surface';
 
 export type RunLayer = (dc: DrawContext, run: RunView) => void;
 
-/** Run layers, back to front. New layers (Crates, effects, HUD, Dialogue Box) slot in here. */
+/** Run layers, back to front. New layers (Crates, effects, Dialogue Box) slot in here. */
 const RUN_LAYERS: readonly RunLayer[] = [
   drawArena,
   drawEnemies,
   drawProjectiles,
   drawRexi,
+  drawHud,
   drawCrosshair,
 ];
 

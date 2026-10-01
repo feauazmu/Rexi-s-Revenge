@@ -32,4 +32,14 @@ describe('Run goldens', () => {
     game.seconds(0.25, { aim, move: -1, fire: true, jump: true });
     await expectGolden('run-jump-aim-left', renderView(game.view));
   });
+
+  it('run-hud: HUD after destroying a Maletín-cóptero, a minute into the Run', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: { spawns: [maletin, { kind: 'maletin-coptero', x: 200, y: 50, atTick: 600 }] },
+    });
+    game.holdFireToward(atMaletin, 3);
+    game.seconds(62.25, { aim: { x: 212, y: 59 } });
+    await expectGolden('run-hud', renderView(game.view));
+  });
 });

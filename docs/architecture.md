@@ -64,8 +64,37 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
   canvas text. That makes output pixel-identical in browsers and in Node.
 - **Sprites are code** (ADR 0001): `defineSprite(palette, rows)` is a palette-indexed pixel grid; the
   `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
-- Layers are listed back to front in `RUN_LAYERS` (`src/render/renderer.ts`).
+- Layers are listed back to front in `RUN_LAYERS` (`src/render/renderer.ts`). The HUD
+  (`src/render/hud/`) is drawn above Rexi and below the crosshair.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
+
+## Text: bitmap fonts, metrics and the strings catalog
+
+All text is drawn with code-defined bitmap fonts (`src/render/text/`), never canvas text.
+
+```ts
+import { drawText, fonts, strings } from '../render'; // or './text', './strings' inside src/render
+
+const { regular, large } = fonts; // regular: HUD, Dialogue Box. large: headings (regular at 2×)
+regular.measure('¡Hola!');        // width in px (widest line for multi-line text)
+regular.wrap(quip, 300);          // greedy word wrap → lines, each ≤ 300 px wide
+regular.blockHeight(2);           // height in px of 2 lines
+regular.missing(text);            // characters the font cannot draw ([] when all are covered)
+drawText(dc, regular, strings.hud.score, x, y, { color, shadow?, align? });
+```
+
+- **Metrics are exact**: what `measure`/`wrap` report is exactly what `drawText` covers. Width = glyph
+  widths + `letterSpacing` (1 px) between glyphs. `y` is the top of the cell; capitals sit on
+  `font.baseline`. The regular cell is 12 px tall (accents over capitals, 7 px capitals, descenders) and
+  `lineHeight` is 13 px. Digits are all 4 px wide so changing numbers don't jitter.
+- `measure`, `wrap` and `drawText` throw on a missing glyph; content tests use `missing()` to catch it first.
+  `drawText` does not wrap: call `font.wrap` and draw the lines (joined with `\n`).
+- **Glyphs** live in `src/render/text/glyphs.ts` as `#`/`.` rows from the cap top. Accented letters are
+  composed from a base glyph plus a mark (`COMPOSED`), so adding `à` is one line.
+- **Strings catalog** (`src/render/strings.ts`): every player-facing string, in Spanish (the title
+  "Rexi's Revenge" stays English). Add new UI copy there, never inline; numbers are formatted by the drawing
+  code (`formatElapsed(ticks)` → `m:ss`). A test asserts every character in the catalog exists in the font.
+- Quip-length check: a Quip fits when `fonts.regular.wrap(text, dialogueTextWidth).length <= 2`.
 
 ## Platform shell
 
@@ -100,6 +129,7 @@ Each tick samples the keyboard/mouse adapter once (edges are consumed by the fir
 4. Register it in `src/core/run/weapons/index.ts`.
 5. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
+6. Draw its HUD icon in `src/render/hud/weapon-icons.ts` and add its Spanish name to `strings.weapons`.
 
 ### An event
 
@@ -128,6 +158,8 @@ await expectGolden('my-scene', renderView(game.view));
   Never import from `src/core/run/` or mutate internals.
 - `tests/support/driver.ts`: `drive()` / `driveEmptyArena()`, `ticks`, `seconds`, `holdFireToward`,
   `eventsOf`, `runOf`.
+- Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
+  (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
 - Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping).
 
 ## Commands

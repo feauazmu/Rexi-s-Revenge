@@ -48,6 +48,9 @@ export interface RexiView extends BoxView {
   readonly vx: number;
   readonly vy: number;
   readonly grounded: boolean;
+  /** Current health, 0..maxHealth (the HUD health bar). */
+  readonly health: number;
+  readonly maxHealth: number;
   /** 1 when facing right, -1 when facing left. Rexi faces the side he aims at. */
   readonly facing: 1 | -1;
   /** Aim target in game coordinates. */

@@ -23,6 +23,8 @@ export interface Body extends Box {
 export interface RexiState extends Body {
   /** True from a jump's take-off until it is cut short or starts falling. */
   rising: boolean;
+  health: number;
+  readonly maxHealth: number;
   facing: 1 | -1;
   aim: Vec2;
   /** Ticks until the current Weapon may fire again. */
