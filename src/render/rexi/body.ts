@@ -103,12 +103,36 @@ const FRONT_CAP: Rows = [
   '..kssmmk.',
 ];
 
-/** Lion head next to a columned courthouse, in sepia ink, on the left arm. */
+/**
+ * Rexi's sleeve tattoo covers his left upper arm from the shoulder to the elbow: the lion's
+ * golden mane at the top flowing into the courthouse's pediment and columns toward the elbow.
+ * These are the inked versions of the far arm and the deltoid cap (same silhouettes).
+ */
 // prettier-ignore
-const TATTOO: Rows = [
-  'aa.iii',
-  'ai.i.i',
-  'aa.iii',
+const BACK_ARM_INKED: Rows = [
+  '...kkkkkk.',
+  '..krRrrrrk',
+  '.krqrkrqrk',
+  '.kajkajsik',
+  'kajsajjaik',
+  'ksjajsjjik',
+  'kijjjjjik.',
+  'kjsjsjsik.',
+  'kjsjsjsik.',
+  '.kiiiiik..',
+  ...BACK_ARM.slice(10),
+];
+
+// prettier-ignore
+const FRONT_CAP_INKED: Rows = [
+  '..kkkkk..',
+  '.krRrrrk.',
+  'krqrkrqrk',
+  'kajkajsik',
+  'kajsajjik',
+  'ksjajsjik',
+  '.kijjjjik',
+  '..kjsjik.',
 ];
 
 /** Long robe skirt; the gap in the middle shows the trousers. */
@@ -238,12 +262,18 @@ export const ROBE_FRAMES = {
 export type RobeFrame = keyof typeof ROBE_FRAMES;
 
 /** Far-arm swings, derived from the hanging arm by bending its lower half. */
-export const BACK_ARM_FRAMES = {
-  hang: BACK_ARM,
-  forward: shearRows(BACK_ARM, (y) => (y >= 12 ? 2 : y >= 9 ? 1 : 0)),
-  back: shearRows(BACK_ARM, (y) => (y >= 12 ? -2 : y >= 9 ? -1 : 0)),
-  flung: shearRows(BACK_ARM, (y) => (y >= 13 ? -3 : y >= 10 ? -2 : y >= 7 ? -1 : 0)),
-} as const;
+function backArmFrames(arm: Rows) {
+  return {
+    hang: arm,
+    forward: shearRows(arm, (y) => (y >= 12 ? 2 : y >= 9 ? 1 : 0)),
+    back: shearRows(arm, (y) => (y >= 12 ? -2 : y >= 9 ? -1 : 0)),
+    flung: shearRows(arm, (y) => (y >= 13 ? -3 : y >= 10 ? -2 : y >= 7 ? -1 : 0)),
+  } as const;
+}
+
+export const BACK_ARM_FRAMES = backArmFrames(BACK_ARM);
+/** The far arm is Rexi's left arm when he faces left, so it wears the sleeve. */
+const BACK_ARM_INKED_FRAMES = backArmFrames(BACK_ARM_INKED);
 
 export type BackArmFrame = keyof typeof BACK_ARM_FRAMES;
 
@@ -268,17 +298,17 @@ const AT = {
   torso: { x: 8, y: 11 },
   head: { x: 11, y: 2 },
   cap: { x: 20, y: 11 },
-  tattooFront: { x: 21, y: 15 },
-  tattooBack: { x: 3, y: 16 },
 } as const;
 
-function bodyRows(pose: BodyPose): string[] {
+/** Body rows drawn facing right; `inkedBackArm` puts the sleeve on the far arm. */
+function bodyRows(pose: BodyPose, inkedBackArm: boolean): string[] {
   const ux = pose.upperX;
   const uy = pose.upperY;
+  const backArm = (inkedBackArm ? BACK_ARM_INKED_FRAMES : BACK_ARM_FRAMES)[pose.backArm];
   const layers: Layer[] = [
     { rows: pose.legs, ...AT.legs },
     { rows: ROBE_FRAMES[pose.robe], ...AT.legs },
-    { rows: BACK_ARM_FRAMES[pose.backArm], x: AT.backArm.x + ux, y: AT.backArm.y + uy },
+    { rows: backArm, x: AT.backArm.x + ux, y: AT.backArm.y + uy },
     { rows: TORSO, x: AT.torso.x + ux, y: AT.torso.y + uy },
     {
       rows: pose.hurt ? HEAD_HURT : HEAD,
@@ -289,12 +319,7 @@ function bodyRows(pose: BodyPose): string[] {
   return composeRows(BODY_WIDTH, BODY_HEIGHT, layers);
 }
 
-interface BodySprites {
-  readonly right: SpriteDef;
-  readonly left: SpriteDef;
-}
-
-const bodyCache = new Map<string, BodySprites>();
+const bodyCache = new Map<string, SpriteDef>();
 const legIds = new Map<LegFrame, number>();
 
 function legId(frame: LegFrame): number {
@@ -308,10 +333,12 @@ function legId(frame: LegFrame): number {
 
 /**
  * The composed body for a pose and facing, built and cached on first use (the renderer's
- * SpriteBank then rasterizes it once). `flash` gives the hurt-blink colors.
+ * SpriteBank then rasterizes it once). `flash` gives the hurt-blink colors. Facing left is the
+ * mirror image, except that the far arm is then Rexi's left arm and wears the sleeve.
  */
 export function bodySprite(pose: BodyPose, facing: 1 | -1, flash: boolean): SpriteDef {
   const key = [
+    facing,
     legId(pose.legs),
     pose.robe,
     pose.backArm,
@@ -322,20 +349,28 @@ export function bodySprite(pose: BodyPose, facing: 1 | -1, flash: boolean): Spri
     pose.headY,
     flash ? 1 : 0,
   ].join(':');
-  let sprites = bodyCache.get(key);
-  if (!sprites) {
-    const right = defineSprite(flash ? rexiFlashPalette : rexiPalette, bodyRows(pose));
-    sprites = { right, left: mirrorSprite(right) };
-    bodyCache.set(key, sprites);
+  let sprite = bodyCache.get(key);
+  if (!sprite) {
+    const right = defineSprite(
+      flash ? rexiFlashPalette : rexiPalette,
+      bodyRows(pose, facing === -1),
+    );
+    sprite = facing === 1 ? right : mirrorSprite(right);
+    bodyCache.set(key, sprite);
   }
-  return facing === 1 ? sprites.right : sprites.left;
+  return sprite;
 }
 
-const capRight = defineSprite(rexiPalette, FRONT_CAP);
-const capLeft = mirrorSprite(capRight);
-const capFlashRight = defineSprite(rexiFlashPalette, FRONT_CAP);
-const capFlashLeft = mirrorSprite(capFlashRight);
-const tattoo = defineSprite(rexiPalette, TATTOO);
+/**
+ * Deltoid cap variants. The aiming arm is Rexi's left arm when he faces right, so that cap wears
+ * the sleeve; facing left the aiming arm is his right arm (the plain cap, mirrored).
+ */
+const caps = {
+  right: defineSprite(rexiPalette, FRONT_CAP_INKED),
+  left: mirrorSprite(defineSprite(rexiPalette, FRONT_CAP)),
+  flashRight: defineSprite(rexiFlashPalette, FRONT_CAP_INKED),
+  flashLeft: mirrorSprite(defineSprite(rexiFlashPalette, FRONT_CAP)),
+} as const;
 
 /** Deltoid cap over the aiming arm's root, and its canvas position (facing applied). */
 export function capSprite(
@@ -344,21 +379,11 @@ export function capSprite(
 ): { sprite: SpriteDef; x: number; y: number } {
   const sprite = flash
     ? facing === 1
-      ? capFlashRight
-      : capFlashLeft
+      ? caps.flashRight
+      : caps.flashLeft
     : facing === 1
-      ? capRight
-      : capLeft;
+      ? caps.right
+      : caps.left;
   const x = facing === 1 ? AT.cap.x : BODY_WIDTH - AT.cap.x - sprite.width;
   return { sprite, x, y: AT.cap.y };
-}
-
-/**
- * The tattoo is on Rexi's left arm. Facing right that is the aiming arm (on its deltoid cap);
- * facing left it is the far arm. Never mirrored, so the lion always sits left of the courthouse.
- */
-export function tattooSprite(facing: 1 | -1): { sprite: SpriteDef; x: number; y: number } {
-  const x = facing === 1 ? AT.tattooFront.x : BODY_WIDTH - AT.tattooBack.x - tattoo.width;
-  const y = facing === 1 ? AT.tattooFront.y : AT.tattooBack.y;
-  return { sprite: tattoo, x, y };
 }

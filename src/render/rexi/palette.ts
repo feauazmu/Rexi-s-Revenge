@@ -32,8 +32,10 @@ export const rexiPalette = {
   c: '#a0603c',
   b: '#6e3c26',
   B: '#43231a',
-  // Tattoo: sepia ink and the lion's golden mane.
+  // Sleeve tattoo (left upper arm, shoulder to elbow): dark sepia ink, ink shading over skin and
+  // the lion's golden mane.
   i: '#5c2c1a',
+  j: '#8e4c30',
   a: '#d8963c',
   // Held Weapons.
   g: '#d4924c',

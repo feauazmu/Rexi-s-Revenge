@@ -1,13 +1,17 @@
 {
   "modality": "image",
-  "prompt": "Pixel-art character reference sheet, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Character \"Rexi\": an extremely muscular male judge (bodybuilder physique, huge arms and shoulders), short light-brown hair, confident grin, clean-shaven with strong jaw. He wears a black judge's robe whose sleeves are torn off (ragged frayed edges at the shoulders), worn open over a white tank top, gray trousers and dark boots. On his LEFT upper arm a tattoo of a lion head next to a small classical columned courthouse (Greek temple with pillars and triangular pediment). Show three views side by side at the same scale: front view, side view (facing right), and back view, plus one close-up inset of the left-arm tattoo and one close-up face portrait inset (for a dialogue box portrait). Clean character turnaround layout, no text.",
+  "prompt": "Edit the attached pixel-art character reference sheet of \"Rexi\" and keep everything identical: same layout, same three views (front, side facing right, back), same face-portrait inset, same tattoo close-up inset, same light-gray background, same 16-bit SNES-era pixel-art style, crisp hard pixels. The ONLY change: the tattoo becomes a SLEEVE tattoo on ONE arm only, his LEFT arm, covering the UPPER ARM ONLY: from the shoulder down to the elbow, and stopping exactly at the elbow. The forearm, wrist and hand stay completely bare skin with no ink. His RIGHT arm has NO tattoo at all in any view. In the front view the sleeve is on the arm at the viewer's right. In the back view the sleeve is on the arm at the viewer's left only; the other arm is bare. In the side view keep the arm as in the original but with the upper-arm sleeve instead of the two small icons. The sleeve is one continuous design of dark tattoo ink: a lion head and a classical columned courthouse (Greek temple with pillars and triangular pediment) woven together, the lion's mane flowing into the columns and pediment, connecting linework and shading filling the whole upper arm. The close-up inset shows that blended sleeve design. No text.",
   "model": "google/gemini-3.1-flash-image",
   "parameters": {
-    "aspect_ratio": "16:9"
+    "aspect_ratio": "16:9",
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a073358448a57715b/reference/rexi-character-sheet-v1.png"
+    ]
   },
   "seed": null,
-  "cost_usd": 0.0672995,
-  "created_at": "2026-10-01T07:51:44.215Z",
+  "cost_usd": 0.0678985,
+  "post_processing": "Second attempt (the first, $0.0678675, put ink on both arms in the back view and past the elbow; discarded). This attempt still inked the back view's right arm (viewer's left), so the region x 898-1002, y 165-400 was pasted back from rexi-character-sheet-v1.png (the edit kept the geometry aligned) to leave that arm bare.",
+  "created_at": "2026-10-01T09:00:47.267Z",
   "asset": {
     "file": "rexi-character-sheet.png",
     "media_type": "image/png",
