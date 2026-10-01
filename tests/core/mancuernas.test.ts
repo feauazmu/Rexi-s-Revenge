@@ -111,7 +111,11 @@ describe('Mancuernas', () => {
 
     const explosions = eventsOf(events, 'explosion');
     expect(explosions).toHaveLength(1);
-    expect(explosions[0]).toMatchObject({ weapon: 'mancuernas', radius: mancuernas.splashRadius });
+    expect(explosions[0]).toMatchObject({
+      owner: 'rexi',
+      kind: 'dumbbell',
+      radius: mancuernas.splashRadius,
+    });
     expect(explosions[0]?.y).toBeCloseTo(groundY - mancuernas.projectileSize / 2, 6);
     expect(explosions[0]?.x).toBeGreaterThan(after.x);
     expect(dumbbells(game)).toHaveLength(0);

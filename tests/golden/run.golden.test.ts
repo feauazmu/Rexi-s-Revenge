@@ -98,6 +98,41 @@ describe('Run goldens', () => {
     game.seconds(0.5, { aim: { x: 262, y: 99 } });
     await expectGolden('enemy-maletin-coptero', renderView(game.view));
   });
+
+  it('enemy-archivador-artillado: patrolling, arming a drop, and a drawer bomb falling', async () => {
+    const game = drive({
+      seed: 3,
+      overrides: {
+        spawns: [
+          // Dropped its drawer 30 ticks before the snapshot.
+          { kind: 'archivador-artillado', x: 150, y: 40 },
+          // Most of the way through lowering its drawer out of the bomb bay.
+          { kind: 'archivador-artillado', x: 300, y: 30, atTick: 35 },
+          // Still waiting for its first drop.
+          { kind: 'archivador-artillado', x: 56, y: 50, atTick: 70 },
+          // Next to the Maletín-cóptero, for scale.
+          { kind: 'maletin-coptero', x: 400, y: 96 },
+        ],
+        tuning: holdStill({
+          rexi: { maxHealth: 1_000_000 },
+          enemies: {
+            'archivador-artillado': { dropRange: 480 },
+            'maletin-coptero': { fireIntervalMin: 9, fireIntervalMax: 9 },
+          },
+        }),
+      },
+    });
+    game.ticks(111, { aim: { x: 412, y: 105 } });
+    const [falling, arming, waiting] = runOf(game.view).enemies.filter(
+      (e) => e.kind === 'archivador-artillado',
+    );
+    expect(falling?.attackWindup).toBe(0);
+    expect(arming?.attackWindup).toBeGreaterThan(0.6);
+    expect(arming?.attackWindup).toBeLessThan(0.9);
+    expect(waiting?.attackWindup).toBe(0);
+    expect(runOf(game.view).projectiles.filter((p) => p.kind === 'drawer')).toHaveLength(1);
+    await expectGolden('enemy-archivador-artillado', renderView(game.view));
+  });
 });
 
 describe('Crate goldens', () => {

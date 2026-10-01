@@ -37,8 +37,9 @@ export interface ProjectileSpawn {
   /** Accelerates along its heading up to a top speed (rockets). Default: constant speed. */
   readonly thrust?: ProjectileThrust;
   /**
-   * Makes it explosive: it detonates with this blast when it hits an Enemy, lands with no
-   * bounces left, or its lifetime runs out (never when it leaves the screen).
+   * Makes it explosive: it detonates with this blast when it hits its target (an Enemy, or Rexi
+   * for Enemy projectiles), lands on the ground or a platform top with no bounces left, or its
+   * lifetime runs out (never when it leaves the screen). See `detonate`.
    */
   readonly blast?: Blast;
   /** Seconds between the puffs of a smoke trail (cosmetic). Default: no trail. */
@@ -96,29 +97,32 @@ function stepProjectile(ctx: RunContext, p: ProjectileState): boolean {
     const target = state.enemies.find((enemy) => enemy.health > 0 && overlaps(p, enemy));
     if (target) {
       damageEnemy(ctx, target, p.damage);
-      if (p.blast) detonate(ctx, p.blast, center(p));
+      detonate(ctx, p);
       return false;
     }
   } else if (canHurtRexi(state.rexi) && overlaps(p, state.rexi)) {
     // While Rexi is invulnerable, Enemy projectiles fly through him.
     damageRexi(ctx, p.damage);
+    detonate(ctx, p);
     return false;
   }
 
-  const surface = p.bounce ? landingSurface(ctx, p, bottomBefore) : groundCrossed(ctx, p);
+  // Bouncing and explosive projectiles land on one-way platforms too; others fly through them.
+  const surface =
+    p.bounce || p.blast ? landingSurface(ctx, p, bottomBefore) : groundCrossed(ctx, p);
   if (surface !== null) {
     p.y = surface - p.h;
     if (p.bounce && p.bounce.left > 0) {
       p.bounce.left -= 1;
       p.vy = -p.vy * p.bounce.restitution;
     } else {
-      if (p.blast) detonate(ctx, p.blast, center(p));
+      detonate(ctx, p);
       return false;
     }
   }
 
   if (p.ttl <= 0) {
-    if (p.blast) detonate(ctx, p.blast, center(p));
+    detonate(ctx, p);
     return false;
   }
   return isNearScreen(p);

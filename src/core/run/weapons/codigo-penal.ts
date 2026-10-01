@@ -1,3 +1,4 @@
+import { splashBlast } from '../explosives';
 import { spawnProjectile } from '../projectiles';
 import type { WeaponDef } from './types';
 
@@ -19,13 +20,7 @@ export const codigoPenal: WeaponDef = {
       lifetime: t.projectileLifetime,
       thrust: { acceleration: t.acceleration, maxSpeed: t.maxSpeed },
       trailInterval: t.trailInterval,
-      blast: {
-        weapon: 'codigo-penal',
-        splashDamage: t.splashDamage,
-        splashRadius: t.splashRadius,
-        splashEdge: t.splashEdge,
-        explosion: t.explosion,
-      },
+      blast: splashBlast(t),
     });
   },
 };

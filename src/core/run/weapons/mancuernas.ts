@@ -1,3 +1,4 @@
+import { splashBlast } from '../explosives';
 import { spawnProjectile } from '../projectiles';
 import type { WeaponDef } from './types';
 
@@ -19,13 +20,7 @@ export const mancuernas: WeaponDef = {
       damage: t.damage,
       lifetime: t.fuse,
       bounce: { count: t.bounces, restitution: t.restitution },
-      blast: {
-        weapon: 'mancuernas',
-        splashDamage: t.splashDamage,
-        splashRadius: t.splashRadius,
-        splashEdge: t.splashEdge,
-        explosion: t.explosion,
-      },
+      blast: splashBlast(t),
     });
   },
 };

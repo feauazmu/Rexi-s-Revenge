@@ -212,6 +212,11 @@ export interface EnemyView extends BoxView {
   readonly age: number;
   /** True for the few ticks after a hit: draw the Enemy as a white silhouette. */
   readonly hitFlash: boolean;
+  /**
+   * Progress of its attack telegraph, 0..1: 0 when not winding up, rising to 1 just before the
+   * attack (e.g. the Archivador Artillado lowering a drawer from its bomb bay).
+   */
+  readonly attackWindup: number;
 }
 
 export interface ProjectileView extends BoxView {

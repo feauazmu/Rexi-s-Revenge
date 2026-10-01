@@ -15,7 +15,7 @@ import type { SoundId } from './presets';
  * - a Weapon: its firing sound in `WEAPON_SOUNDS`;
  * - an Enemy: its firing sound in `ENEMY_FIRE_SOUNDS` (its explosion follows its tuned
  *   `explosion` size automatically);
- * - an explosive Weapon: nothing; its blast's sound follows its splash radius;
+ * - an explosive projectile (Weapon or Enemy): nothing; its blast's sound follows its preset size;
  * - an event kind: its rule in `EVENT_SOUNDS` (return null to keep it silent).
  * The `Record`s fail to typecheck until the new id or event kind has its entry.
  */
@@ -37,22 +37,13 @@ export const WEAPON_SOUNDS: Readonly<Record<WeaponId, SoundId>> = {
 
 export const ENEMY_FIRE_SOUNDS: Readonly<Record<EnemyKind, SoundId>> = {
   'maletin-coptero': 'paper-fwip',
+  'archivador-artillado': 'cannon-pomp', // the bomb bay lets a drawer go
 };
 
 export const EXPLOSION_SOUNDS: Readonly<Record<ExplosionSize, SoundId>> = {
   small: 'explosion-small',
   large: 'explosion-large',
 };
-
-/**
- * An explosive Weapon's blast (`explosion` event) sounds large from this splash radius up, px:
- * Mancuernas' 28 px blast is small, Código Penal's 36 px one large.
- */
-export const LARGE_BLAST_RADIUS = 32;
-
-/** The explosion sound for a blast of `radius` px. */
-export const blastSound = (radius: number): SoundId =>
-  EXPLOSION_SOUNDS[radius >= LARGE_BLAST_RADIUS ? 'large' : 'small'];
 
 /** How far toward the speakers positional sounds pan at the screen edges. */
 const PAN_WIDTH = 0.6;
@@ -83,7 +74,7 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
     pan: panAt(x),
   }),
   'enemy-fired': ({ kind }) => ENEMY_FIRE_SOUNDS[kind],
-  explosion: ({ radius, x }) => ({ sound: blastSound(radius), pan: panAt(x) }),
+  explosion: ({ size, x }) => ({ sound: EXPLOSION_SOUNDS[size], pan: panAt(x) }),
   'rexi-hit': () => 'rexi-oof',
   'run-ended': () => 'sad-trombone',
   'menu-moved': () => 'menu-move',

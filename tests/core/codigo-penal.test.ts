@@ -138,7 +138,11 @@ describe('Código Penal', () => {
 
     const explosions = eventsOf(events, 'explosion');
     expect(explosions).toHaveLength(1);
-    expect(explosions[0]).toMatchObject({ weapon: 'codigo-penal', radius: codigo.splashRadius });
+    expect(explosions[0]).toMatchObject({
+      owner: 'rexi',
+      kind: 'law-book',
+      radius: codigo.splashRadius,
+    });
     expect(explosions[0]?.x).toBeLessThan(target.x + maletin.width / 2);
     expect(books(game)).toHaveLength(0);
   });

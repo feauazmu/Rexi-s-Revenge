@@ -218,6 +218,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector)
       maxHealth: e.maxHealth,
       age: e.age,
       hitFlash: isHitFlashing(e, state.tick, tuning),
+      attackWindup: e.attackWindup,
     })),
     projectiles: state.projectiles.map((p) => ({
       id: p.id,

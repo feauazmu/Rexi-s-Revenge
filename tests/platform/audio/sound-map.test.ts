@@ -10,7 +10,6 @@ import {
 } from '../../../src/core';
 import { SOUND_PRESETS } from '../../../src/platform/audio/presets';
 import {
-  blastSound,
   ENEMY_FIRE_SOUNDS,
   EXPLOSION_SOUNDS,
   soundForEvent,
@@ -70,8 +69,42 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     ],
   ],
   explosion: [
-    [{ type: 'explosion', weapon: 'mancuernas', x: 240, y: 200, radius: 28 }, 'explosion-small'],
-    [{ type: 'explosion', weapon: 'codigo-penal', x: 240, y: 200, radius: 36 }, 'explosion-large'],
+    [
+      {
+        type: 'explosion',
+        owner: 'rexi',
+        kind: 'dumbbell',
+        size: 'small',
+        x: 240,
+        y: 200,
+        radius: 28,
+      },
+      'explosion-small',
+    ],
+    [
+      {
+        type: 'explosion',
+        owner: 'rexi',
+        kind: 'law-book',
+        size: 'large',
+        x: 240,
+        y: 200,
+        radius: 36,
+      },
+      'explosion-large',
+    ],
+    [
+      {
+        type: 'explosion',
+        owner: 'enemy',
+        kind: 'drawer',
+        size: 'small',
+        x: 240,
+        y: 200,
+        radius: 16,
+      },
+      'explosion-small',
+    ],
   ],
   'enemy-fired': [[{ type: 'enemy-fired', enemyId: 1, kind: 'maletin-coptero' }, 'paper-fwip']],
   'rexi-hit': [[{ type: 'rexi-hit', damage: 5, health: 95 }, 'rexi-oof']],
@@ -170,7 +203,9 @@ describe('soundForEvent', () => {
   it('pans a Weapon blast with its x', () => {
     const blastAt = (x: number): GameEvent => ({
       type: 'explosion',
-      weapon: 'codigo-penal',
+      owner: 'rexi',
+      kind: 'law-book',
+      size: 'large',
       x,
       y: 200,
       radius: 36,
@@ -206,11 +241,20 @@ describe('sound catalogs', () => {
     for (const weapon of WEAPON_IDS) {
       const tuning: object = defaultTuning.weapons[weapon];
       if (!('explosion' in tuning && 'splashRadius' in tuning)) continue;
-      const { explosion, splashRadius } = tuning as {
+      const { explosion: size, splashRadius: radius } = tuning as {
         explosion: ExplosionSize;
         splashRadius: number;
       };
-      expect(blastSound(splashRadius)).toBe(EXPLOSION_SOUNDS[explosion]);
+      const cue = soundForEvent({
+        type: 'explosion',
+        owner: 'rexi',
+        kind: 'dumbbell',
+        size,
+        x: 240,
+        y: 200,
+        radius,
+      });
+      expect(cue?.sound).toBe(EXPLOSION_SOUNDS[size]);
     }
   });
 

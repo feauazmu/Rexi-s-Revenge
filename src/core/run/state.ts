@@ -88,6 +88,8 @@ export interface EnemyState extends Box {
   age: number;
   /** Run tick of the latest hit-flash start, or null if never hit. */
   hitFlashTick: number | null;
+  /** Progress of an attack telegraph, 0..1 (0 when not winding up). Set by its behavior. */
+  attackWindup: number;
   /** Per-kind behavior memory, created by the Enemy's `init` and only read by its `update`. */
   memory: unknown;
 }
@@ -131,12 +133,18 @@ export interface ProjectileThrust {
   readonly maxSpeed: number;
 }
 
-/** What an explosive projectile does when it detonates (see `SplashTuning`). */
+/**
+ * What an explosive projectile does when it detonates (see `detonate`). Its splash hurts what
+ * its owner fights: Enemies for Rexi's projectiles, Rexi for Enemy ones.
+ */
 export interface Blast {
-  readonly weapon: SpecialWeaponId;
-  readonly splashDamage: number;
-  readonly splashRadius: number;
-  readonly splashEdge: number;
+  /** Reach, from the blast center to the nearest point of a target's hitbox, px. */
+  readonly radius: number;
+  /** Splash damage at the center; 0 for a harmless (cosmetic) explosion. */
+  readonly damage: number;
+  /** Fraction of `damage` dealt at the edge of the radius (0..1). */
+  readonly edge: number;
+  /** Explosion preset played (see `tuning.effects.explosions`). */
   readonly explosion: ExplosionSize;
 }
 

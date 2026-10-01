@@ -98,11 +98,14 @@ carried Weapons in that order, wrapping. Cooldowns are per Weapon, so switching 
 Projectile behaviors are options of `spawnProjectile` (`src/core/run/projectiles.ts`), so a Weapon
 composes them instead of writing motion code: `gravity` (arcs), `bounce` (off the ground and one-way
 platforms, landing from above), `thrust` (accelerate along the heading to a top speed), `trailInterval`
-(cosmetic smoke puffs) and `blast`. A projectile with a `blast` is explosive: it detonates when it hits an
-Enemy (after its impact `damage`), lands with no bounces left, or its lifetime runs out — never when it
-leaves the screen. `detonate` (`src/core/run/explosives.ts`) emits `explosion`, plays the blast's
-explosion preset and deals splash damage (`SplashTuning`: full at the center, linear falloff to
-`splashEdge` at `splashRadius`, measured to the nearest point of each Enemy). Splash never hurts Rexi.
+(cosmetic smoke puffs) and `blast`. A projectile with a `blast` is explosive: it detonates when it hits its
+target (after its impact `damage`), lands on the ground or a one-way platform top with no bounces left, or its
+lifetime runs out — never when it leaves the screen. `detonate` (`src/core/run/explosives.ts`) emits
+`explosion` (owner, projectile kind, preset size, center, radius), plays the blast's explosion preset and deals
+splash damage (`Blast`: `damage` at the center, linear falloff to `edge` × `damage` at `radius`, measured to the
+nearest point of each target's hitbox). The splash hurts what the owner fights: Rexi's blasts hurt every Enemy
+in reach and never Rexi; Enemy blasts hurt only Rexi (respecting his invulnerability). A blast with `damage: 0`
+is a harmless burst. Weapons build theirs from `SplashTuning` with `splashBlast`.
 Mancuernas (`gravity` + `bounce` + `blast`) and Código Penal (`thrust` + `trailInterval` + `blast`) are
 built this way.
 
@@ -168,7 +171,10 @@ hit, at the ground (unless they bounce), off-screen or when their lifetime runs 
 homes: each tick it turns toward the nearest live Enemy (Rexi, for Enemy projectiles) by at most that rate,
 keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits inside `fire` instead of
 spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
-every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. When Rexi's health reaches zero the Run emits
+every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. An Enemy projectile with a `blast`
+(e.g. the Archivador Artillado's drawer) explodes like Rexi's (see "Weapons and the inventory"), but its splash hurts
+only Rexi. Behaviors that telegraph an attack set `EnemyState.attackWindup` (0..1, shown as
+`EnemyView.attackWindup`) so the renderer can animate the telegraph. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
 advancing (it can no longer be paused); the Game then plays the defeat beat and opens the Veredicto (see Screen flow).
 
@@ -344,8 +350,8 @@ is code, like the art.
 - **Sound map** (`sound-map.ts`, pure): `soundForEvent(event)` → `{ sound, pan? }` or null. A
   `Record<GameEventType, …>` rule per event kind, plus `WEAPON_SOUNDS` (`Record<WeaponId, …>`),
   `ENEMY_FIRE_SOUNDS` (`Record<EnemyKind, …>`) and `EXPLOSION_SOUNDS` (by the Enemy's tuned `explosion`
-  size). Explosions pan with the Enemy's x. An explosive Weapon's `explosion` event picks the small or
-  large blast by its splash radius (`LARGE_BLAST_RADIUS`) and pans with the blast's x.
+  size). Explosions pan with the Enemy's x. An `explosion` event (any explosive projectile, Rexi's or an
+  Enemy's) plays `EXPLOSION_SOUNDS[size]` for its blast's preset and pans with the blast's x.
 - **Voice limiter** (`voices.ts`, pure): per-sound voice caps (the oldest voice of the same sound is
   stolen), a global cap (the oldest voice of the lowest priority is stolen; a new voice that matters less
   than everything playing is dropped) and a `minGap` that drops same-tick duplicates.

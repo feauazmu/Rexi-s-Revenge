@@ -334,7 +334,7 @@ export const SOUND_PRESETS = {
     pitchJitter: 0.1,
     variants: 2,
   },
-  /** Heavier Enemy guns: a stubby "pomp". (future: Archivador Artillado, Banca Artillada) */
+  /** Heavier Enemy guns: a stubby "pomp" (Archivador Artillado; future: Banca Artillada). */
   'cannon-pomp': {
     patch: {
       peak: 0.3,

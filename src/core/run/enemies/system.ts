@@ -20,6 +20,7 @@ export function spawnEnemy(ctx: RunContext, kind: EnemyKind, x: number, y: numbe
     maxHealth: health,
     age: 0,
     hitFlashTick: null,
+    attackWindup: 0,
     memory: undefined,
   };
   enemy.memory = enemyCatalog[kind].init(enemy, ctx);

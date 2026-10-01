@@ -42,6 +42,7 @@ export type CrateContents =
 
 export const ENEMY_KINDS = [
   'maletin-coptero', // Maletín-cóptero (Lawyer Craft)
+  'archivador-artillado', // Archivador Artillado (Lawyer Craft)
 ] as const;
 export type EnemyKind = (typeof ENEMY_KINDS)[number];
 
@@ -53,6 +54,7 @@ export const PROJECTILE_KINDS = [
   'subpoena', // Citaciones Teledirigidas
   'dumbbell', // Mancuernas
   'law-book', // Código Penal
+  'drawer', // Archivador Artillado's drawer bomb
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

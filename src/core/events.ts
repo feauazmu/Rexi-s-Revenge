@@ -1,6 +1,13 @@
-import type { Craft, CrateContents, EnemyKind, SpecialWeaponId, WeaponId } from './ids';
+import type {
+  Craft,
+  CrateContents,
+  EnemyKind,
+  ProjectileKind,
+  SpecialWeaponId,
+  WeaponId,
+} from './ids';
 import type { QuipTheme } from './quips/catalog';
-import type { TimedPowerUpId } from './tuning';
+import type { ExplosionSize, TimedPowerUpId } from './tuning';
 import type { ScreenKind } from './view';
 
 /**
@@ -165,12 +172,17 @@ export interface EnemyFiredEvent {
 }
 
 /**
- * An explosive Weapon's projectile detonated (Mancuernas, Código Penal). Its splash damage is
- * applied in the same tick, as `enemy-hit` events after this one.
+ * An explosive projectile detonated: on its target, on the ground or a platform, or burning out
+ * (Mancuernas, Código Penal, an Archivador Artillado's drawer, a Banca Artillada's rocket). Its
+ * splash damage is applied in the same tick, as `enemy-hit` / `rexi-hit` events after this one.
  */
 export interface ExplosionEvent {
   readonly type: 'explosion';
-  readonly weapon: SpecialWeaponId;
+  /** Who fired it: Rexi's blasts hurt Enemies, Enemy blasts hurt Rexi. */
+  readonly owner: 'rexi' | 'enemy';
+  readonly kind: ProjectileKind;
+  /** Explosion preset played (see `tuning.effects.explosions`). */
+  readonly size: ExplosionSize;
   /** Center of the blast, in game coordinates. */
   readonly x: number;
   readonly y: number;
