@@ -2,7 +2,8 @@
 
 Rexi's Revenge is a **headless, deterministic Game core** wrapped by thin **platform adapters**.
 The core is the single source of truth; adapters only translate between the browser and the core.
-Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](adr/0001-gameplay-art-drawn-in-code.md).
+Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0002](adr/0002-pixel-art-rules-and-pipeline.md) (pixel-art rules and the
+art pipeline in `scripts/art/`, see "Art pipeline" below).
 
 ```
           browser events                                     pixels
@@ -254,8 +255,11 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
 - **Determinism rule**: the renderer only uses `Surface.fillRect` (integer-snapped solid rectangles) and
   `Surface.drawBitmap` (unscaled pre-rasterized bitmaps at integer positions). No paths, arcs, gradients or
   canvas text. That makes output pixel-identical in browsers and in Node.
-- **Sprites are code** (ADR 0001): `defineSprite(palette, rows)` is a palette-indexed pixel grid; the
-  `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
+- **Sprites are palette-indexed data** (ADR 0002): `defineSprite(palette, rows)` is a palette-indexed
+  pixel grid; `decodeSprite` (`sprite-data.ts`) turns the art pipeline's compact run-length data into
+  the same `SpriteDef`. The `SpriteBank` rasterizes each sprite once on first use through the
+  platform's `BitmapFactory`. Existing sprites are still drawn in code (they predate ADR 0002) until
+  the art pass replaces them with exported pipeline art.
 - Layers are listed back to front in `src/render/renderer.ts`: `WORLD_LAYERS` are drawn offset by the
   screen shake, `SCREEN_LAYERS` stay fixed: the HUD (`src/render/hud/`), then the Dialogue Box
   (`src/render/dialogue/`), then the crosshair. When paused, the world layers and the frozen Dialogue
@@ -273,16 +277,21 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
   for the hurt pose, `invulnerableTicks` for the red blink, `shotAge`) and the Run tick. The aiming
   arm (`arm.ts`) is rasterized from shapes in 16 directions around `RexiView.shoulder`, holding the current Weapon's look from `held-weapons.ts` (a
   `Record<WeaponId, …>`, so a new Weapon must add its held look there).
-  Rexi's sleeve tattoo (left upper arm, shoulder to elbow) is drawn into whichever part is his left
-  arm for the facing: the deltoid cap and aiming arm facing right, the far arm facing left. So
-  those parts are built per facing, not just mirrored.
+  The code-drawn sprite draws the sleeve tattoo into whichever part is his **left** arm for the
+  facing (the deltoid cap and aiming arm facing right, the far arm facing left), so those parts are
+  built per facing, not just mirrored. That side is wrong: the sleeve is on his **right** arm
+  (CONTEXT.md). This sprite is replaced by the pipeline's Rexi in the art pass, whose rig puts the
+  sleeve on the aiming arm facing right and on the near arm facing left; it is not patched here.
 
 ## Palette
 
-`masterPalette` (`src/render/palette.ts`) is the game's one curated palette: 40 named colors in the
-style of a 16-bit palette. `paletteRamps` lists them as ramps, dark to light: robe, grey (steel,
-trousers, smoke, marble, tank top), stone (plaza, ledges), skin, hair, leather, red (gym), brass,
-sky, glass, neonPink, fire and foliage. The swatch golden `palette-swatches` shows every color.
+`masterPalette` (`src/render/palette.ts`) is the game's one curated palette: 56 named colors in the
+style of a 16-bit palette (ADR 0002). `paletteRamps` lists them as ramps, dark to light: robe,
+grey (trousers, smoke, marble, tank top), skin, hair, leather, red (gym), brass, stone (plaza,
+ledges, courthouse), steel (guns, rotors, casings), sky, glass, neonCyan, neonPink, neonLime, fire
+and foliage. The swatch golden `palette-swatches` shows every color. The art pipeline reads both
+from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of its class
+(characters never use sky, glass, neon or foliage).
 
 - **Rules**: draw only with `masterPalette` colors, named (`masterPalette.skin3`), never hex
   literals. No blending or alpha: the renderer must put exact palette colors on screen.
@@ -290,7 +299,11 @@ sky, glass, neonPink, fire and foliage. The swatch golden `palette-swatches` sho
 - **Ramps are hue-shifted**: shadows lean purple/blue, highlights lean warm yellow. To shade a
   material, step along its ramp (base, one step down for shadow, one up for light). Never darken
   or lighten a color by hand. Ramps share colors on purpose (`coral` is the gym-red highlight and
-  a sunset band; `leather3` is the brass shadow), which keeps the count down and the scene unified.
+  a sunset band; `leather3` is the brass shadow; `skyPeach` and `sunYellow` are both sunset and
+  fire), which keeps the count down and the scene unified. The steps added for the art pass:
+  `robeMid` (robe folds), `skinWarm` (muscle midtone), `steel1`–`steel3`, `stoneLight`,
+  `redLight` (gym red and the fire's ember), `skyViolet`, `skyPeach`, `sunYellow`, `leafDeep`,
+  `leafMid`, `leafLight`, `neonTeal`, `neonBlush` and `neonLime`.
 - **Checking**: `src/render/palette-audit.ts` finds off-palette colors in rendered pixels
   (`findOffPaletteColors`) or sprite definitions (`findOffPaletteSpriteColors`), each with its
   nearest palette color. Tests use `expectOnPalette` and `loadGoldens` from `tests/support/palette.ts`.
@@ -299,7 +312,33 @@ sky, glass, neonPink, fire and foliage. The swatch golden `palette-swatches` sho
 - **A new color**: first try the nearest ramp step (`nearestPaletteColor` suggests one). If no
   step works, ask the owner, with a mock-up showing why. An accepted color gets a semantic name,
   goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
-  palette stays at 40 colors or fewer (the palette test enforces it).
+  palette stays at 56 colors or fewer, each name short enough for its swatch label (the palette
+  test enforces both).
+
+## Art pipeline
+
+Gameplay art is generated pixel art made through `scripts/art/` (ADR 0002; workflow, commands and
+manifest format in [`scripts/art/README.md`](../scripts/art/README.md)). It is a Python tool run
+with `uv`, outside the game build: the game only ever sees the TypeScript it exports.
+
+- **Art roots**: a directory with a `sheets.json` manifest, prompt files, templates, raw renders
+  (with JSON sidecars), their reconstructed grids, and the cleaned sprites. `art/` is the
+  production root; `reference/manu-pipeline/` is the version C prototype, kept reproducible
+  (`npm run art:test` rebuilds its sprites from its grids and compares them byte for byte).
+- **Flow**: `templates` (reference images on the model's 240-cell grid, size anchor inside) →
+  `gen` (one edit through the creation-tool, refused past the $10 cap: CREDITS.md running total +
+  uncredited `art/ledger.tsv` rows + the call's estimate) → `clean` (grid reconstruction, palette
+  snap to the asset's class, slicing, canvases, hole fill; scenes from tiles, split into layers) →
+  `bake` (RotSprite angles with pivots) → character scripts (code animation from the master,
+  `scripts/art/characters/`) → `export` (palette-indexed TypeScript, pixel-text rows or run-length
+  data) → `preview` (contact sheets) → `audit` (palette, alpha, outline). `credit` folds the ledger
+  into CREDITS.md.
+- **Contract with the renderer**: exported modules import `masterPalette`/`defineSprite` or
+  `decodeSprite` and export `sprites` (plus animation tables and pivots as `as const` data). The
+  run-length format is fixed by `src/render/sprite-data.ts`; `tests/render/sprite-data.test.ts`
+  decodes a fixture written by the Python exporter, so the two cannot drift.
+- Nothing from the pipeline is wired into the renderer yet; each area of the art pass (#24) swaps
+  its code-drawn sprites for an exported module.
 
 ## Brand art: logo, icons and share preview
 
@@ -586,6 +625,8 @@ await expectGolden('my-scene', renderView(game.view));
 | `npm test`              | Vitest: unit, core and golden tests                               |
 | `npm run golden:update` | Re-render and overwrite golden PNGs                               |
 | `npm run share-preview` | Re-render the favicons, app icons and link preview in `public/`   |
+| `npm run art -- <cmd>`  | The art pipeline (`scripts/art/README.md`; needs `uv`)            |
+| `npm run art:test`      | The art pipeline's Python tests                                   |
 | `npm run build`         | Production build to `dist/`                                       |
 | `npm run smoke`         | Build, serve and run Playwright (`SMOKE_PORT` to change the port) |
 | `npm run check`         | All of the above, as CI does                                      |

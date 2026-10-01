@@ -1,220 +1,165 @@
-"""Reference images passed to the image model (written to reference/manu-pipeline/templates/).
+"""Reference images for the image model, built in code on the model's art grid (ADR 0002).
 
-Gemini draws pixel art on a grid about 240 cells wide at any output size (manus-garden's finding).
-Every template is drawn at 1 cell = 1 art pixel on that grid and upscaled NEAREST to the 2K
-output size, so the model sees the exact art-pixel size: the size anchor is inside the image
-being edited (manus-garden lesson 1).
+Gemini draws pixel art on a grid about 240 cells wide at any output size (manus-garden's finding,
+confirmed by the version C prototype). Every template is drawn at 1 cell = 1 art pixel on that
+grid and upscaled NEAREST to the 2K output (2752x1536), so the model sees the exact art-pixel
+size, and the size anchor sits inside the image being edited. `save` writes both <name>.png
+(what is passed to the model) and <name>_1x.png (the cells, for reading).
 
-  anchor     the side view of reference/rexi-character-sheet.png box-downscaled to 64 px tall and
-             snapped to the palette: a rough draft at the exact in-game size, redrawn in place
-  editsheet  N copies of the cleaned master on a shared ground row (keyframe edits)
-  poseguide  grey stick figures in the same N slots (run contact, run passing, jump, hurt, arm)
-
-    uv run -q --with pillow --with numpy python scripts/art/templates.py
+Builders (each returns a PIL RGBA image on the grid):
+  editsheet(sprite, n)          n copies of a master on one ground row: keyframe edits
+  lineup(anchor, draft, n)      a proven sprite as density anchor + n drafts with ground lines and
+                                head-top ticks at the target height: masters
+  slotsheet(anchor, n, box)     a size anchor + n empty slots, each with a light box of the
+                                largest allowed size: props, enemies (flying: ground=None)
+  icongrid(n, cell, anchor)     n icon cells with guides, an accepted icon in cell 0
+  poseguide(poses, n)           two-tone stick figures in the editsheet's slots
+  draft(image, size, allowed)   a picture box-downscaled to its in-game size and palette-snapped:
+                                a blurry draft fixing size, proportions and colours
+  scene_tiles(draft, step)      a 640x360 scene draft cut into 240x135 tiles (one edit each, then
+                                re-assembled by clean's `tiles`)
 """
 import os
-import sys
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from palette import ROOT  # noqa: E402
-from pixelize import snap  # noqa: E402
+from pixelize import snap
 
-OUT = os.path.join(ROOT, "reference", "manu-pipeline", "templates")
 GW, GH = 240, 135                 # the model's art grid for 16:9
 FULL = (2752, 1536)               # 2K 16:9 output size
-HEIGHT = 64                       # Rexi's height in art pixels (640x360 game)
-GROUND = 100                      # ground row on the grid (feet stand on GROUND - 1)
+GROUND = 100                      # default ground row (feet stand on GROUND - 1)
 GUIDE = (170, 170, 170)
-NEAR, FAR = (105, 105, 105), (200, 200, 200)   # two-tone guides: the near leg is the darker one
-SIDE_BOX = (630, 47, 815, 737)    # side view in the 1376x768 character sheet
+TICK = (212, 212, 212)
+BOX = (226, 226, 226)
+NEAR, FAR = (105, 105, 105), (200, 200, 200)   # two-tone pose guides: the near limb is darker
 
 
-def save(im, name):
-    os.makedirs(OUT, exist_ok=True)
-    im.convert("RGB").resize(FULL, Image.NEAREST).save(os.path.join(OUT, name + ".png"))
-    im.save(os.path.join(OUT, name + "_1x.png"))
+def save(project, im, name):
+    out = project.path("templates")
+    os.makedirs(out, exist_ok=True)
+    im.convert("RGB").resize(FULL, Image.NEAREST).save(os.path.join(out, name + ".png"))
+    im.save(os.path.join(out, name + "_1x.png"))
+    return os.path.join(out, name + ".png")
 
 
-def side_anchor():
-    """The character sheet's side view at 64 px: area-average downscale, then palette snap.
-    Blurry on purpose: it fixes size, proportions and colours, the model supplies the pixels."""
-    sheet = Image.open(os.path.join(ROOT, "reference", "rexi-character-sheet.png")).convert("RGB")
-    crop = sheet.crop(SIDE_BOX)
-    a = np.asarray(crop).astype(int)
-    bg = np.array([170, 174, 181])
-    fg = (np.abs(a - bg).sum(-1) > 40).astype(np.uint8) * 255
-    w = round(crop.width * HEIGHT / crop.height)
-    small = crop.resize((w, HEIGHT), Image.BOX)
-    alpha = Image.fromarray(fg).resize((w, HEIGHT), Image.BOX)
-    g = np.dstack([np.asarray(small), (np.asarray(alpha) > 110).astype(np.uint8) * 255])
-    return snap(g.astype(np.uint8), char=True)
+def _img(sprite):
+    im = Image.fromarray(sprite) if isinstance(sprite, np.ndarray) else sprite.convert("RGBA")
+    box = im.getbbox()
+    return im.crop(box) if box else im
 
 
-def anchor_sheet():
-    """The rough 64 px draft alone, feet on the ground row, horizontally centred."""
-    im = Image.new("RGBA", (GW, GH), "white")
-    sp = Image.fromarray(side_anchor())
-    im.alpha_composite(sp, (GW // 2 - sp.width // 2, GROUND - HEIGHT))
-    save(im, "anchor_side")
-    return sp
+def blank():
+    return Image.new("RGBA", (GW, GH), "white")
 
 
-MANU = "/Users/felipe/github/feauazmu/manus-garden/Art/characters/manu/master_dr.png"
-
-
-def density_sheet(draft_png):
-    """Second master attempt. v1 came back on a 480-cell grid (128 px tall), so this template
-    puts a proven 240-grid sprite beside the draft: Manu (manus-garden, 78 px) on the left as a
-    pixel-density anchor, and the v1 render reduced 2:1 to 64 px (scripts/art/reduce.py) in the
-    centre, to be redrawn in place."""
-    im = Image.new("RGBA", (GW, GH), "white")
-    m = Image.open(MANU).convert("RGBA"); m = m.crop(m.getbbox())
-    im.alpha_composite(m, (60 - m.width // 2, GROUND - m.height))
-    d = Image.open(draft_png).convert("RGBA"); d = d.crop(d.getbbox())
-    im.alpha_composite(d, (GW // 2 - d.width // 2, GROUND - d.height))
-    save(im, "density_side")
-
-
-def coarse_sheet(draft_png, name="coarse_side", n=1, gw=160, ground=84):
-    """Third master attempt. Flash redraws a figure at whatever share of the image height it
-    likes (v1: 128 cells tall on a 480-cell grid, v2: 98 cells on the 240 grid), so instead of
-    fighting that, the grid is made coarser: 160x90 cells (17.2 output px per art pixel), where
-    a 64 px Rexi already fills ~70% of the height, the share the model drew him at both times."""
-    gh = gw * 9 // 16
-    im = Image.new("RGBA", (gw, gh), "white")
-    d = Image.open(draft_png).convert("RGBA") if isinstance(draft_png, str) else Image.fromarray(draft_png)
-    d = d.crop(d.getbbox())
-    sw = gw // n
-    for c in range(n):
-        im.alpha_composite(d, (c * sw + sw // 2 - d.width // 2, ground - d.height))
-    save(im, name)
-
-
-def cast_sheet(draft_png, copies=3):
-    """Fourth master attempt (manus-garden's cast_row: a lineup with head-top and ground lines).
-    Slot 1 is Manu (78 px, a proven 240-grid sprite) as the pixel-density anchor; slots 2.. hold
-    copies of the 64 px draft, each with a ground line and a short head-top tick. A crowded row
-    keeps the model from enlarging the figure (v2 drew a lone figure 98 px tall), and the copies
-    give several samples of the master for the price of one call."""
-    im = Image.new("RGBA", (GW, GH), "white"); d = ImageDraw.Draw(im)
-    n = copies + 1; sw = GW // n
-    m = Image.open(MANU).convert("RGBA"); m = m.crop(m.getbbox())
-    im.alpha_composite(m, (sw // 2 - m.width // 2, GROUND - m.height))
-    r = Image.open(draft_png).convert("RGBA"); r = r.crop(r.getbbox())
-    for c in range(1, n):
-        cx = c * sw + sw // 2
-        d.line([(cx - sw // 2 + 4, GROUND), (cx + sw // 2 - 4, GROUND)], fill=GUIDE)
-        d.line([(cx - 6, GROUND - HEIGHT - 1), (cx + 6, GROUND - HEIGHT - 1)], fill=(212, 212, 212))
-        im.alpha_composite(r, (cx - r.width // 2, GROUND - r.height))
-    save(im, "cast_side")
-
-
-def side_crop():
-    """The side view alone, cropped out of the character sheet (design reference: passing the
-    whole sheet made v3 redraw the sheet instead of editing the template)."""
-    sheet = Image.open(os.path.join(ROOT, "reference", "rexi-character-sheet.png")).convert("RGB")
-    x0, y0, x1, y1 = SIDE_BOX
-    c = sheet.crop((x0 - 60, y0 - 10, x1 + 60, y1 + 10))
-    c.save(os.path.join(OUT, "sheet_side_crop.png"))
-
-
-def editsheet(master, name, n):
-    """n copies of a master sprite (RGBA array) in one row, feet on the shared ground row."""
-    im = Image.new("RGBA", (GW, GH), "white")
-    m = Image.fromarray(master); m = m.crop(m.getbbox())
+def editsheet(sprite, n, ground=GROUND):
+    im = blank()
+    m = _img(sprite)
     sw = GW // n
     for c in range(n):
+        im.alpha_composite(m, (c * sw + sw // 2 - m.width // 2, ground - m.height))
+    return im
+
+
+def lineup(anchor, draft, n=3, height=64, ground=GROUND):
+    """Slot 1: the anchor (a sprite already on the 240 grid); slots 2..n+1: the draft, each with a
+    ground line and a short tick one row above the target head top."""
+    im = blank(); d = ImageDraw.Draw(im)
+    sw = GW // (n + 1)
+    a = _img(anchor)
+    im.alpha_composite(a, (sw // 2 - a.width // 2, ground - a.height))
+    r = _img(draft)
+    for c in range(1, n + 1):
         cx = c * sw + sw // 2
-        im.alpha_composite(m, (cx - m.width // 2, GROUND - m.height))
-    save(im, name)
+        d.line([(cx - sw // 2 + 4, ground), (cx + sw // 2 - 4, ground)], fill=GUIDE)
+        d.line([(cx - 6, ground - height - 1), (cx + 6, ground - height - 1)], fill=TICK)
+        im.alpha_composite(r, (cx - r.width // 2, ground - r.height))
+    return im
+
+
+def slotsheet(anchor, n, box, ground=GROUND):
+    """Slot 0: the size anchor standing on the ground; slots 1..n: a light box `box` (w, h) of the
+    largest allowed size, bottom on the ground row (or vertically centred when ground is None,
+    for flying Enemies), for the model to draw into."""
+    im = blank(); d = ImageDraw.Draw(im)
+    sw = GW // (n + 1)
+    a = _img(anchor)
+    base = ground if ground is not None else GH // 2 + a.height // 2
+    im.alpha_composite(a, (sw // 2 - a.width // 2, base - a.height))
+    bw, bh = box
+    for c in range(1, n + 1):
+        cx = c * sw + sw // 2
+        bottom = ground if ground is not None else GH // 2 + bh // 2
+        d.rectangle([cx - bw // 2, bottom - bh, cx + bw // 2 - 1, bottom - 1], outline=BOX)
+        if ground is not None:
+            d.line([(cx - sw // 2 + 4, ground), (cx + sw // 2 - 4, ground)], fill=GUIDE)
+    return im
+
+
+def icongrid(n, cell, anchor=None, cols=None):
+    """n cells of `cell` px with a light frame each, laid out in rows; cell 0 holds `anchor`."""
+    cols = cols or min(n, 8)
+    rows = -(-n // cols)
+    gap = max(4, cell // 2)
+    im = blank(); d = ImageDraw.Draw(im)
+    x0 = (GW - (cols * (cell + gap) - gap)) // 2
+    y0 = (GH - (rows * (cell + gap) - gap)) // 2
+    for i in range(n):
+        x, y = x0 + (i % cols) * (cell + gap), y0 + (i // cols) * (cell + gap)
+        d.rectangle([x - 1, y - 1, x + cell, y + cell], outline=BOX)
+        if i == 0 and anchor is not None:
+            a = _img(anchor)
+            im.alpha_composite(a, (x + (cell - a.width) // 2, y + (cell - a.height) // 2))
+    return im
 
 
 def _stick(d, pts, width=2):
-    """A grey stick figure: pts = dict of named joints in grid coords."""
     head = pts["head"]
     d.ellipse([head[0] - 4, head[1] - 5, head[0] + 4, head[1] + 4], outline=GUIDE, width=width)
+    two = pts.get("twotone")
     for a, b in (("neck", "hip"), ("neck", "elbowN"), ("elbowN", "handN"), ("neck", "elbowF"),
                  ("elbowF", "handF"), ("hip", "kneeN"), ("kneeN", "footN"), ("hip", "kneeF"), ("kneeF", "footF")):
         if a in pts and b in pts:
-            col = NEAR if "N" in a + b and pts.get("twotone") else FAR if "F" in a + b and pts.get("twotone") else GUIDE
+            col = (NEAR if "N" in a + b else FAR) if two else GUIDE
             d.line([pts[a], pts[b]], fill=col, width=width)
 
 
-# Pose guides, facing right, in slot-local coords: x relative to the slot centre, y = grid row.
-# Built from Rexi's 64 px proportions: head top 36, neck 47, hip 70, knee 83, feet 99.
-T, NECK, HIP, KNEE, FEET = GROUND - HEIGHT, GROUND - 53, GROUND - 30, GROUND - 16, GROUND - 1
-POSES = {   # the near (tattooed) arm is left out: it becomes the separate aiming arm
-    "contact": dict(head=(3, T + 6), neck=(2, NECK), hip=(0, HIP + 1),
-                    elbowF=(7, NECK + 10), handF=(12, NECK + 16), kneeN=(7, KNEE), footN=(13, FEET),
-                    kneeF=(-4, KNEE + 1), footF=(-12, FEET - 3)),
-    "passing": dict(head=(3, T + 5), neck=(2, NECK - 1), hip=(0, HIP - 1),
-                    elbowF=(2, NECK + 12), handF=(4, NECK + 21), kneeN=(0, KNEE), footN=(0, FEET),
-                    kneeF=(7, KNEE - 5), footF=(0, FEET - 8)),
-    "jump": dict(head=(3, T + 2), neck=(2, NECK - 3), hip=(0, HIP - 5),
-                 elbowF=(9, NECK - 6), handF=(8, NECK - 15), kneeN=(9, KNEE - 12), footN=(3, FEET - 14),
-                 kneeF=(-1, KNEE - 6), footF=(-7, FEET - 10)),
-    "hurt": dict(head=(-6, T + 9), neck=(-4, NECK + 2), hip=(1, HIP + 1),
-                 elbowF=(6, NECK - 5), handF=(11, NECK - 12), kneeN=(6, KNEE), footN=(9, FEET),
-                 kneeF=(-3, KNEE + 1), footF=(-8, FEET)),
-}
-# Second key sheet: the rest of the run cycle and the jump arc. Two-tone legs (near = dark). No
-# arms: both arms stay as in the master (the far arm is replaced by the aiming arm in code).
-POSES.update({
-    "downA": dict(head=(3, T + 7), neck=(2, NECK + 1), hip=(0, HIP + 2), kneeN=(6, KNEE + 1), footN=(9, FEET),
-                  kneeF=(-5, KNEE - 1), footF=(-11, FEET - 6)),
-    "contactB": dict(head=(3, T + 6), neck=(2, NECK), hip=(0, HIP + 1), kneeF=(7, KNEE), footF=(13, FEET),
-                     kneeN=(-4, KNEE + 1), footN=(-12, FEET - 3)),
-    "downB": dict(head=(3, T + 7), neck=(2, NECK + 1), hip=(0, HIP + 2), kneeF=(6, KNEE + 1), footF=(9, FEET),
-                  kneeN=(-5, KNEE - 1), footN=(-11, FEET - 6)),
-    "passingB": dict(head=(3, T + 5), neck=(2, NECK - 1), hip=(0, HIP - 1), kneeF=(0, KNEE), footF=(0, FEET),
-                     kneeN=(7, KNEE - 5), footN=(0, FEET - 8)),
-    "rise": dict(head=(3, T - 2), neck=(2, NECK - 7), hip=(0, HIP - 8), kneeN=(2, KNEE - 7), footN=(-1, FEET - 6),
-                 kneeF=(-1, KNEE - 7), footF=(-5, FEET - 7)),
-    "fall": dict(head=(3, T - 1), neck=(2, NECK - 6), hip=(0, HIP - 7), kneeN=(6, KNEE - 8), footN=(5, FEET - 5),
-                 kneeF=(-2, KNEE - 6), footF=(-4, FEET - 3)),
-    "land": dict(head=(4, T + 9), neck=(3, NECK + 4), hip=(-1, HIP + 6), kneeN=(8, KNEE + 3), footN=(7, FEET),
-                 kneeF=(4, KNEE + 4), footF=(-5, FEET)),
-    "hurt2": dict(head=(-8, T + 11), neck=(-6, NECK + 4), hip=(1, HIP + 2), kneeN=(7, KNEE + 1), footN=(10, FEET),
-                  kneeF=(-2, KNEE + 2), footF=(-8, FEET)),
-})
-for _k in ("downA", "contactB", "downB", "passingB", "rise", "fall", "land", "hurt2"):
-    POSES[_k]["twotone"] = True
-
-
-def poseguide(name, order):
+def poseguide(poses, ground=GROUND):
+    """poses: list of joint dicts in slot-local coords (x from the slot centre, y = grid row):
+    head, neck, hip, elbowN/F, handN/F, kneeN/F, footN/F; "twotone": True draws the near limbs
+    dark and the far ones light (tell the model which is which in the prompt)."""
     im = Image.new("RGB", (GW, GH), "white"); d = ImageDraw.Draw(im)
-    sw = GW // len(order)
-    for c, pose in enumerate(order):
+    sw = GW // len(poses)
+    for c, pose in enumerate(poses):
         cx = c * sw + sw // 2
-        d.line([(cx - sw // 2 + 4, GROUND), (cx + sw // 2 - 4, GROUND)], fill=GUIDE)
-        _stick(d, {k: (v if k == "twotone" else (cx + v[0], v[1])) for k, v in POSES[pose].items()})
-    save(im, name)
+        d.line([(cx - sw // 2 + 4, ground), (cx + sw // 2 - 4, ground)], fill=GUIDE)
+        _stick(d, {k: (v if k == "twotone" else (cx + v[0], v[1])) for k, v in pose.items()})
+    return im.convert("RGBA")
 
 
-def palette_swatch():
-    """Rexi's palette subset as big squares, one ramp per row ('use only these colours')."""
-    from palette import REXI
-    rows = [["outline", "night", "robe", "robeSheen"], ["grey1", "grey2", "grey3", "marble", "white"],
-            ["skin1", "skin2", "skin3", "skin4", "skin5"], ["leather1", "leather2", "leather3", "leather4", "hairLight"],
-            ["brass", "gold", "light"], ["red1", "red2", "red3", "coral"]]
-    im = Image.new("RGB", (5 * 40, len(rows) * 40), "white"); d = ImageDraw.Draw(im)
-    for r, ramp in enumerate(rows):
-        for c, n in enumerate(ramp):
-            d.rectangle([c * 40 + 2, r * 40 + 2, c * 40 + 37, r * 40 + 37], fill=REXI[n])
-    im.resize((im.width * 4, im.height * 4), Image.NEAREST).save(os.path.join(OUT, "palette_swatch.png"))
+def draft(image, size, allowed=None, alpha=None):
+    """Area-average `image` (PIL) down to `size` and snap it to the palette. `alpha` (a PIL L
+    mask of the same size as `image`) keeps the figure and drops its background."""
+    small = image.convert("RGB").resize(size, Image.BOX)
+    a = np.full(size[::-1], 255, np.uint8) if alpha is None else \
+        (np.asarray(alpha.resize(size, Image.BOX)) > 110).astype(np.uint8) * 255
+    return snap(np.dstack([np.asarray(small), a]).astype(np.uint8), allowed)
 
 
-if __name__ == "__main__":
-    palette_swatch()
-    sp = anchor_sheet()
-    print("anchor", sp.size)
-    poseguide("poseguide_keys", ["contact", "passing", "jump", "hurt"])
-    poseguide("poseguide_run_b", ["downA", "contactB", "downB", "passingB"])
-    poseguide("poseguide_air", ["rise", "fall", "land", "hurt2"])
-    master = os.path.join(ROOT, "reference", "manu-pipeline", "master_side.png")
-    if os.path.exists(master):
-        editsheet(np.asarray(Image.open(master).convert("RGBA")), "edit_master_x4", 4)
-    print(sorted(os.listdir(OUT)))
+def scene_tiles(scene, step=(200, 113), tile=(GW, GH)):
+    """Cut a scene draft (RGBA array at game size, e.g. 640x360) into overlapping grid-sized
+    tiles: [(row, col, (x, y), tile image)]. Tile (r, c) starts at (c * step_x, r * step_y), so
+    neighbours overlap by tile - step cells; edges are padded with the scene's edge pixels."""
+    h, w = scene.shape[:2]
+    tw, th = tile
+    out = []
+    rows = max(1, -(-(h - th) // step[1]) + 1)
+    cols = max(1, -(-(w - tw) // step[0]) + 1)
+    padded = np.pad(scene, ((0, max(0, (rows - 1) * step[1] + th - h)), (0, max(0, (cols - 1) * step[0] + tw - w)), (0, 0)),
+                    mode="edge")
+    for r in range(rows):
+        for c in range(cols):
+            x, y = c * step[0], r * step[1]
+            out.append((r, c, (x, y), Image.fromarray(padded[y:y + th, x:x + tw].copy())))
+    return out

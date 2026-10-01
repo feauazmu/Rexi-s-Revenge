@@ -3,18 +3,22 @@
 Ported from manus-garden's Art/tools/pixelize.py (itself from its art-spike-3), unchanged in
 method: pitch detection on the edge-energy comb, phase search, median resampling of each cell
 centre, pale/white guide removal, CIELAB nearest-colour snap and recursive XY-cut slicing.
-Only the palette differs: ours comes from src/render/palette.ts (scripts/art/palette.py) and a
-character snaps to the REXI subset.
+The palette comes from src/render/palette.ts (scripts/art/palette.py); a manifest entry limits
+the snap to its asset class's ramps (`allowed`).
+
+Additions for this project: a chroma-key background (`background: "green"`, the #00FF00
+keying that works for Gemini, which has no real alpha), opaque scenes (`background: "none"`),
+and `fit`, an exact mode resample of a snapped grid to a target size (backgrounds drawn on a
+coarser or finer grid than the game's 640x360).
 """
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from palette import ALL, REXI, hex2rgb  # noqa: E402
+from palette import MASTER, hex2rgb  # noqa: E402
 
-FLAT = list(dict.fromkeys(ALL.values()))
-CHAR_EXCLUDE = {h for h in FLAT if h not in REXI.values()}
+FLAT = list(dict.fromkeys(MASTER.values()))
 
 
 def to_lab(rgb):
@@ -41,6 +45,25 @@ def bg_mask(img, thresh=60):
             ImageDraw.floodfill(probe, s, (255, 0, 255), thresh=thresh)
     a = np.asarray(probe)
     return (a[..., 0] == 255) & (a[..., 1] == 0) & (a[..., 2] == 255)
+
+
+def green_mask(img, hue_tol=22, min_sat=0.3, min_val=0.3):
+    """Chroma key: pixels near pure green (#00FF00) in HSV, the keying that works for Gemini
+    (no real alpha). Ask for a 2-3 px white outline buffer around each sprite in the prompt;
+    drop_pale then removes that buffer like any other pale halo."""
+    hsv = np.asarray(img.convert("HSV")).astype(float)
+    hue = hsv[..., 0] * 360 / 255
+    return (np.abs(hue - 120) <= hue_tol) & (hsv[..., 1] / 255 >= min_sat) & (hsv[..., 2] / 255 >= min_val)
+
+
+def background_mask(img, background="white"):
+    if background == "white":
+        return bg_mask(img)
+    if background == "green":
+        return green_mask(img)
+    if background == "none":
+        return np.zeros((img.height, img.width), bool)
+    raise ValueError(f"unknown background {background!r} (white, green or none)")
 
 
 def _edge_profile(arr, axis):
@@ -86,7 +109,7 @@ def best_phase(arr, s):
     return offs
 
 
-def resample(img, mask, s, ox, oy, keep_white=False):
+def resample(img, mask, s, ox, oy, keep_white=False, pale_guides=True):
     a = np.asarray(img.convert("RGB")).astype(float)
     h, w = mask.shape
     nx, ny = int((w - ox) // s), int((h - oy) // s)
@@ -104,7 +127,7 @@ def resample(img, mask, s, ox, oy, keep_white=False):
             pale[j, i] = px.min() > 238 or (px.max() - px.min() < 12 and px.min() > 150)   # white, light-grey guides
             white[j, i] = px.min() > 250
             out[j, i, :3] = px; out[j, i, 3] = 255
-    return drop_pale(out, pale, white, keep_white)
+    return drop_pale(out, pale, white, keep_white) if pale_guides else out
 
 
 def drop_pale(out, pale, white, keep_white=False, min_keep=24):
@@ -125,16 +148,40 @@ def drop_pale(out, pale, white, keep_white=False, min_keep=24):
     return out
 
 
-def snap(g, char=False, allowed=None):
-    """Nearest master-palette colour in CIELAB. `allowed` = list of hex colours (a Garden subset)."""
+def snap(g, allowed=None, chunk=65536):
+    """Nearest master-palette colour in CIELAB. `allowed` = list of hex colours (the entry's
+    asset class, palette.allowed_colors); None = the whole palette. Chunked, so a 640x360
+    scene does not build a pixels x colours x 3 array at once."""
     rgb = g[..., :3].reshape(-1, 3).astype(float)
-    d = ((to_lab(rgb)[:, None, :] - PAL_LAB[None]) ** 2).sum(-1)
-    if char:
-        d[:, [i for i, h in enumerate(FLAT) if h in CHAR_EXCLUDE]] = 1e9
-    if allowed:
-        d[:, [i for i, h in enumerate(FLAT) if h not in allowed]] = 1e9
+    banned = [i for i, h in enumerate(FLAT) if allowed and h not in allowed]
+    idx = np.empty(len(rgb), int)
+    for s in range(0, len(rgb), chunk):
+        d = ((to_lab(rgb[s:s + chunk])[:, None, :] - PAL_LAB[None]) ** 2).sum(-1)
+        d[:, banned] = 1e9
+        idx[s:s + chunk] = d.argmin(1)
     out = g.copy()
-    out[..., :3] = PAL[d.argmin(1)].reshape(g.shape[:2] + (3,)).astype(np.uint8)
+    out[..., :3] = PAL[idx].reshape(g.shape[:2] + (3,)).astype(np.uint8)
+    return out
+
+
+def fit(g, size):
+    """Resample a snapped RGBA grid to `size` (w, h) without new colours: each output pixel takes
+    the most common colour of the source cells it covers (transparent if most are)."""
+    W, H = size
+    h, w = g.shape[:2]
+    out = np.zeros((H, W, 4), np.uint8)
+    key = (g[..., 0].astype(np.int64) << 16) | (g[..., 1].astype(np.int64) << 8) | g[..., 2]
+    key = np.where(g[..., 3] > 0, key + (1 << 24), 0)
+    for j in range(H):
+        y0 = int(j * h / H); y1 = max(y0 + 1, int(round((j + 1) * h / H)))
+        for i in range(W):
+            x0 = int(i * w / W); x1 = max(x0 + 1, int(round((i + 1) * w / W)))
+            b = key[y0:y1, x0:x1].ravel()
+            if (b == 0).sum() * 2 > b.size:
+                continue
+            vals, cnt = np.unique(b[b > 0], return_counts=True)
+            k = int(vals[cnt.argmax()]) - (1 << 24)
+            out[j, i] = ((k >> 16) & 255, (k >> 8) & 255, k & 255, 255)
     return out
 
 
@@ -232,13 +279,15 @@ def blobs(g, min_px=12, row_gap=1, col_gap=2, row_tol=10):
     return [(t[0], t[1], t[3]) for r in rows for t in sorted(r, key=lambda t: t[1])]
 
 
-def to_grid(path, pitch=None, keep_white=False):
-    """Raw render -> (unsnapped RGBA grid, pitch). Pitch is detected unless given."""
+def to_grid(path, pitch=None, keep_white=False, background="white"):
+    """Raw render -> (unsnapped RGBA grid, pitch). Pitch is detected unless given. An opaque
+    scene (background "none") keeps every cell, pale ones included."""
     img = Image.open(path)
     arr = np.asarray(img.convert("RGB")).astype(int)
     s = pitch or detect_pitch(arr)
     ox, oy = best_phase(arr, s)
-    return resample(img, bg_mask(img), s, ox, oy, keep_white), s
+    return resample(img, background_mask(img, background), s, ox, oy, keep_white,
+                    pale_guides=background != "none"), s
 
 
 def head_lock(frame, master, cut, search=4):

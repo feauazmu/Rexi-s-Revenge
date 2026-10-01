@@ -1,7 +1,7 @@
 """Enclosed transparent holes in sprites: the audit, and the fill clean.py applies.
 
-    python Art/tools/holes.py                 # audit every sprite PNG under Art/ (counts per file)
-    python Art/tools/holes.py -v FILE ...     # one line per hole: seed, size, box, hidden colour, ring
+    art.py holes [--root DIR]               # audit every sprite PNG of an art root (counts per file)
+    art.py holes [--root DIR] -v FILE ...   # one line per hole: seed, size, box, hidden colour, ring
 
 A hole is a 4-connected transparent region that the image border can't reach. The palette cleanup
 (pixelize.drop_pale) drops small white and pale components, even on keep_white sheets, so white
@@ -30,9 +30,8 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pixelize import hex2rgb, label  # noqa: E402
 
-ART = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "reference", "manu-pipeline")
 INK = 60            # an opaque cell darker than this in every channel is outline ink
-SKIP = ("raw/", "build/", "templates/", "comparison/", "anim/", "prompts/")
+SKIP = ("raw/", "grid/", "build/", "templates/", "prompts/", "work/")
 
 
 def find(sp, seal=()):
@@ -87,10 +86,10 @@ def fill(sp, auto=True, keep=(), fill=(), seal=()):
     return sp, n
 
 
-def audit(paths, verbose=False):
+def audit(paths, root, verbose=False):
     total = 0
     for p in paths:
-        rel = os.path.relpath(p, ART)
+        rel = os.path.relpath(p, root)
         sp = np.asarray(Image.open(p).convert("RGBA"))
         hs = find(sp)
         if not hs:
@@ -110,11 +109,7 @@ def audit(paths, verbose=False):
     return total
 
 
-if __name__ == "__main__":
-    args = sys.argv[1:]
-    verbose = "-v" in args
-    args = [a for a in args if a != "-v"]
-    if not args:
-        args = sorted(p for p in glob.glob(os.path.join(ART, "**", "*.png"), recursive=True)
-                      if not os.path.relpath(p, ART).startswith(SKIP))
-    audit(args, verbose)
+def run(root, files=(), verbose=False):
+    files = list(files) or sorted(p for p in glob.glob(os.path.join(root, "**", "*.png"), recursive=True)
+                                  if not os.path.relpath(p, root).startswith(SKIP))
+    return audit(files, root, verbose)

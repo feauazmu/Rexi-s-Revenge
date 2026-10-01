@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { fonts } from '../../src/render';
 import { masterPalette, paletteRamps } from '../../src/render/palette';
 import {
   findOffPaletteColors,
@@ -16,10 +17,10 @@ function luma(color: string): number {
 }
 
 describe('master palette', () => {
-  it('has 32 to 40 distinct #rrggbb colors', () => {
+  it('has 48 to 56 distinct #rrggbb colors (ADR 0002)', () => {
     const colors = Object.values(masterPalette);
-    expect(colors.length).toBeGreaterThanOrEqual(32);
-    expect(colors.length).toBeLessThanOrEqual(40);
+    expect(colors.length).toBeGreaterThanOrEqual(48);
+    expect(colors.length).toBeLessThanOrEqual(56);
     for (const color of colors) expect(color).toMatch(/^#[0-9a-f]{6}$/);
     expect(new Set(colors).size).toBe(colors.length);
   });
@@ -34,6 +35,12 @@ describe('master palette', () => {
       names.forEach((name) => used.add(name));
     }
     expect([...used].sort()).toEqual(Object.keys(masterPalette).sort());
+  });
+
+  it('keeps every color name short enough for its swatch label', () => {
+    for (const name of Object.keys(masterPalette)) {
+      expect(fonts.regular.measure(name), name).toBeLessThanOrEqual(56);
+    }
   });
 });
 

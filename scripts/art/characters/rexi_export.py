@@ -1,13 +1,15 @@
-"""Version C exports: animation frames, the 4x contact sheet and the in-game mock.
+"""Version C exports: animation frames, arm parts, the 4x contact sheet and the in-game mock.
 
-    uv run -q --with pillow --with numpy python scripts/art/export_c.py OUT_DIR [ARENA_PNG ARENA_JSON]
+    uv run -q --with pillow --with numpy python scripts/art/characters/rexi_export.py [ARENA_PNG ARENA_JSON]
 
 Writes (all from rexi_rig.Rig, nothing hand-placed):
-  reference/manu-pipeline/frames/<anim>/NN.png and anim.json   the committed copy
-  OUT_DIR/compare/anim/C/<anim>/NN.png and anim.json            for the comparison page
-  OUT_DIR/gallery/img/rexi-c-sheet.png                          4x contact sheet + character sheet
-  OUT_DIR/gallery/img/rexi-c-ingame.png                         one frame over the Arena, 2x
+  reference/manu-pipeline/frames/<anim>/NN.png and anim.json   the frames (committed)
+  reference/manu-pipeline/parts/arm_{inked,plain}_<angle>.png  the 9 RotSprite arm angles
+  reference/manu-pipeline/build/rexi-c-sheet.png               4x contact sheet + character sheet
+  reference/manu-pipeline/build/rexi-c-ingame.png              one frame over a 640x360 Arena, 2x
+                                                               (only with ARENA_PNG ARENA_JSON)
 Frames are 120x100, transparent, soles on row 89, facing right unless noted (aim also faces left).
+The generic previews (npm run art -- preview --root reference/manu-pipeline) show them too.
 """
 import json
 import math
@@ -19,10 +21,10 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from palette import ROOT  # noqa: E402
+from rexi_common import PIPE, ROOT  # noqa: E402
+from project import write_json  # noqa: E402
 from rexi_rig import Rig, CANVAS, FEET, BODY, PIVOT, ANGLES  # noqa: E402
 
-PIPE = os.path.join(ROOT, "reference", "manu-pipeline")
 
 RUN = [("key_contact", 0), ("key_downA", 1), ("key_passing", -1),
        ("key_contactB", 0), ("key_downB", 1), ("key_passing", -1)]
@@ -62,7 +64,7 @@ def write_frames(anims, out):
         for i, f in enumerate(frames):
             Image.fromarray(f).save(os.path.join(out, name, f"{i:02d}.png"))
         meta["anims"][name] = {"fps": fps, "loop": loop, "frames": len(frames)}
-    json.dump(meta, open(os.path.join(out, "anim.json"), "w"), indent=1)
+    write_json(os.path.join(out, "anim.json"), meta)
 
 
 def contact_sheet(anims, rig, path, K=4):
@@ -71,7 +73,7 @@ def contact_sheet(anims, rig, path, K=4):
         ("idle: rest, breath, blink  |  shoot: recoil + flash  |  hurt", [anims["idle"][2][0], anims["idle"][2][2],
                                                                         anims["idle"][2][7]] + anims["shoot"][2][:2] + anims["hurt"][2][:2]),
         ("run (12 fps)", anims["run"][2]),
-        ("run, facing left (mirrored; the sleeve moves to the aiming arm)", [rig.compose(k, bob=b, facing=-1) for k, b in RUN]),
+        ("run, facing left (mirrored; the sleeve moves to the near arm, his right)", [rig.compose(k, bob=b, facing=-1) for k, b in RUN]),
         ("jump: rise, apex, fall, land", anims["jump"][2]),
         ("aim: 9 RotSprite angles facing right (-90..90)", anims["aim"][2][:9]),
         ("aim: 7 more facing left = 16 directions", anims["aim"][2][9:]),
@@ -110,14 +112,15 @@ def contact_sheet(anims, rig, path, K=4):
 
 
 def ingame(rig, arena_png, arena_json, path):
-    """The 480x270 Arena upscaled 4/3 (nearest) to 640x360, Rexi at his true 64 px on the
-    ground where the game spawned him, aiming at the Maletin-coptero, then the whole frame 2x."""
+    """An Arena frame (a 640x360 game screenshot; an older 480x270 one is scaled up by an exact
+    nearest resample), Rexi at his true 64 px on the ground where the game spawned him (ARENA_JSON:
+    his hitbox {x, y, w, h} in that frame's coordinates), aiming at a Maletin-coptero, then 2x."""
     a = Image.open(arena_png).convert("RGBA")
+    k = 640 / a.width
     a = a.resize((640, 360), Image.NEAREST)
     r = json.load(open(arena_json))
-    k = 640 / 480
     feet_x, ground = (r["x"] + r["w"] / 2) * k, (r["y"] + r["h"]) * k
-    target = (340 * k, 80 * k)
+    target = (450, 105)
     torso_cx = BODY[0] + 23                       # canvas column of the torso centre
     px, py = feet_x + (BODY[0] + PIVOT[0] - torso_cx), ground - (FEET - (BODY[1] + PIVOT[1]))
     ang = math.degrees(math.atan2(py - target[1], target[0] - px))
@@ -129,15 +132,14 @@ def ingame(rig, arena_png, arena_json, path):
 
 
 def main():
-    out = sys.argv[1]
     rig = Rig()
     anims = build(rig)
     write_frames(anims, os.path.join(PIPE, "frames"))
-    write_frames(anims, os.path.join(out, "compare", "anim", "C"))
-    os.makedirs(os.path.join(out, "gallery", "img"), exist_ok=True)
-    contact_sheet(anims, rig, os.path.join(out, "gallery", "img", "rexi-c-sheet.png"))
-    if len(sys.argv) > 3:
-        print("in-game aim angle", ingame(rig, sys.argv[2], sys.argv[3], os.path.join(out, "gallery", "img", "rexi-c-ingame.png")))
+    out = os.path.join(PIPE, "build")
+    os.makedirs(out, exist_ok=True)
+    contact_sheet(anims, rig, os.path.join(out, "rexi-c-sheet.png"))
+    if len(sys.argv) > 2:
+        print("in-game aim angle", ingame(rig, sys.argv[1], sys.argv[2], os.path.join(out, "rexi-c-ingame.png")))
     # the 9 unique arm angles as parts (inked and plain), for the record
     parts = os.path.join(PIPE, "parts")
     os.makedirs(parts, exist_ok=True)

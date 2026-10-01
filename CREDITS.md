@@ -1,6 +1,6 @@
 # Credits and asset provenance
 
-Generated media for Rexi's Revenge. Per [ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), the images in `reference/` are concept references for the sprites drawn in code. They are kept out of the production bundle. The only generated image that ships is `public/title.png` (also inside the link preview `public/og-image.png`, composed in code). The logo and the site icons are drawn in code.
+Generated media for Rexi's Revenge. The images in `reference/` were made as concept references for the sprites drawn in code ([ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), now superseded by [ADR 0002](docs/adr/0002-pixel-art-rules-and-pipeline.md): game art is generated through `scripts/art/`, see "Art pipeline" below). They are kept out of the production bundle. The only generated image that ships is `public/title.png` (also inside the link preview `public/og-image.png`, composed in code). The logo and the site icons are drawn in code.
 
 All images were generated through OpenRouter with the creation-tool, using the default model `google/gemini-3.1-flash-image` (1376×768, 16:9, pixel-art style prompts). Each file in `reference/` has a JSON sidecar next to it with the full prompt, model, parameters and cost.
 
@@ -25,6 +25,8 @@ All images were generated through OpenRouter with the creation-tool, using the d
 
 The first eight images met their brief on the first attempt. The sleeve correction (left-arm tattoo as a shoulder-to-elbow sleeve) regenerated the character sheet and the title source; the earlier versions are kept as `*-v1.png`.
 
+**Sleeve side corrected later (owner, #31):** Rexi's sleeve is on his **right** arm, one continuous piece (a lion head whose mane flows into a columned courthouse; CONTEXT.md). The rows above describe what was asked at the time, so they still say left arm, and the character sheet and title images show it on the left. They stay as concept references; the pipeline's prompts and Rexi's rig use the right arm.
+
 ## Music
 
 Generated through OpenRouter with the creation-tool and the default music model `google/lyria-3-clip-preview` (30.8 s clips, MP3 44.1 kHz stereo). Both raw clips and their JSON sidecars (full prompt, model, cost) are in `reference/audio/`, outside the bundle. The prompts asked for an instrumental, comedic 80s workout synth-rock track with a chiptune square-wave lead at a steady 140 BPM, so the loop could be cut on bars.
@@ -37,7 +39,7 @@ Generated through OpenRouter with the creation-tool and the default music model 
 
 ## Rexi version C prototype (manus-garden pipeline)
 
-Sprite sources for the version C comparison (Refs #9), made with the pipeline in `scripts/art/` (see its README). Every call used `google/gemini-3.1-flash-image` at 2K (2752×1536, 16:9) and edited a template on the model's 240-cell grid. Raw renders, their JSON sidecars (full prompt, references, cost) and the prompts are in `reference/manu-pipeline/`. These are concept sources outside the bundle; nothing here ships. Version C cap: **$1.50**.
+Sprite sources for the version C comparison (Refs #9), made with the pipeline in `scripts/art/` (see its README). Every call used `google/gemini-3.1-flash-image` at 2K (2752×1536, 16:9) and edited a template on the model's 240-cell grid. Raw renders, their JSON sidecars (full prompt, references, cost) and the prompts are in `reference/manu-pipeline/`. The sidecars keep each prompt exactly as sent; the prompt files were later corrected for the right-arm sleeve (#31), so a re-run asks for the right design. These are concept sources outside the bundle; nothing here ships. Version C cap: **$1.50**.
 
 | #   | File (`reference/manu-pipeline/raw/`) | What it asked for                                                                                | Result                                                                                   | Cost (USD) | C total |
 | --- | ------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ---------- | ------- |
@@ -52,6 +54,18 @@ Sprite sources for the version C comparison (Refs #9), made with the pipeline in
 | 9   | `master_34_v5.png`                    | Owner feedback: turn head and chest toward the camera (Metal Slug ¾), both eyes, toothy grin     | Copy b's head is the master's head                                                       | 0.1021     | 0.9219  |
 
 Version C total: **0.9219 of 1.50**. All later steps (grid cleanup, palette snap, hand pass, rig, RotSprite, exports) are code and cost nothing.
+
+## Art pipeline
+
+Generations made with `scripts/art` (see its README), folded in from `art/ledger.tsv` by `npm run art -- credit`. Raw renders and their JSON sidecars are in each art root's `raw/`.
+
+<!-- art-ledger:start -->
+
+| #   | Time | Root | Name       | Model | Cost (USD) | Note |
+| --- | ---- | ---- | ---------- | ----- | ---------- | ---- |
+|     |      |      | (none yet) |       | 0.0000     |      |
+
+<!-- art-ledger:end -->
 
 ## Budget
 

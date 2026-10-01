@@ -1,0 +1,53 @@
+{
+  "_doc": "The production art root (ADR 0002). Fields: scripts/art/README.md. Sections: templates (reference images built in code), sheets (raw render -> sprites), parts (RotSprite bakes), exports (TypeScript modules), audit (extra globs to lint). Entries starting with _ are ignored.",
+  "templates": {
+    "rexi_x4": {
+      "type": "editsheet",
+      "sprite": "../reference/manu-pipeline/master_side.png",
+      "n": 4
+    },
+    "enemy_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "n": 3,
+      "box": [48, 36],
+      "ground": null
+    },
+    "icon_cells": {
+      "type": "icongrid",
+      "n": 11,
+      "cell": 16
+    },
+    "arena_draft": {
+      "type": "draft",
+      "image": "../reference/arena.png",
+      "size": [640, 360],
+      "palette": "scene"
+    },
+    "arena_tiles": {
+      "type": "scene_tiles",
+      "draft": "templates/arena_draft_1x.png",
+      "step": [200, 113]
+    }
+  },
+  "sheets": {
+    "_example_arena": {
+      "kind": "scene",
+      "prompt": "prompts/_example_arena_tile.txt",
+      "style": true,
+      "background": "none",
+      "tiles": [
+        ["arena_r0c0", "arena_r0c1", "arena_r0c2"],
+        ["arena_r1c0", "arena_r1c1", "arena_r1c2"],
+        ["arena_r2c0", "arena_r2c1", "arena_r2c2"]
+      ],
+      "tile_step": [200, 113],
+      "crop": [0, 0, 640, 360],
+      "layers": {
+        "sky": { "ramps": ["sky"] }
+      }
+    }
+  },
+  "parts": {},
+  "exports": {}
+}

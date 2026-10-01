@@ -12,7 +12,7 @@ Every change is a rule or a pixel-text patch here, so the pass is reviewable and
      leather3 glint on the toe cap, as on the character sheet;
   3. small face and tattoo patches (see PATCHES).
 
-    uv run -q --with pillow --with numpy python scripts/art/fix_master.py
+    uv run -q --with pillow --with numpy python scripts/art/characters/rexi_master.py
 """
 import os
 import sys
@@ -21,10 +21,9 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from palette import ROOT  # noqa: E402
+from rexi_common import PIPE  # noqa: E402
 from pixtext import RGB, to_text, from_text, paint  # noqa: E402
 
-PIPE = os.path.join(ROOT, "reference", "manu-pipeline")
 SRC = os.path.join(PIPE, "clean", "m34_b.png")   # ¾ face (master_34_v5); body as master_b
 OUT = os.path.join(PIPE, "master_side.png")
 CANVAS = (48, 72)
