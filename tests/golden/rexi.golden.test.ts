@@ -9,7 +9,7 @@ import { renderView } from '../support/render-node';
 import { cropImage, tileImages } from '../support/sheet';
 import { expectGolden } from './golden';
 
-const TILE = 72;
+const TILE = 112;
 const ahead = { x: 533, y: 267 };
 
 /** A square crop of the current frame centered on Rexi. */
@@ -17,7 +17,7 @@ function rexiTile(game: Driver) {
   const { rexi } = runOf(game.view);
   return cropImage(
     renderView(game.view),
-    { cx: rexi.x + rexi.w / 2, cy: rexi.y + rexi.h / 2 - 4 },
+    { cx: rexi.x + rexi.w / 2, cy: rexi.y + rexi.h / 2 - 8 },
     TILE,
   );
 }
@@ -37,19 +37,19 @@ describe('Rexi goldens', () => {
     await expectGolden('rexi-idle-breath', tileImages([exhaled, rexiTile(game)], 2));
   });
 
-  it('rexi-running: the six-frame run cycle, forward then backpedaling', async () => {
+  it('rexi-running: the eight-frame run cycle, forward then backpedaling', async () => {
     const game = driveEmptyArena();
     const tiles = [];
     game.ticks(2, { move: 1, aim: ahead });
-    for (let frame = 0; frame < 6; frame++) {
+    for (let frame = 0; frame < 8; frame++) {
       tiles.push(rexiTile(game));
       game.ticks(4, { move: 1, aim: ahead });
     }
-    for (let frame = 0; frame < 6; frame++) {
+    for (let frame = 0; frame < 8; frame++) {
       tiles.push(rexiTile(game));
       game.ticks(4, { move: -1, aim: ahead });
     }
-    await expectGolden('rexi-running', tileImages(tiles, 6));
+    await expectGolden('rexi-running', tileImages(tiles, 8));
   });
 
   it('rexi-running-frame: running right while firing', async () => {
@@ -59,7 +59,7 @@ describe('Rexi goldens', () => {
     await expectGolden('rexi-running-frame', renderView(game.view));
   });
 
-  it('rexi-jumping: rising, apex and falling', async () => {
+  it('rexi-jumping: rising, apex, falling and the landing squat', async () => {
     const game = driveEmptyArena();
     const jump: InputFramePatch = { jump: true, aim: ahead };
     game.ticks(6, jump);
@@ -67,7 +67,10 @@ describe('Rexi goldens', () => {
     game.ticks(14, jump);
     const apex = rexiTile(game);
     game.ticks(14, { aim: ahead });
-    await expectGolden('rexi-jumping', tileImages([rising, apex, rexiTile(game)], 3));
+    const falling = rexiTile(game);
+    for (let t = 0; t < 120 && !runOf(game.view).rexi.grounded; t++) game.ticks(1, { aim: ahead });
+    expect(runOf(game.view).rexi.landedTicks).toBe(0);
+    await expectGolden('rexi-jumping', tileImages([rising, apex, falling, rexiTile(game)], 4));
   });
 
   it('rexi-hurt: hurt reaction after an Enemy paper hits him, normal and blink frames', async () => {
@@ -95,7 +98,7 @@ describe('Rexi goldens', () => {
       const game = driveEmptyArena();
       const angle = (k * Math.PI) / 8;
       const { rexi } = runOf(game.view);
-      const center: Vec2 = { x: rexi.x + rexi.w / 2, y: rexi.y + 6.5 };
+      const center: Vec2 = { x: rexi.x + rexi.w / 2, y: rexi.shoulder.y };
       const aim = { x: center.x + Math.cos(angle) * 30, y: center.y - Math.sin(angle) * 30 };
       game.ticks(8, { aim });
       tiles.push(rexiTile(game));

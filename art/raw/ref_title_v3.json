@@ -1,0 +1,33 @@
+{
+  "modality": "image",
+  "prompt": "Edit the first attached image (the title-screen illustration of Rexi, a very muscular judge) and keep it identical: the same composition and framing, the same heroic pose, the gavel raised in the hand on the viewer's right, the clenched flexing fist on the viewer's left, the same face, hair, open black robe with torn-off sleeves, white tank top, grey trousers and boots, the same sunset plaza with the courthouse on the left and the city behind, the same sunset palette and 16-bit pixel-art style with crisp hard pixels, and the calm, empty sky in the upper-left third kept free for a logo.\n\nThe ONLY change is which arm wears the tattoo. Rexi's sleeve tattoo belongs on his RIGHT arm, which in this front view is the FLEXING arm on the viewer's LEFT. So:\n- Remove every bit of tattoo ink from the arm holding the gavel (the arm on the viewer's right): it becomes plain bare skin with the same muscle shading as the other arm.\n- Give the flexing arm on the viewer's left a full sleeve tattoo on its upper arm, from the shoulder down to the elbow and stopping at the elbow (the forearm and fist stay bare): one continuous piece of dark sepia-black ink with continuous linework wrapping around the arm, exactly the design in the second attached image (the character sheet): a roaring lion's head high on the shoulder whose flowing mane streams down and turns into the columns and pediment of a classical courthouse just above the elbow. One woven design, never two separate small pictures.\n\nPixel art, 16:9. Absolutely no text, no letters, no logo.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/title-source-v2.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/rexi-character-sheet.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.068496,
+  "created_at": "2026-10-01T11:23:07.211Z",
+  "asset": {
+    "file": "ref_title_v3.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_v3.txt",
+    "style": false,
+    "references": ["reference/title-source-v2.png", "reference/rexi-character-sheet.png"],
+    "note": "Title illustration: sleeve moved to the right (flexing) arm (Refs #26)",
+    "spent_after_usd": 2.018058
+  }
+}

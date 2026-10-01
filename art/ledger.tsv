@@ -1,1 +1,12 @@
 time	root	name	model	cost_usd	file	credited	note
+2026-10-01T13:20:10	art	ref_rexi_sheet_v3	google/gemini-3.1-flash-image	0.0679835	ref_rexi_sheet_v3.png	yes	Rexi character sheet: right-arm sleeve as one piece (Refs #26)
+2026-10-01T13:20:58	art	ref_rexi_sheet_v4	google/gemini-3.1-flash-image	0.0681785	ref_rexi_sheet_v4.png	yes	Rexi character sheet: sleeve ends at the elbow, inset redrawn (Refs #26)
+2026-10-01T13:23:22	art	ref_title_v3	google/gemini-3.1-flash-image	0.068496	ref_title_v3.png	yes	Title illustration: sleeve moved to the right (flexing) arm (Refs #26)
+2026-10-01T13:23:50	art	ref_title_v4	google/gemini-3.1-flash-image	0.067836	ref_title_v4.png	yes	Title illustration step 1: tattoo removed from the gavel arm (Refs #26)
+2026-10-01T13:24:50	art	ref_title_v5	google/gemini-3.1-flash-image	0.06846	ref_title_v5.png	yes	Title illustration step 2: sleeve added to the right (flexing) arm (Refs #26)
+2026-10-01T13:26:00	art	ref_title_v6	google/gemini-3.1-flash-image	0.0684555	ref_title_v6.png	yes	Title illustration step 2, on the mirrored image (the model inked the gavel arm in v5): sleeve on the flexing arm (Refs #26)
+2026-10-01T13:26:45	art	ref_title_v7	google/gemini-3.1-flash-image	0.0684695	ref_title_v7.png	yes	Title illustration: arms swap roles, gavel and sleeve on his right arm (v5/v6 kept inking the gavel arm) (Refs #26)
+2026-10-01T13:27:28	art	ref_title_plate	google/gemini-3.1-flash-image	0.067826	ref_title_plate.png	yes	Title illustration: empty background plate for compositing (Refs #26)
+2026-10-01T13:32:25	art	rexi_sleeve_v1	google/gemini-3.1-flash-image	0.1022395	rexi_sleeve_v1.png	yes	Rexi master: right-arm sleeve on the near arm (Refs #26)
+2026-10-01T13:38:36	art	rexi_run_v1	google/gemini-3.1-flash-image	0.102827	rexi_run_v1.png	yes	Rexi run keys: up A, passing B (twice), up B (Refs #26)
+2026-10-01T14:01:18	art	rexi_portrait_v1	google/gemini-3.1-flash-image	0.1021075	rexi_portrait_v1.png	yes	Dialogue Box portrait redrawn with the right-arm sleeve (Refs #26)

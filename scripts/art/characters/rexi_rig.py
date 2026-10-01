@@ -11,9 +11,10 @@ Every frame is layered from parts, never redrawn freehand:
                 22.5 degree steps) and mirrored for facing left: 16 directions;
   * shoulder    the robe's lapel from arm_v1, drawn over the arm's root at every angle.
 The master was drawn with the sleeve on the near arm. Rexi's sleeve is on his RIGHT arm
-(CONTEXT.md; rexi_common.TATTOO_SIDE), and facing right the camera sees his left side: so facing
-right the near arm is plain (detattoo) and the aiming arm (his right arm) wears the sleeve;
-facing left the frame is mirrored and the near arm, now his right arm, keeps the master's sleeve.
+(CONTEXT.md; rexi_common.TATTOO_SIDE), and facing right the camera sees his right side (#26): so
+facing right the near arm keeps the master's sleeve and he aims with the far arm, his plain left arm;
+facing left the frame is mirrored, the near arm (now his left) is detattooed and the aiming arm
+(now his right) wears the sleeve. The production rig is rexi.py.
 
     from rexi_rig import Rig
     rig = Rig(); frame = rig.frame("run", 0, facing=1)
@@ -208,7 +209,7 @@ class Rig:
         """Paint the sleeve on the aiming arm's upper segment, shoulder to elbow, as one piece: a
         lion head at the shoulder (mane in leather3/leather4, face in skin, features in
         leather2) whose mane flows into a columned courthouse (pediment, three columns, steps)
-        that ends at the elbow. Used whenever the aiming arm is Rexi's right arm (facing right)."""
+        that ends at the elbow. Used whenever the aiming arm is Rexi's right arm (facing left)."""
         a = arm.copy()
         px, py = self.arm_pivot
         sleeve = [
@@ -283,8 +284,8 @@ class Rig:
         W, H = CANVAS
         bx, by = BODY
         out = np.zeros((H, W, 4), np.uint8)
-        # facing right the near arm is Rexi's left arm; facing left (mirrored) it is his right arm
-        near_is_right = facing == -1
+        # facing right the near arm is Rexi's right arm; facing left (mirrored) it is his left arm
+        near_is_right = facing == 1
         inked = near_is_right == (TATTOO_SIDE == "right")       # does the near arm wear the sleeve?
         upper = self.upper if inked else self.upper_plain
         if key:

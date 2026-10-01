@@ -9,8 +9,8 @@ import { hasInmunidadJudicial } from './power-ups/inmunidad-judicial';
 import type { RexiState } from './state';
 import { createInventory } from './weapons/inventory';
 
-/** `shotAge` stops counting here; animation only cares about the first few ticks. */
-const SHOT_AGE_CAP = 600;
+/** `shotAge` and `landedTicks` stop counting here; animation only cares about the first few ticks. */
+const AGE_CAP = 600;
 
 export function createRexi(tuning: Tuning): RexiState {
   const { rexi, arena } = tuning;
@@ -28,7 +28,8 @@ export function createRexi(tuning: Tuning): RexiState {
     maxHealth: rexi.maxHealth,
     facing: 1,
     aim: { x: rexi.spawnX + 133, y: arena.groundY - rexi.height },
-    shotAge: SHOT_AGE_CAP,
+    shotAge: AGE_CAP,
+    landedTicks: AGE_CAP,
     invulnerableTicks: 0,
     hurtTicks: 0,
     inventory: createInventory(),
@@ -55,7 +56,7 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
   const { tuning } = ctx;
 
   if (rexi.invulnerableTicks > 0) rexi.invulnerableTicks -= 1;
-  if (rexi.shotAge < SHOT_AGE_CAP) rexi.shotAge += 1;
+  if (rexi.shotAge < AGE_CAP) rexi.shotAge += 1;
   if (rexi.hurtTicks > 0) rexi.hurtTicks -= 1;
 
   rexi.vx = clamp(input.move, -1, 1) * tuning.rexi.runSpeed;
@@ -68,7 +69,10 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
     rexi.rising = false;
   }
   rexi.flying = applyFlightThrust(ctx, input);
+  const wasGrounded = rexi.grounded;
   stepBody(rexi, worldOf(tuning), DT, { dropThrough: input.drop });
+  if (rexi.grounded && !wasGrounded) rexi.landedTicks = 0;
+  else if (rexi.landedTicks < AGE_CAP) rexi.landedTicks += 1;
   stopAtFlightCeiling(ctx);
 
   rexi.aim = input.aim;

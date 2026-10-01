@@ -202,6 +202,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector)
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
       shotAge: rexi.shotAge,
+      landedTicks: rexi.landedTicks,
       hurtTicks: rexi.hurtTicks,
       invulnerableTicks: rexi.invulnerableTicks,
       ...viewInventory(rexi.inventory),

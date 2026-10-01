@@ -73,7 +73,7 @@ def contact_sheet(anims, rig, path, K=4):
         ("idle: rest, breath, blink  |  shoot: recoil + flash  |  hurt", [anims["idle"][2][0], anims["idle"][2][2],
                                                                         anims["idle"][2][7]] + anims["shoot"][2][:2] + anims["hurt"][2][:2]),
         ("run (12 fps)", anims["run"][2]),
-        ("run, facing left (mirrored; the sleeve moves to the near arm, his right)", [rig.compose(k, bob=b, facing=-1) for k, b in RUN]),
+        ("run, facing left (mirrored; the sleeve moves to the aiming arm, his right)", [rig.compose(k, bob=b, facing=-1) for k, b in RUN]),
         ("jump: rise, apex, fall, land", anims["jump"][2]),
         ("aim: 9 RotSprite angles facing right (-90..90)", anims["aim"][2][:9]),
         ("aim: 7 more facing left = 16 directions", anims["aim"][2][9:]),

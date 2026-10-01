@@ -1,17 +1,19 @@
 {
   "modality": "image",
-  "prompt": "Edit the first attached image (the title-screen illustration) and keep it identical in composition, framing, pose, background, sunset palette, pixel-art style, and keep the calm empty sky in the upper-left third reserved for a logo. The ONLY change: Rexi's tattoo. Following the second attached image (the updated character sheet), the tattoo is a SLEEVE on his LEFT arm only (the flexing arm), covering the whole UPPER ARM from the shoulder down to the elbow and stopping at the elbow: one continuous piece of dark tattoo ink over the skin, a lion head and a classical columned courthouse woven together, the lion's mane flowing into the columns and pediment, connecting linework and shading. The forearm and hand stay bare; the right arm holding the gavel has no tattoo. Pixel art, 16-bit SNES-era style, limited palette, crisp hard pixels, no anti-aliasing, 16:9. Absolutely no text, no letters, no logo.",
+  "prompt": "Edit the first attached image and keep it identical in every way (composition, framing, pose, the gavel, the face, the robe, the clothes, the background, the sunset palette, the 16-bit pixel-art style with crisp hard pixels, the empty sky) except for ONE addition: a sleeve tattoo on the arm on the viewer's RIGHT side of the image, the FLEXING arm with the clenched fist raised next to his head (NOT the arm holding the gavel, which is on the viewer's left and stays bare skin with no ink).\n\nInk that flexing arm's upper arm, the big bulging bicep and shoulder between the robe's torn armhole and the elbow, as one full sleeve: a single continuous piece of dark sepia-black tattoo ink with continuous linework and ink shading wrapping around the arm, no bare gaps. The design, as on the second attached image: a roaring lion's head on the shoulder and bicep whose long flowing mane streams toward the elbow and turns into the fluted columns and triangular pediment of a classical courthouse, with the courthouse steps at the elbow. One woven design, never two separate small pictures. The tattoo stops at the elbow: the forearm and the fist stay bare skin.\n\nAbsolutely no text, no letters, no logo.",
   "model": "google/gemini-3.1-flash-image",
   "parameters": {
     "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
     "references": [
-      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a073358448a57715b/reference/title-source-v1.png",
-      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a073358448a57715b/reference/rexi-character-sheet.png"
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/art/templates/ref_title_mirrored.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/rexi-character-sheet.png"
     ]
   },
   "seed": null,
-  "cost_usd": 0.068424,
-  "created_at": "2026-10-01T09:02:21.311Z",
+  "cost_usd": 0.0684555,
+  "created_at": "2026-10-01T11:25:15.202Z",
   "asset": {
     "file": "title-source.png",
     "media_type": "image/png",
@@ -19,5 +21,19 @@
     "height": 768,
     "index": 1,
     "of": 1
-  }
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_v6.txt",
+    "style": false,
+    "references": ["art/templates/ref_title_mirrored.png", "reference/rexi-character-sheet.png"],
+    "note": "Title illustration step 2, on the mirrored image (the model inked the gavel arm in v5): sleeve on the flexing arm (Refs #26)",
+    "spent_after_usd": 2.222809
+  },
+  "post_processing": "Right-arm sleeve (#26), composited (`rexi_refs.py title-source`). The model always inked the arm holding the gavel: ref_title_v3 changed nothing, ref_title_v5 and ref_title_v7 inked the gavel arm on the viewer's right. So ref_title_v4 removed the tattoo, ref_title_v6 (this prompt) inked the gavel arm of the mirrored picture (art/templates/ref_title_mirrored.png), and that Rexi, cut out by his difference from ref_title_plate (an empty background plate), was pasted unmirrored where he stood on the plate: the same layout and logo sky, with the gavel in his inked right hand.",
+  "sources": [
+    "art/raw/ref_title_v4.json",
+    "art/raw/ref_title_v6.json",
+    "art/raw/ref_title_plate.json"
+  ]
 }

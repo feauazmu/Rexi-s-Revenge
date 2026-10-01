@@ -4,7 +4,7 @@ import { palette } from '../palette';
 import { strings } from '../strings';
 import type { Color } from '../surface';
 import { drawText, fonts, type BitmapFont } from '../text';
-import { REXI_PORTRAIT } from './rexi-portrait';
+import { sprites as portrait } from '../art/generated/rexi-portrait';
 
 const OUTLINE: Color = palette.outline;
 const BORDER: Color = '#fff4c0';
@@ -120,7 +120,7 @@ function drawFrame(
 function drawPortrait(dc: DrawContext, dy: number): void {
   const { x, y, w, h } = PORTRAIT_FRAME;
   drawFrame(dc, x, y + dy, w, h, null);
-  dc.surface.drawBitmap(dc.sprites.get(REXI_PORTRAIT), x + 2, y + 2 + dy);
+  dc.surface.drawBitmap(dc.sprites.get(portrait.portrait), x + 2, y + 2 + dy);
 }
 
 function drawPanel(dc: DrawContext, dy: number): void {

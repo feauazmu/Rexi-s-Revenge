@@ -1,0 +1,33 @@
+{
+  "modality": "image",
+  "prompt": "Edit the first attached image (the title-screen illustration). Keep the composition: Rexi stands on the right half of the picture in the same place, at the same size, in the same wide heroic stance with the same legs, boots, open black robe flaring out, white tank top, face and hair; the same sunset plaza background with the courthouse on the left and the city behind; the same sunset palette and 16-bit pixel-art style with crisp hard pixels; and the calm, empty sky in the upper-left third kept free for a logo.\n\nThe change: his two arms swap roles, like a mirror image of the arm pose.\n- The arm on the viewer's LEFT now holds the big wooden gavel raised high beside his head (the gavel head up at the top left of his figure). This arm wears a full sleeve tattoo on its upper arm, from the shoulder to the elbow: one continuous piece of dark sepia-black ink wrapping around the arm, a roaring lion's head on the shoulder whose flowing mane streams down into the fluted columns and pediment of a classical courthouse at the elbow (as on the second attached image). The forearm and hand stay bare.\n- The arm on the viewer's RIGHT is now bare (no ink at all) and flexes: the bicep bulging, the clenched fist raised beside his head, no gavel.\n\nAbsolutely no text, no letters, no logo.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/art/raw/ref_title_v4.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/rexi-character-sheet.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.0684695,
+  "created_at": "2026-10-01T11:26:28.502Z",
+  "asset": {
+    "file": "ref_title_v7.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_v7.txt",
+    "style": false,
+    "references": ["art/raw/ref_title_v4.png", "reference/rexi-character-sheet.png"],
+    "note": "Title illustration: arms swap roles, gavel and sleeve on his right arm (v5/v6 kept inking the gavel arm) (Refs #26)",
+    "spent_after_usd": 2.291279
+  }
+}

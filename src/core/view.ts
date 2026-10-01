@@ -165,6 +165,8 @@ export interface RexiView extends BoxView {
   readonly aimDirection: Vec2;
   /** Ticks since the last shot (capped at a few seconds), for recoil animation. */
   readonly shotAge: number;
+  /** Ticks since he last landed from the air (capped at a few seconds), for the landing squat. */
+  readonly landedTicks: number;
   /** Ticks left of the hurt reaction after a hit (0 = not hurt). Drives the hurt animation. */
   readonly hurtTicks: number;
   /** Ticks left during which hits are ignored (0 = vulnerable). Drives the flicker. */

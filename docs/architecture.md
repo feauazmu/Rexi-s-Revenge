@@ -248,12 +248,12 @@ platforms, spawn and altitude bands) was multiplied by 4/3 and rounded to the ne
 jump speed were rounded so a full jump stays 4/3 as high (about 78 px), and the platform
 reachability tests still hold. The catalog holds the resulting literal numbers, not a multiplier.
 
-**Interim art (until the art pass redraws the sprites).** Rexi, the Enemies, projectiles and icons
-keep their old pixel size, so they look small inside their larger 640×360 hitboxes: Rexi's body
-stands on the bottom center of his hitbox (his gameplay shoulder and muzzle sit a little above
-and ahead of the drawn arm), and each Enemy's art is drawn centered in its hitbox through
-`ART_BOX` in `src/render/enemies/index.ts`, the box size its art was drawn for. Gameplay is
-unchanged; only the art is small. Remove an `ART_BOX` entry when that Enemy is redrawn.
+**Interim art (until the art pass redraws the sprites).** The Enemies, projectiles and icons
+keep their old pixel size, so they look small inside their larger 640×360 hitboxes: each Enemy's
+art is drawn centered in its hitbox through `ART_BOX` in `src/render/enemies/index.ts`, the box
+size its art was drawn for. Gameplay is unchanged; only the art is small. Remove an `ART_BOX`
+entry when that Enemy is redrawn. Rexi is redrawn (#26): 64 px tall, with a 22×60 hitbox
+(`tuning.rexi`) whose shoulder and muzzle reach match the drawn arm and the Mazo Automático.
 
 ## Seam 2: the renderer
 
@@ -287,15 +287,25 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
   (`idle`, `windup` to telegraph, `firing`) and `windup`, the telegraph's progress 0..1 (e.g. the
   Archivador Artillado's drawer sliding out of the bay). It is the only telegraph channel.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
-- **Rexi** (`src/render/rexi/`): body parts drawn facing right (`body.ts`) are composed per pose and
-  mirrored for facing left; `pose.ts` picks the pose from `RexiView` (grounded/vx/vy, `hurtTicks`
-  for the hurt pose, `invulnerableTicks` for the red blink, `shotAge`) and the Run tick. The aiming
-  arm (`arm.ts`) is rasterized from shapes in 16 directions around `RexiView.shoulder`, holding the current Weapon's look from `held-weapons.ts` (a
-  `Record<WeaponId, …>`, so a new Weapon must add its held look there).
-  Rexi's sleeve tattoo (right upper arm, shoulder to elbow; CONTEXT.md) is drawn into whichever
-  part is his right arm for the facing: the far arm facing right, the deltoid cap and aiming arm
-  facing left. So those parts are built per facing, not just mirrored. (The Dialogue Box portrait
-  still flexes the inked arm on the viewer's side it was drawn with; the art pass redraws it.)
+- **Rexi** (`src/render/rexi/`) is pipeline art (`scripts/art/characters/rexi.py`, exported to
+  `src/render/art/generated/rexi.ts`; `art.ts` wraps it). `pose.ts` picks the body frame from
+  `RexiView` and the Run tick through the pipeline's animation table: idle (breath, blink), the
+  8-frame run (reversed when backpedaling), rise/apex/fall from `vy` and the landing squat from
+  `landedTicks`, the hurt frames over `hurtTicks`, the red blink over `invulnerableTicks` (every
+  color mapped onto the red ramp, so it stays on the palette), and the shot's recoil and muzzle
+  flash from `shotAge` (3 frames over one Mazo Automático fire interval). `layers/rexi.ts` draws
+  the body frame with its soles on the hitbox's bottom row, then the aiming arm, pre-rotated with
+  RotSprite into 9 angles (`arm.ts` picks one of 16 directions; facing left mirrors), at the
+  frame's shoulder, holding the current Weapon's look from `held-weapons.ts` (a
+  `Record<WeaponId, …>`, so a new Weapon must add its held look there), then the robe's lapel over
+  the arm's root and the muzzle flash. Inmunidad Judicial outlines the whole figure; Día de
+  Pierna's jets fire from the frame's boot soles (`bootsOf`, `layers/power-up-effects.ts`).
+  Rexi's sleeve tattoo (right upper arm, shoulder to elbow; CONTEXT.md) is on whichever part is
+  his right arm for the facing. Facing right the camera sees his right side: the near arm wears
+  it and he aims with the far arm. Facing left the near arm is plain and the aiming arm wears it.
+  So the body frames come in both facings, not just mirrored, and the arm comes inked and plain.
+  The Dialogue Box portrait (`src/render/art/generated/rexi-portrait.ts`) flexes his inked right
+  arm too.
 
 ## Palette
 
@@ -351,8 +361,8 @@ with `uv`, outside the game build: the game only ever sees the TypeScript it exp
   `decodeSprite` and export `sprites` (plus animation tables and pivots as `as const` data). The
   run-length format is fixed by `src/render/sprite-data.ts`; `tests/render/sprite-data.test.ts`
   decodes a fixture written by the Python exporter, so the two cannot drift.
-- Nothing from the pipeline is wired into the renderer yet; each area of the art pass (#24) swaps
-  its code-drawn sprites for an exported module.
+- Each area of the art pass (#24) swaps its code-drawn sprites for an exported module. Rexi and
+  his Dialogue Box portrait are wired (#26); the rest is still drawn in code.
 
 ## Brand art: logo, icons and share preview
 
@@ -549,7 +559,9 @@ effects are code, like the art; the only audio file is the music loop, `public/m
    A projectile that turns with its heading or spins can be drawn procedurally with
    `rotatedShapeSprites` (`src/render/projectiles/rotated-shape.ts`), like the dumbbell and law book.
 7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts`, its
-   look in Rexi's fist in `src/render/rexi/held-weapons.ts`, and add its Spanish name to `strings.weapons`.
+   look in Rexi's fist (pixel text in `WEAPONS`, `scripts/art/characters/rexi.py`, rebuilt and
+   exported, then mapped in `src/render/rexi/held-weapons.ts`), and add its Spanish name to
+   `strings.weapons`.
 8. Give it a firing sound in `WEAPON_SOUNDS` (`src/platform/audio/sound-map.ts`); most v1 Weapons already
    have a preset waiting in `src/platform/audio/presets.ts`.
 9. Test it through a scripted Crate: `weaponCrate(id, ON_REXI.x, { y: ON_REXI.y })` from
