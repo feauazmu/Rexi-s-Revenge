@@ -1,0 +1,25 @@
+{
+  "modality": "image",
+  "prompt": "Edit image 1. It shows 4 identical pixel-art copies of Rexi, a muscular judge in a sleeveless black robe, grey trousers and brown boots, facing right. Image 2 is a pose guide with a grey stick figure in the same 4 slots. Change ONLY his legs, boots, the robe's lower half and his far arm (the one behind his body) in each copy to match the guide, and keep his near arm (the tattooed one) hanging exactly as in the copy:\n1) run, contact: the near leg reaches forward with the heel down, the far leg pushes off behind him on its toes, the robe's hem swings back behind his legs, the far fist swings forward;\n2) run, passing: the near leg straight under his body bearing his weight, the far leg swinging past with the knee lifted and the boot off the ground, the robe hanging straight, the far fist at his side; his whole body 1 pixel higher;\n3) jump: the whole body lifted 5 pixels off the ground, both knees tucked up, boots pointing down, the robe's hem flaring out and up behind him, the far arm raised;\n4) hurt: knocked backwards, the head thrown back with eyes squeezed shut and teeth gritted, the upper body leaning back 3 pixels, the knees bent, both boots on the ground, the robe flapping forward.\nKeep everything else exactly identical to the copy: the same head, hair, face (except in 4), tank top, tattoo, colours, pixel size, height and position. Chunky pixel art at exactly the same pixel size, 1-pixel dark outline, no anti-aliasing, flat pure white background, no guide lines, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ae9852a94483147c4/reference/manu-pipeline/templates/edit_master_x4.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ae9852a94483147c4/reference/manu-pipeline/templates/poseguide_keys.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.102102,
+  "created_at": "2026-10-01T10:07:27.753Z",
+  "asset": {
+    "file": "keys_v1.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  }
+}
