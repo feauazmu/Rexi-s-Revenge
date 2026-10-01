@@ -2,6 +2,7 @@ import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponI
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
 import type { DirectorState } from './director';
+import type { ExplosionSize } from '../tuning';
 import type { EffectsState } from './effects';
 
 /** Mutable simulation state of one Run. Private to src/core/run; exposed only via RunView. */
@@ -95,6 +96,12 @@ export interface ProjectileState extends Box {
   ttl: number;
   /** Ticks since fired. */
   age: number;
+  /** Speeds up along its heading (rockets); null for constant-speed shots. */
+  readonly thrust: { readonly acceleration: number; readonly maxSpeed: number } | null;
+  /** Turns toward Rexi for a while after launch (Enemy rockets); null when it never steers. */
+  homing: { readonly turnRate: number; ticksLeft: number } | null;
+  /** Explosion played where it ends (hitting, landing or burning out); null for none. */
+  readonly burst: ExplosionSize | null;
 }
 
 export interface RunStats {

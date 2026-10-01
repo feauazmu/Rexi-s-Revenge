@@ -87,8 +87,7 @@ export const directorTuning = {
     fireRateMax: 2,
   },
   // Weights are relative to the kinds allowed at the time. Planned entries for the later
-  // Enemies: Archivador Artillado and Caminadora a Reacción from 60 s (weight 20 each), Banca
-  // Artillada from 120 s (weight 15, maxOnScreen 1).
+  // Enemies: Archivador Artillado and Caminadora a Reacción from 60 s (weight 20 each).
   roster: {
     'maletin-coptero': {
       from: 0,
@@ -97,6 +96,15 @@ export const directorTuning = {
       edges: ['left', 'right'],
       minY: 30,
       maxY: 140,
+    },
+    // The heavy set piece: from two minutes in, and never two at once.
+    'banca-artillada': {
+      from: 120,
+      weight: 15,
+      maxOnScreen: 1,
+      edges: ['left', 'right'],
+      minY: 36,
+      maxY: 80,
     },
   },
 } as const satisfies DirectorTuning;

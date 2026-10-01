@@ -34,6 +34,7 @@ export type CrateContents =
 
 export const ENEMY_KINDS = [
   'maletin-coptero', // Maletín-cóptero (Lawyer Craft)
+  'banca-artillada', // Banca Artillada (Gym Craft)
 ] as const;
 export type EnemyKind = (typeof ENEMY_KINDS)[number];
 
@@ -42,6 +43,7 @@ export const PROJECTILE_KINDS = [
   'gavel', // Mazo Automático
   'paper', // Maletín-cóptero
   'stamp', // Lluvia de Sellos
+  'rocket', // Banca Artillada
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

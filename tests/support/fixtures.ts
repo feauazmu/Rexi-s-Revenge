@@ -11,6 +11,7 @@ export function holdStill(tuning: TuningOverrides = {}): TuningOverrides {
     enemies: {
       ...tuning.enemies,
       'maletin-coptero': { driftSpeed: 0, ...tuning.enemies?.['maletin-coptero'] },
+      'banca-artillada': { driftSpeed: 0, ...tuning.enemies?.['banca-artillada'] },
     },
   };
 }

@@ -98,6 +98,36 @@ describe('Run goldens', () => {
     game.seconds(0.5, { aim: { x: 262, y: 99 } });
     await expectGolden('enemy-maletin-coptero', renderView(game.view));
   });
+  it('enemy-banca-artillada: the gunship facing Rexi from both sides, rotors turning', async () => {
+    const game = drive({
+      seed: 2,
+      overrides: {
+        spawns: [
+          { kind: 'banca-artillada', x: 24, y: 40 },
+          { kind: 'banca-artillada', x: 300, y: 64, atTick: 1 },
+        ],
+        tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 99 } } }),
+      },
+    });
+    game.seconds(0.5, { aim: { x: 328, y: 79 } });
+    await expectGolden('enemy-banca-artillada', renderView(game.view));
+  });
+
+  it('banca-volley: a rocket volley fanning out of the pods, flames and smoke trails', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [{ kind: 'banca-artillada', x: 300, y: 50 }],
+        tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 0.5 } } }),
+      },
+    });
+    const aim = { x: 328, y: 65 };
+    game.seconds(0.5, { aim });
+    game.ticks(32, { aim });
+    const rockets = runOf(game.view).projectiles.filter((p) => p.kind === 'rocket');
+    expect(rockets).toHaveLength(defaultTuning.enemies['banca-artillada'].volleySize);
+    await expectGolden('banca-volley', renderView(game.view));
+  });
 });
 
 describe('Crate goldens', () => {
