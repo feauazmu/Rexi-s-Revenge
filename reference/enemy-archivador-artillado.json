@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art enemy concept reference, 16-bit SNES-era arcade shooter style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Enemy \"Archivador Artillado\": a flying gray metal office filing cabinet (four drawers) armored like a gunship, with small jet thrusters underneath and stubby wings, a bottom hatch that drops its own drawers as bombs (one drawer falling with papers spilling and a lit fuse). Show it from the side large in the center, plus a smaller front view and a small inset of the falling drawer-bomb. Comedic, readable silhouette, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.067267,
+  "created_at": "2026-10-01T07:52:33.785Z",
+  "asset": {
+    "file": "enemy-archivador-artillado.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}

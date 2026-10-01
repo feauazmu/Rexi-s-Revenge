@@ -1,0 +1,19 @@
+{
+  "modality": "image",
+  "prompt": "Pixel-art enemy concept reference, 16-bit SNES-era arcade shooter style, limited palette, crisp hard pixels, no anti-aliasing, flat plain light-gray background. Enemy \"Maletín-cóptero\": a flying brown leather briefcase with a small helicopter rotor on top and a tail rotor, a tiny cartoon lawyer pilot in a suit and tie with slicked hair sitting in a little cockpit on top of the briefcase, a small gun nozzle shooting sheets of paper. Show it from the side (facing left) large in the center, plus a smaller front view and a small inset of its paper-sheet projectile and a 3-frame rotor spin. Comedic, readable silhouette, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9"
+  },
+  "seed": null,
+  "cost_usd": 0.067274,
+  "created_at": "2026-10-01T07:52:24.131Z",
+  "asset": {
+    "file": "enemy-maletin-coptero.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  }
+}
