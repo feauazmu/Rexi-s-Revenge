@@ -8,6 +8,9 @@ import {
   type Color,
   type Surface,
   type TextTarget,
+  type TouchOverlayView,
+  ROTATE_PROMPT_HEIGHT,
+  ROTATE_PROMPT_WIDTH,
 } from '../../src/render';
 import { createSpriteBank } from '../../src/render/sprite';
 import type { RgbaImage } from '../golden/golden';
@@ -23,11 +26,22 @@ const createBitmap: BitmapFactory = (width, height, rgba) => {
 
 const renderer = createRenderer(createBitmap);
 
-/** Renders one frame of `view` to raw RGBA pixels at 480×270. */
-export function renderView(view: GameView): RgbaImage {
+/** Renders one frame of `view` (and the touch overlay, if given) to raw RGBA pixels at 480×270. */
+export function renderView(view: GameView, overlay?: TouchOverlayView | null): RgbaImage {
   return renderFrame((surface) => {
-    renderer.render(surface, view);
+    renderer.render(surface, view, overlay);
   });
+}
+
+/** Renders the portrait "Gira tu teléfono" prompt at animation tick `tick`. */
+export function renderRotatePrompt(tick: number): RgbaImage {
+  return renderFrame(
+    (surface) => {
+      renderer.renderRotatePrompt(surface, tick);
+    },
+    ROTATE_PROMPT_WIDTH,
+    ROTATE_PROMPT_HEIGHT,
+  );
 }
 
 /**
@@ -42,10 +56,14 @@ export function renderPart(background: Color, paint: (target: TextTarget) => voi
   });
 }
 
-function renderFrame(paint: (surface: Surface) => void): RgbaImage {
-  const canvas = createCanvas(SCREEN_WIDTH, SCREEN_HEIGHT);
+function renderFrame(
+  paint: (surface: Surface) => void,
+  width = SCREEN_WIDTH,
+  height = SCREEN_HEIGHT,
+): RgbaImage {
+  const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
   paint(canvasSurface<Canvas>(ctx));
-  const { data } = ctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  return { width: SCREEN_WIDTH, height: SCREEN_HEIGHT, data: new Uint8ClampedArray(data) };
+  const { data } = ctx.getImageData(0, 0, width, height);
+  return { width, height, data: new Uint8ClampedArray(data) };
 }

@@ -9,6 +9,15 @@ Play it at <https://feauazmu.github.io/Rexi-s-Revenge/>.
 - Jump: W, ↑ or Space
 - Aim: mouse; fire: hold the left button
 
+## Controls (touch, landscape)
+
+- Move: left stick (pull it down to drop through a platform)
+- Aim and fire: right stick
+- Jump: the red button; switch Weapon: tap the Weapon icon; pause: the button at the top right
+- Menus: the d-pad (or swipe), ✓ to confirm, ✕ to go back
+
+Try them in a desktop browser with `?device=touch`.
+
 ## Development
 
 Requires Node 24+.

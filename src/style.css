@@ -15,9 +15,15 @@ body {
   -webkit-user-select: none;
 }
 
-.game-canvas {
+.game-canvas,
+.rotate-canvas {
   position: absolute;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   cursor: none;
+}
+
+.game-canvas[hidden],
+.rotate-canvas[hidden] {
+  display: none;
 }

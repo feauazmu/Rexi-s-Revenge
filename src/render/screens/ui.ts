@@ -8,7 +8,7 @@ import type { DrawContext } from '../draw-context';
 import { palette } from '../palette';
 import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
-import { drawText, fonts, type BitmapFont, type TextAlign } from '../text';
+import { drawText, fonts, type BitmapFont, type TextAlign, type TextTarget } from '../text';
 
 export const ui = {
   ink: palette.outline,
@@ -33,7 +33,7 @@ export function blinkOn(tick: number): boolean {
 
 /** Text with a 1 px outline all around (8 directions), legible over any background. */
 export function drawOutlinedText(
-  dc: DrawContext,
+  dc: TextTarget,
   font: BitmapFont,
   text: string,
   x: number,
