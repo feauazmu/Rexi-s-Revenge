@@ -29,6 +29,7 @@ export {
   resolveTuning,
   type DeepPartial,
   type ExplosionSize,
+  type TimedPowerUpId,
   type Tuning,
   type TuningOverrides,
 } from './tuning';

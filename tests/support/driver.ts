@@ -14,6 +14,7 @@ import {
   type GameOptions,
   type GameView,
   type InputFramePatch,
+  type PowerUpId,
   type ScriptedCrateSpawn,
   type SpecialWeaponId,
   type Vec2,
@@ -99,6 +100,15 @@ export function weaponCrate(
   options: { readonly y?: number; readonly atTick?: number } = {},
 ): ScriptedCrateSpawn {
   return { kind: 'crate', contents: { kind: 'weapon', weapon }, x, ...options };
+}
+
+/** A scripted Crate carrying `powerUp`, dropped at `x` (`y` default: above the top). */
+export function powerUpCrate(
+  powerUp: PowerUpId,
+  x: number,
+  options: { readonly y?: number; readonly atTick?: number } = {},
+): ScriptedCrateSpawn {
+  return { kind: 'crate', contents: { kind: 'power-up', powerUp }, x, ...options };
 }
 
 /** A Crate position overlapping Rexi at his spawn point: it is picked up on the first tick. */

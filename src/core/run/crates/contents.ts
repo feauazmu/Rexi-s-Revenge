@@ -1,8 +1,6 @@
 import { POWER_UP_IDS, SPECIAL_WEAPON_IDS, type CrateContents } from '../../ids';
-import type { Tuning } from '../../tuning';
 import type { RunContext } from '../context';
-import { powerUpCatalog } from '../power-ups/index';
-import type { PowerUpDef } from '../power-ups/types';
+import { collectPowerUp } from '../power-ups/system';
 import { collectWeapon } from '../weapons/inventory';
 
 /**
@@ -16,16 +14,18 @@ const ALL_CONTENTS: readonly CrateContents[] = [
   ...POWER_UP_IDS.map((powerUp): CrateContents => ({ kind: 'power-up', powerUp })),
 ];
 
-function weightOf(tuning: Tuning, contents: CrateContents): number {
-  const { weights } = tuning.crates;
-  return contents.kind === 'weapon'
-    ? weights.weapons[contents.weapon]
-    : weights.powerUps[contents.powerUp];
+function weightOf(ctx: RunContext, contents: CrateContents): number {
+  const { weights, recesoBoost } = ctx.tuning.crates;
+  if (contents.kind === 'weapon') return weights.weapons[contents.weapon];
+  const weight = weights.powerUps[contents.powerUp];
+  const { health, maxHealth } = ctx.state.rexi;
+  const boosted = contents.powerUp === 'receso' && health <= maxHealth * recesoBoost.belowHealth;
+  return boosted ? weight * recesoBoost.weightMultiplier : weight;
 }
 
 /** Picks the contents of a new Crate, weighted by the tuning catalog (seeded). */
 export function rollCrateContents(ctx: RunContext): CrateContents {
-  const entries = ALL_CONTENTS.map((c) => [c, weightOf(ctx.tuning, c)] as const);
+  const entries = ALL_CONTENTS.map((c) => [c, weightOf(ctx, c)] as const);
   if (!entries.some(([, weight]) => weight > 0)) {
     throw new Error('No Crate contents has a positive weight in tuning.crates.weights');
   }
@@ -34,11 +34,6 @@ export function rollCrateContents(ctx: RunContext): CrateContents {
 
 /** Gives Rexi what a picked-up Crate carries. */
 export function collectCrateContents(ctx: RunContext, contents: CrateContents): void {
-  if (contents.kind === 'weapon') {
-    collectWeapon(ctx, contents.weapon);
-    return;
-  }
-  // Typed explicitly: while POWER_UP_IDS is empty the lookup's type is `never`.
-  const powerUp: PowerUpDef = powerUpCatalog[contents.powerUp];
-  powerUp.collect(ctx);
+  if (contents.kind === 'weapon') collectWeapon(ctx, contents.weapon);
+  else collectPowerUp(ctx, contents.powerUp);
 }

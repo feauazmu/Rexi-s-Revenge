@@ -23,8 +23,12 @@ export const SPECIAL_WEAPON_IDS: readonly SpecialWeaponId[] = WEAPON_IDS.filter(
   (id): id is SpecialWeaponId => id !== DEFAULT_WEAPON,
 );
 
-/** Every Power-up. Empty until the Power-up tickets add them (one entry per line). */
-export const POWER_UP_IDS = [] as const;
+/** Every Power-up (one entry per line). */
+export const POWER_UP_IDS = [
+  'receso', // Receso (instant heal)
+  'inmunidad-judicial', // Inmunidad Judicial (timed)
+  'creatina', // Creatina (timed)
+] as const;
 export type PowerUpId = (typeof POWER_UP_IDS)[number];
 
 /** What a Crate carries: ammo for one special Weapon, or one Power-up. */

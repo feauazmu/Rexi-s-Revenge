@@ -1,6 +1,7 @@
 import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponId } from '../ids';
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
+import type { TimedPowerUpId } from '../tuning';
 import type { EffectsState } from './effects';
 
 /** Mutable simulation state of one Run. Private to src/core/run; exposed only via RunView. */
@@ -42,6 +43,15 @@ export interface RexiState extends Body {
   /** Ticks left of the hurt reaction (0 = not hurt). */
   hurtTicks: number;
   inventory: InventoryState;
+  /** Active timed Power-ups, in pickup order. */
+  readonly powerUps: Map<TimedPowerUpId, ActivePowerUpState>;
+}
+
+export interface ActivePowerUpState {
+  /** Ticks left, counting the current one; it ends when this reaches 0. */
+  ticksLeft: number;
+  /** The full duration it started (or restarted) with, ticks. */
+  readonly totalTicks: number;
 }
 
 /** HA3-style Weapon inventory. The Mazo Automático is always carried and has no ammo entry. */

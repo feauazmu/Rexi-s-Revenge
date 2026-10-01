@@ -9,6 +9,7 @@ import type {
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
 import type { PauseMenuItem } from './pause-menu';
+import type { TimedPowerUpId } from './tuning';
 
 /**
  * Read-only snapshot of everything needed to draw one frame. The renderer is a pure function
@@ -113,6 +114,16 @@ export interface RexiView extends BoxView {
   readonly weapon: WeaponView;
   /** Every Weapon Rexi carries, in slot order (the Mazo Automático is always first). */
   readonly inventory: readonly WeaponView[];
+  /** Active timed Power-ups in pickup order (HUD timers; Inmunidad Judicial's glow). */
+  readonly powerUps: readonly ActivePowerUpView[];
+}
+
+export interface ActivePowerUpView {
+  readonly id: TimedPowerUpId;
+  /** Ticks left, counting the current one (show `ceil(ticksLeft / 60)` seconds). */
+  readonly ticksLeft: number;
+  /** The full duration it started with, ticks. */
+  readonly totalTicks: number;
 }
 
 export interface WeaponView {

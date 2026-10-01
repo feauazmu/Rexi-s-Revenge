@@ -1,4 +1,4 @@
-import type { WeaponId } from '../core';
+import type { PowerUpId, WeaponId } from '../core';
 
 /**
  * The Spanish UI strings catalog: every player-facing string lives here (neutral Latin
@@ -21,6 +21,12 @@ export const strings = {
     'mazo-automatico': 'Mazo Automático',
     'lluvia-de-sellos': 'Lluvia de Sellos',
   } satisfies Record<WeaponId, string>,
+
+  powerUps: {
+    receso: 'Receso',
+    'inmunidad-judicial': 'Inmunidad Judicial',
+    creatina: 'Creatina',
+  } satisfies Record<PowerUpId, string>,
 
   titleScreen: {
     pressAnyKey: 'Presiona cualquier tecla',

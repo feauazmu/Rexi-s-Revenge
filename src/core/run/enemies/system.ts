@@ -3,6 +3,7 @@ import type { EnemyKind } from '../../ids';
 import { center } from '../../math';
 import type { RunContext } from '../context';
 import { flashEnemy, shatterEnemy } from '../effects';
+import { rexiDamageMultiplier } from '../power-ups/creatina';
 import type { EnemyState } from '../state';
 import { enemyCatalog } from './index';
 
@@ -35,9 +36,13 @@ export function stepEnemies(ctx: RunContext): void {
   }
 }
 
-/** Applies damage; destroys the Enemy (score, events, removal) when its health runs out. */
-export function damageEnemy(ctx: RunContext, enemy: EnemyState, damage: number): void {
+/**
+ * Applies a hit from Rexi (all damage to Enemies is his), scaled by his active Power-ups;
+ * destroys the Enemy (score, events, removal) when its health runs out.
+ */
+export function damageEnemy(ctx: RunContext, enemy: EnemyState, baseDamage: number): void {
   if (enemy.health <= 0) return;
+  const damage = baseDamage * rexiDamageMultiplier(ctx);
   enemy.health = Math.max(0, enemy.health - damage);
   ctx.emit({ type: 'enemy-hit', enemyId: enemy.id, kind: enemy.kind, damage });
   flashEnemy(ctx, enemy);

@@ -1,10 +1,11 @@
-import { SCREEN_WIDTH, type RunView } from '../../core';
+import { SCREEN_WIDTH, TICKS_PER_SECOND, type ActivePowerUpView, type RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { palette } from '../palette';
-import { defineSprite } from '../sprite';
+import { defineSprite, type SpriteDef } from '../sprite';
 import { strings } from '../strings';
 import type { Color } from '../surface';
 import { drawText, fonts, formatElapsed, type TextAlign } from '../text';
+import { powerUpIcons } from './power-up-icons';
 import { weaponIcons } from './weapon-icons';
 
 const MARGIN = 6;
@@ -31,15 +32,24 @@ const HEART = defineSprite({ k: palette.outline, r: '#e8433a', R: '#ff9a7a' }, [
   '...k...',
 ]);
 
+/** Icon rows in the left column: the current Weapon, then one per active timed Power-up. */
 const WEAPON_ROW_Y = 16;
+const ICON_ROW_PITCH = 15;
+/** A Power-up's icon blinks during its last seconds, toggling every few ticks. */
+const EXPIRY_WARNING_TICKS = 2 * TICKS_PER_SECOND;
+const EXPIRY_BLINK_TICKS = 6;
 
 /**
- * HUD: health bar (top left), current Weapon icon and ammo (below it), elapsed time (top
- * center) and score (top right). All text goes through the bitmap font.
+ * HUD: health bar (top left), current Weapon icon and ammo (below it), one row per active
+ * timed Power-up with its seconds left (below that), elapsed time (top center) and score (top
+ * right). All text goes through the bitmap font.
  */
 export function drawHud(dc: DrawContext, run: RunView): void {
   drawHealth(dc, run.rexi.health, run.rexi.maxHealth);
   drawWeapon(dc, run);
+  run.rexi.powerUps.forEach((powerUp, i) => {
+    drawPowerUpTimer(dc, powerUp, WEAPON_ROW_Y + (i + 1) * ICON_ROW_PITCH);
+  });
   drawLabeled(
     dc,
     strings.hud.time,
@@ -67,14 +77,34 @@ function drawHealth(dc: DrawContext, health: number, maxHealth: number): void {
 
 function drawWeapon(dc: DrawContext, run: RunView): void {
   const { weapon } = run.rexi;
-  const icon = weaponIcons[weapon.id];
-  dc.surface.drawBitmap(dc.sprites.get(icon), MARGIN, WEAPON_ROW_Y);
   const ammo = weapon.ammo === null ? strings.hud.unlimitedAmmo : String(weapon.ammo);
+  drawIconRow(dc, weaponIcons[weapon.id], ammo, WEAPON_ROW_Y);
+}
+
+function drawPowerUpTimer(dc: DrawContext, powerUp: ActivePowerUpView, y: number): void {
+  const { ticksLeft } = powerUp;
+  const seconds = String(Math.ceil(ticksLeft / TICKS_PER_SECOND));
+  const blinkOff =
+    ticksLeft <= EXPIRY_WARNING_TICKS && Math.floor(ticksLeft / EXPIRY_BLINK_TICKS) % 2 === 1;
+  drawIconRow(dc, powerUpIcons[powerUp.id], seconds, y, { hideIcon: blinkOff });
+}
+
+/** An icon in the left column with a value to its right, the capitals centered on the icon. */
+function drawIconRow(
+  dc: DrawContext,
+  icon: SpriteDef,
+  value: string,
+  y: number,
+  { hideIcon = false } = {},
+): void {
+  if (!hideIcon) dc.surface.drawBitmap(dc.sprites.get(icon), MARGIN, y);
   const font = fonts.regular;
-  // Center the capitals on the icon.
   const capCenter = font.baseline - 4;
-  const y = WEAPON_ROW_Y + Math.floor(icon.height / 2) - capCenter;
-  drawText(dc, font, ammo, MARGIN + icon.width + LABEL_GAP, y, { color: VALUE, shadow: SHADOW });
+  const textY = y + Math.floor(icon.height / 2) - capCenter;
+  drawText(dc, font, value, MARGIN + icon.width + LABEL_GAP, textY, {
+    color: VALUE,
+    shadow: SHADOW,
+  });
 }
 
 /** "LABEL value" on the top text row, anchored at `x` as a whole. */

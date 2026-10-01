@@ -10,6 +10,8 @@ import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effect
 import { firstCrateDrop, stepCrates, viewCrate } from './crates/system';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
+import { viewPowerUps } from './power-ups/active';
+import { stepPowerUps } from './power-ups/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, shoulderOf, stepRexi } from './rexi';
 import { sortSpawns, stepSpawning } from './spawning';
@@ -63,6 +65,7 @@ export function createRun(deps: RunDeps): Run {
       events = [];
       if (state.ended) return events;
       stepEffects(ctx);
+      stepPowerUps(ctx);
       stepSpawning(ctx);
       stepRexi(ctx, input);
       stepCrates(ctx);
@@ -120,6 +123,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       hurtTicks: rexi.hurtTicks,
       invulnerableTicks: rexi.invulnerableTicks,
       ...viewInventory(rexi.inventory),
+      powerUps: viewPowerUps(rexi),
     },
     enemies: state.enemies.map((e) => ({
       id: e.id,
