@@ -98,6 +98,30 @@ describe('Run goldens', () => {
     game.seconds(0.5, { aim: { x: 262, y: 99 } });
     await expectGolden('enemy-maletin-coptero', renderView(game.view));
   });
+
+  it('enemy-caminadora-a-reaccion: strafing both ways, winding up, and firing a burst', async () => {
+    const kind = 'caminadora-a-reaccion';
+    const game = drive({
+      seed: 2,
+      overrides: {
+        spawns: [
+          { kind, x: 40, y: 60 },
+          { kind, x: 400, y: 128, atTick: 10 },
+          { kind, x: 20, y: 96, atTick: 40 },
+        ],
+        tuning: { enemies: { [kind]: { fireIntervalMin: 1, fireIntervalMax: 1 } } },
+      },
+    });
+    // Rexi runs right, so the first one turns toward him and the second keeps facing him.
+    game.ticks(86, { move: 1, aim: { x: 360, y: 80 } });
+    const poses = runOf(game.view).enemies.map((e) => e.pose);
+    expect(poses).toEqual([
+      { facing: 1, attack: 'firing' },
+      { facing: -1, attack: 'windup' },
+      { facing: 1, attack: 'idle' },
+    ]);
+    await expectGolden('enemy-caminadora-a-reaccion', renderView(game.view));
+  });
 });
 
 describe('Crate goldens', () => {

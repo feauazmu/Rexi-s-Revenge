@@ -52,9 +52,39 @@ export interface MaletinCopteroTuning extends EnemyTuningBase {
   readonly paperLifetime: number;
 }
 
+export interface CaminadoraAReaccionTuning extends EnemyTuningBase {
+  /** Horizontal speed while strafing, px/s. */
+  readonly strafeSpeed: number;
+  /** It turns around this far from the side edges, px. */
+  readonly strafeMarginX: number;
+  /** Altitude band of the hitbox top, px: each pass picks a new altitude inside it. */
+  readonly strafeMinY: number;
+  readonly strafeMaxY: number;
+  /** Vertical speed while changing altitude between passes, px/s. */
+  readonly climbSpeed: number;
+  /** Time between bursts, seconds: each wait is drawn uniformly from [min, max]. */
+  readonly fireIntervalMin: number;
+  readonly fireIntervalMax: number;
+  /** It stops this long before each burst (the telegraph), seconds. */
+  readonly windup: number;
+  /** Bullets per burst, all aimed where Rexi was when the burst started. */
+  readonly burstCount: number;
+  /** Time between the bullets of a burst, seconds. */
+  readonly burstSpacing: number;
+  /** Bullet speed, px/s. */
+  readonly bulletSpeed: number;
+  /** Damage a bullet does to Rexi. */
+  readonly bulletDamage: number;
+  /** Bullet hitbox size, px. */
+  readonly bulletSize: number;
+  /** Bullet lifetime, seconds. */
+  readonly bulletLifetime: number;
+}
+
 /** One entry per Enemy (keyed by EnemyKind). */
 export interface EnemiesTuning {
   readonly 'maletin-coptero': MaletinCopteroTuning;
+  readonly 'caminadora-a-reaccion': CaminadoraAReaccionTuning;
 }
 
 export const enemiesTuning = {
@@ -82,5 +112,28 @@ export const enemiesTuning = {
     paperDamage: 5,
     paperSize: 6,
     paperLifetime: 6,
+  },
+  'caminadora-a-reaccion': {
+    width: 32,
+    height: 14,
+    health: 36,
+    points: 400,
+    explosion: 'large',
+    debrisPieces: 6,
+    alwaysQuip: false,
+    strafeSpeed: 110,
+    strafeMarginX: 8,
+    strafeMinY: 70,
+    strafeMaxY: 130,
+    climbSpeed: 40,
+    fireIntervalMin: 2.6,
+    fireIntervalMax: 3.4,
+    windup: 1 / 3,
+    burstCount: 5,
+    burstSpacing: 1 / 12,
+    bulletSpeed: 170,
+    bulletDamage: 5,
+    bulletSize: 4,
+    bulletLifetime: 4,
   },
 } as const satisfies EnemiesTuning & Record<EnemyKind, EnemyTuningBase>;

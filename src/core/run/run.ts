@@ -11,7 +11,7 @@ import { createDirector } from './director';
 import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effects';
 import { firstCrateDrop, stepCrates, viewCrate } from './crates/system';
 import { enemyCatalog } from './enemies/index';
-import { stepEnemies } from './enemies/system';
+import { poseOf, stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, shoulderOf, stepRexi } from './rexi';
 import { advanceRampClock } from './ramp';
@@ -214,6 +214,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector)
       maxHealth: e.maxHealth,
       age: e.age,
       hitFlash: isHitFlashing(e, state.tick, tuning),
+      pose: poseOf(e),
     })),
     projectiles: state.projectiles.map((p) => ({
       id: p.id,

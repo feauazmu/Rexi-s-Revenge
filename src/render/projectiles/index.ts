@@ -1,5 +1,6 @@
 import type { ProjectileKind, ProjectileView, RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { drawBullet } from './bullet';
 import { drawGavel } from './gavel';
 import { drawPaper } from './paper';
 import { drawStamp } from './stamp';
@@ -11,6 +12,7 @@ const projectileDrawers: Readonly<Record<ProjectileKind, ProjectileDrawer>> = {
   gavel: drawGavel,
   paper: drawPaper,
   stamp: drawStamp,
+  bullet: drawBullet,
 };
 
 export function drawProjectiles(dc: DrawContext, run: RunView): void {

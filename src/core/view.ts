@@ -160,6 +160,17 @@ export interface CrateView extends BoxView {
   readonly age: number;
 }
 
+/**
+ * What an Enemy's behavior shows the renderer beyond its box. Behaviors that do not report a
+ * pose face whichever way their drawer picks and never telegraph.
+ */
+export interface EnemyPose {
+  /** 1 facing right, -1 facing left; null lets the drawer decide (e.g. face Rexi). */
+  readonly facing: 1 | -1 | null;
+  /** Attack phase: between attacks, telegraphing the next one, or attacking. */
+  readonly attack: 'idle' | 'windup' | 'firing';
+}
+
 export interface EnemyView extends BoxView {
   readonly id: number;
   readonly kind: EnemyKind;
@@ -170,6 +181,7 @@ export interface EnemyView extends BoxView {
   readonly age: number;
   /** True for the few ticks after a hit: draw the Enemy as a white silhouette. */
   readonly hitFlash: boolean;
+  readonly pose: EnemyPose;
 }
 
 export interface ProjectileView extends BoxView {

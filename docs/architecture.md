@@ -185,6 +185,9 @@ It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; m
   go on top.
 - Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
   rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
+- Enemy drawers read `EnemyView.pose` for what the behavior wants shown: `facing` (null when the
+  behavior leaves it to the drawer, e.g. the Maletín-cóptero faces Rexi) and the `attack` phase
+  (`idle`, `windup` to telegraph, `firing`).
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
 - **Rexi** (`src/render/rexi/`): body parts drawn facing right (`body.ts`) are composed per pose and
   mirrored for facing left; `pose.ts` picks the pose from `RexiView` (grounded/vx/vy, `hurtTicks`
@@ -246,7 +249,8 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 4. Write its behavior in `src/core/run/enemies/<kind>.ts` with `defineEnemy({ kind, craft, init, update })`.
    Use the `dt` argument for all time-based motion (Pre-entreno scales Enemy time), count attack cooldowns
    down by `dt * enemyFireRate(ctx)` so the ramp raises its fire rate, and use `ctx.rng` for randomness.
-   It may spawn just outside the Arena: it must fly itself in.
+   It may spawn just outside the Arena: it must fly itself in. If the drawer needs to know which way it
+   faces or when it winds up and fires, add `pose(memory)` (it becomes `EnemyView.pose`).
 5. Register it in `src/core/run/enemies/index.ts` (one line).
 6. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
    the drawer and chunks in `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face
