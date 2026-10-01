@@ -1,6 +1,7 @@
 import type { EnemyKind, ProjectileKind, WeaponId } from '../ids';
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
+import type { EffectsState } from './effects';
 
 /** Mutable simulation state of one Run. Private to src/core/run; exposed only via RunView. */
 export interface RunState {
@@ -9,6 +10,8 @@ export interface RunState {
   rexi: RexiState;
   enemies: EnemyState[];
   projectiles: ProjectileState[];
+  /** Cosmetic effects (particles, screen shake); never read by gameplay. */
+  effects: EffectsState;
   stats: RunStats;
   /** Scripted spawns not yet released, sorted by tick. Null when spawning is automatic. */
   scriptedSpawns: ScriptedSpawn[] | null;
@@ -37,6 +40,8 @@ export interface EnemyState extends Box {
   readonly maxHealth: number;
   /** Ticks since spawn. */
   age: number;
+  /** Run tick of the latest hit-flash start, or null if never hit. */
+  hitFlashTick: number | null;
   /** Per-kind behavior memory, created by the Enemy's `init` and only read by its `update`. */
   memory: unknown;
 }

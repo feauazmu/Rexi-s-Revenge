@@ -1,10 +1,13 @@
 import type { GameEvent } from './events';
 import type { InputFrame } from './input';
 import type { DeviceKind, GameOptions } from './options';
-import { createRng } from './rng';
+import { createRng, deriveSeed } from './rng';
 import { createRun, type Run } from './run/run';
 import { resolveTuning, type Tuning } from './tuning';
 import type { GameView, ScreenKind } from './view';
+
+/** Stream id of the effects' random generator (any constant distinct from other streams). */
+const EFFECTS_STREAM = 0xeff3c7;
 
 /**
  * The headless Game core. Advance it only with `tick`, once per fixed 1/60 s step, and draw
@@ -20,6 +23,8 @@ export interface Game {
 export function createGame(options: GameOptions): Game {
   const tuning: Tuning = resolveTuning(options.overrides?.tuning);
   const rng = createRng(options.seed);
+  /** Cosmetic effects draw from their own stream so they can never shift gameplay. */
+  const effectsSeed = deriveSeed(options.seed, EFFECTS_STREAM);
   const device: DeviceKind = options.device ?? 'desktop';
   // `options.storage` (default: memoryStorage()) is read once persistence (high scores,
   // "Cómo jugar" seen, mute) lands with the screen-flow and Veredicto tickets.
@@ -40,7 +45,13 @@ export function createGame(options: GameOptions): Game {
   };
 
   const startRun = (): void => {
-    run = createRun({ tuning, rng, nextId, spawns: options.overrides?.spawns ?? null });
+    run = createRun({
+      tuning,
+      rng,
+      effectsSeed,
+      nextId,
+      spawns: options.overrides?.spawns ?? null,
+    });
     changeScreen('run');
     queued.push({ type: 'run-started' });
   };

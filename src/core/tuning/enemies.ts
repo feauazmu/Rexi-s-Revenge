@@ -1,4 +1,5 @@
 import type { EnemyKind } from '../ids';
+import type { ExplosionSize } from './effects';
 
 /** Numbers every Enemy has, whatever its behavior. */
 export interface EnemyTuningBase {
@@ -8,6 +9,10 @@ export interface EnemyTuningBase {
   readonly health: number;
   /** Score awarded when destroyed. Heavier Enemies are worth more. */
   readonly points: number;
+  /** Explosion preset played when destroyed (see `tuning.effects.explosions`). */
+  readonly explosion: ExplosionSize;
+  /** Chunks of debris it breaks into when destroyed (the renderer draws each chunk). */
+  readonly debrisPieces: number;
 }
 
 export interface MaletinCopteroTuning extends EnemyTuningBase {
@@ -28,6 +33,8 @@ export const enemiesTuning = {
     height: 18,
     health: 12,
     points: 100,
+    explosion: 'small',
+    debrisPieces: 4,
     hoverAmplitude: 6,
     hoverPeriod: 2,
   },

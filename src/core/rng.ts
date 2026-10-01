@@ -37,3 +37,26 @@ export function createRng(seed: number): Rng {
     },
   };
 }
+
+/**
+ * Derives the seed of a separate random stream (e.g. cosmetic effects), so drawing from that
+ * stream never shifts the gameplay sequence of the main `Rng`.
+ */
+export function deriveSeed(seed: number, stream: number): number {
+  return hash32(seed, stream);
+}
+
+/** Integer hash of a list of integers (murmur3-style mixing), as an unsigned 32-bit int. */
+export function hash32(...values: readonly number[]): number {
+  let h = 0x9e3779b9;
+  for (const value of values) {
+    h = Math.imul(h ^ (value | 0), 0x85ebca6b);
+    h = (h << 13) | (h >>> 19);
+  }
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}

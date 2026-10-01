@@ -2,6 +2,7 @@ import { DT } from '../../constants';
 import type { EnemyKind } from '../../ids';
 import { center } from '../../math';
 import type { RunContext } from '../context';
+import { flashEnemy, shatterEnemy } from '../effects';
 import type { EnemyState } from '../state';
 import { enemyCatalog } from './index';
 
@@ -17,6 +18,7 @@ export function spawnEnemy(ctx: RunContext, kind: EnemyKind, x: number, y: numbe
     health,
     maxHealth: health,
     age: 0,
+    hitFlashTick: null,
     memory: undefined,
   };
   enemy.memory = enemyCatalog[kind].init(enemy, ctx);
@@ -38,6 +40,7 @@ export function damageEnemy(ctx: RunContext, enemy: EnemyState, damage: number):
   if (enemy.health <= 0) return;
   enemy.health = Math.max(0, enemy.health - damage);
   ctx.emit({ type: 'enemy-hit', enemyId: enemy.id, kind: enemy.kind, damage });
+  flashEnemy(ctx, enemy);
   if (enemy.health > 0) return;
 
   const { points } = ctx.tuning.enemies[enemy.kind];
@@ -45,6 +48,7 @@ export function damageEnemy(ctx: RunContext, enemy: EnemyState, damage: number):
   ctx.state.stats.score += points;
   ctx.state.stats.enemiesDestroyed += 1;
   ctx.state.enemies = ctx.state.enemies.filter((e) => e !== enemy);
+  shatterEnemy(ctx, enemy);
   ctx.emit({
     type: 'enemy-destroyed',
     enemyId: enemy.id,
