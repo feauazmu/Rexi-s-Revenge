@@ -17,6 +17,8 @@ export function createRexi(tuning: Tuning): RexiState {
     vy: 0,
     grounded: true,
     rising: false,
+    health: rexi.maxHealth,
+    maxHealth: rexi.maxHealth,
     facing: 1,
     aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
     fireCooldown: 0,

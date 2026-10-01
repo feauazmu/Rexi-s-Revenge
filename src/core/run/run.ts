@@ -75,6 +75,8 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       vx: rexi.vx,
       vy: rexi.vy,
       grounded: rexi.grounded,
+      health: rexi.health,
+      maxHealth: rexi.maxHealth,
       facing: rexi.facing,
       aim: rexi.aim,
       muzzle: muzzleOf(rexi, tuning),
