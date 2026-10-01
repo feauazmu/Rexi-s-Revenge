@@ -17,3 +17,28 @@ export function memoryStorage(initial: Readonly<Record<string, string>> = {}): S
     },
   };
 }
+
+/**
+ * Wraps a port so the core never crashes on storage errors, even from a misbehaving adapter:
+ * every write is also kept in memory, and reads that throw fall back to that memory.
+ */
+export function resilientStorage(port: StoragePort): StoragePort {
+  const memory = memoryStorage();
+  return {
+    get(key) {
+      try {
+        return port.get(key) ?? memory.get(key);
+      } catch {
+        return memory.get(key);
+      }
+    },
+    set(key, value) {
+      memory.set(key, value);
+      try {
+        port.set(key, value);
+      } catch {
+        // The in-memory copy keeps the session consistent.
+      }
+    },
+  };
+}

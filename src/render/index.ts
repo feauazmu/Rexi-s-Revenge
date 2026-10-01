@@ -1,5 +1,5 @@
 /** Public interface of the renderer: a pure function from the Game core's view to pixels. */
-export { createRenderer, type Renderer } from './renderer';
+export { createRenderer, type Renderer, type RendererOptions } from './renderer';
 export {
   canvasSurface,
   type Bitmap,

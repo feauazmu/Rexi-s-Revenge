@@ -13,7 +13,8 @@ export type GameEvent =
   | WeaponFiredEvent
   | EnemySpawnedEvent
   | EnemyHitEvent
-  | EnemyDestroyedEvent;
+  | EnemyDestroyedEvent
+  | MuteToggledEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -57,4 +58,11 @@ export interface EnemyDestroyedEvent {
   /** Center of the Enemy when it was destroyed, in game coordinates. */
   readonly x: number;
   readonly y: number;
+}
+
+/** "Silenciar música" was chosen in the pause menu. The choice is already persisted. */
+export interface MuteToggledEvent {
+  readonly type: 'mute-toggled';
+  /** The new state: true when the music is now muted. */
+  readonly muted: boolean;
 }

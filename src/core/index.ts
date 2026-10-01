@@ -15,6 +15,7 @@ export type * from './events';
 export type * from './view';
 export type { DeviceKind, GameOptions, GameOverrides, ScriptedSpawn } from './options';
 export { memoryStorage, type StoragePort } from './storage';
+export { PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
 export {
   defaultTuning,
   resolveTuning,

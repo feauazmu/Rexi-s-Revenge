@@ -25,7 +25,19 @@ function distinctCanvasColors(page: Page): Promise<number> {
   });
 }
 
-test('boots the production build without errors and draws the game', async ({ page }) => {
+/** The screen the game shows, as exposed by the shell on the app root. */
+function screenOf(page: Page): Promise<string | null> {
+  return page.locator('#app').getAttribute('data-screen');
+}
+
+/** Marks "Cómo jugar" as seen, as a returning player would have it. */
+async function asReturningPlayer(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    localStorage.setItem('rexis-revenge:how-to-play-seen', '1');
+  });
+}
+
+test('boots the production build on the Title without errors and draws it', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('');
 
@@ -34,9 +46,23 @@ test('boots the production build without errors and draws the game', async ({ pa
   await expect(canvas).toHaveAttribute('width', '480');
   await expect(canvas).toHaveAttribute('height', '270');
 
+  await expect.poll(() => screenOf(page)).toBe('title');
   await expect.poll(() => distinctCanvasColors(page)).toBeGreaterThan(8);
+  expect(errors).toEqual([]);
+});
 
-  // Play a little: run, jump and fire at the Maletín-cóptero.
+test('a key press moves from the Title into the Run, and the Run plays', async ({ page }) => {
+  const errors = trackErrors(page);
+  await asReturningPlayer(page);
+  await page.goto('');
+  await expect.poll(() => screenOf(page)).toBe('title');
+
+  await page.waitForTimeout(600); // the Title ignores input for its first half second
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  // Play a little: run, jump and fire.
+  const canvas = page.locator('canvas');
   const box = await canvas.boundingBox();
   if (!box) throw new Error('canvas has no layout box');
   await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.3);
@@ -49,6 +75,48 @@ test('boots the production build without errors and draws the game', async ({ pa
 
   expect(await distinctCanvasColors(page)).toBeGreaterThan(8);
   expect(errors).toEqual([]);
+});
+
+test('a first-time player sees Cómo jugar once, then goes straight in', async ({ page }) => {
+  await page.goto('');
+  await expect.poll(() => screenOf(page)).toBe('title');
+  await page.waitForTimeout(600);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('how-to-play');
+  await page.waitForTimeout(600);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  await page.reload();
+  await expect.poll(() => screenOf(page)).toBe('title');
+  await page.waitForTimeout(600);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+});
+
+test('pauses with Esc, auto-pauses when the tab is hidden, and Salir returns to the Title', async ({
+  page,
+}) => {
+  await asReturningPlayer(page);
+  await page.goto('');
+  await page.waitForTimeout(600);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  await page.keyboard.press('Escape');
+  await expect.poll(() => screenOf(page)).toBe('paused');
+  await page.keyboard.press('Escape');
+  await expect.poll(() => screenOf(page)).toBe('run');
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(() => screenOf(page)).toBe('paused');
+
+  await page.keyboard.press('ArrowUp'); // wraps from Continuar to Salir
+  await page.keyboard.press('Enter');
+  await expect.poll(() => screenOf(page)).toBe('title');
 });
 
 test('scales the canvas by a whole number with letterboxing', async ({ page }) => {

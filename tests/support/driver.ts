@@ -6,6 +6,7 @@ import {
   createGame,
   inputFrame,
   TICKS_PER_SECOND,
+  type Game,
   type GameEvent,
   type GameEventOf,
   type GameEventType,
@@ -25,10 +26,30 @@ export interface Driver {
   seconds(seconds: number, input?: InputFramePatch): GameEvent[];
   /** Holds fire aimed at `target` for `seconds` (plus any extra input). */
   holdFireToward(target: Vec2, seconds: number, input?: InputFramePatch): GameEvent[];
+  /** What the shell does when the tab is hidden or loses focus. */
+  pause(): void;
 }
 
+/**
+ * A game that has already been taken from the Title (through Cómo jugar, if needed) into a
+ * Run: the first `ticks` call advances Run tick 0. The log starts with the Run's first tick.
+ * Use {@link driveFromTitle} to test the screen flow itself.
+ */
 export function drive(options: Partial<GameOptions> = {}): Driver {
   const game = createGame({ seed: 1, ...options });
+  for (let i = 0; i < 10 * TICKS_PER_SECOND && game.view.screen !== 'run'; i++) {
+    game.tick(inputFrame({ start: game.view.startReady }));
+  }
+  if (game.view.screen !== 'run') throw new Error('Could not start a Run from the Title');
+  return driverFor(game);
+}
+
+/** A freshly created game, still before its first tick (the Title comes up on tick 1). */
+export function driveFromTitle(options: Partial<GameOptions> = {}): Driver {
+  return driverFor(createGame({ seed: 1, ...options }));
+}
+
+function driverFor(game: Game): Driver {
   const log: GameEvent[] = [];
 
   const ticks = (count: number, input: InputFramePatch = {}): GameEvent[] => {
@@ -50,6 +71,9 @@ export function drive(options: Partial<GameOptions> = {}): Driver {
     ticks,
     seconds,
     holdFireToward: (target, s, input = {}) => seconds(s, { ...input, aim: target, fire: true }),
+    pause: () => {
+      game.pause();
+    },
   };
 }
 
