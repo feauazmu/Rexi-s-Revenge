@@ -3,6 +3,7 @@ the TypeScript export round-trips."""
 import json
 import os
 import shutil
+import sys
 
 import numpy as np
 import pytest
@@ -29,6 +30,35 @@ def test_prototype_clean_reproduces_the_committed_sprites(tmp_path):
         assert got.shape == want.shape and (got == want).all(), name
     assert json.load(open(root / "clean" / "positions.json")) == \
         json.load(open(os.path.join(PIPE, "clean", "positions.json")))
+
+
+def test_the_arena_rebuilds_from_its_committed_grids(tmp_path):
+    art = os.path.join(ROOT, "art")
+    root = tmp_path / "art"
+    os.makedirs(root)
+    shutil.copy(os.path.join(art, "sheets.json"), root)
+    for folder in ("grid", "drafts"):
+        shutil.copytree(os.path.join(art, folder), root / folder)
+    assert clean.run(Project(str(root)), ["arena", "arena_props"], log=lambda *_: None) == 0
+    names = ["scene", "ledge_102", "ledge_144"] + [f"cloud_{c}" for c in "abcde"]
+    for name in names:
+        got = np.asarray(Image.open(root / "sprites" / "arena" / f"{name}.png").convert("RGBA"))
+        want = np.asarray(Image.open(os.path.join(art, "sprites", "arena", f"{name}.png")).convert("RGBA"))
+        assert got.shape == want.shape and (got == want).all(), name
+
+
+def test_the_arena_layers_partition_the_scene_and_match_the_committed_ones(tmp_path):
+    sys.path.insert(0, os.path.join(ROOT, "scripts", "art", "scenes"))
+    import arena
+
+    split = arena.build(out=str(tmp_path))
+    opaque = [layer[..., 3] > 0 for layer in split.values()]
+    foreground = opaque[1] | opaque[2] | opaque[3]
+    assert not (opaque[1] & opaque[2]).any() and not (opaque[2] & opaque[3]).any()
+    assert (opaque[0] | foreground).all()          # nothing shows through the four layers
+    for name, layer in split.items():
+        want = np.asarray(Image.open(os.path.join(arena.OUT, f"{name}.png")).convert("RGBA"))
+        assert (layer == want).all(), name
 
 
 def test_rle_round_trips_and_rows_use_fixed_codes():

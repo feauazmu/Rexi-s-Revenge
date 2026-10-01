@@ -61,9 +61,19 @@ Generations made with `scripts/art` (see its README), folded in from `art/ledger
 
 <!-- art-ledger:start -->
 
-| #   | Time | Root | Name       | Model | Cost (USD) | Note |
-| --- | ---- | ---- | ---------- | ----- | ---------- | ---- |
-|     |      |      | (none yet) |       | 0.0000     |      |
+| #   | Time                | Root  | Name               | Model                         | Cost (USD) | Note                                           |
+| --- | ------------------- | ----- | ------------------ | ----------------------------- | ---------- | ---------------------------------------------- |
+| 1   | 2026-10-01T13:21:42 | `art` | `arena_r2c1`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r2c1 (#28)                          |
+| 2   | 2026-10-01T13:23:28 | `art` | `arena_r0c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r0c0 (#28)                          |
+| 3   | 2026-10-01T13:23:48 | `art` | `arena_r0c1`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r0c1 (#28)                          |
+| 4   | 2026-10-01T13:24:11 | `art` | `arena_r0c2`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r0c2 (#28)                          |
+| 5   | 2026-10-01T13:24:32 | `art` | `arena_r1c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c0 (#28)                          |
+| 6   | 2026-10-01T13:25:04 | `art` | `arena_r1c1`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c1 (#28)                          |
+| 7   | 2026-10-01T13:25:28 | `art` | `arena_r1c2`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r1c2 (#28)                          |
+| 8   | 2026-10-01T13:25:50 | `art` | `arena_r2c0`       | google/gemini-3.1-flash-image | 0.1016     | Arena tile r2c0 (#28)                          |
+| 9   | 2026-10-01T13:26:12 | `art` | `arena_r2c2`       | google/gemini-3.1-flash-image | 0.1017     | Arena tile r2c2 (#28)                          |
+| 10  | 2026-10-01T13:32:58 | `art` | `arena_fix_center` | google/gemini-3.1-flash-image | 0.1017     | Arena centre fix: skyline, sun, step end (#28) |
+| 11  | 2026-10-01T13:35:24 | `art` | `arena_props`      | google/gemini-3.1-flash-image | 0.1016     | Arena ledges and clouds (#28)                  |
 
 <!-- art-ledger:end -->
 
@@ -76,6 +86,7 @@ Shared cap for all generated media (images + music): **$10.00** (raised from $5.
 | Images (12 generations)               | 0.8115                                 |
 | Music (2 generations)                 | 0.0800                                 |
 | Rexi version C images (9 generations) | 0.9219                                 |
-| **Running total**                     | **1.8134 of 10.00** (8.1866 remaining) |
+| Art pipeline (11 generations)         | 1.1181                                 |
+| **Running total**                     | **2.9315 of 10.00** (7.0685 remaining) |
 
 The image subtotal is summed from the unrounded costs in the JSON sidecars (and the post-processing note for the discarded sheet attempt), so it can differ by $0.0001 from the sum of the rounded table rows.

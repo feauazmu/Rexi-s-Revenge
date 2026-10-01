@@ -351,8 +351,16 @@ with `uv`, outside the game build: the game only ever sees the TypeScript it exp
   `decodeSprite` and export `sprites` (plus animation tables and pivots as `as const` data). The
   run-length format is fixed by `src/render/sprite-data.ts`; `tests/render/sprite-data.test.ts`
   decodes a fixture written by the Python exporter, so the two cannot drift.
-- Nothing from the pipeline is wired into the renderer yet; each area of the art pass (#24) swaps
-  its code-drawn sprites for an exported module.
+- Each area of the art pass (#24) swaps its code-drawn sprites for an exported module. Wired so
+  far:
+  - **The Arena** (#28), `src/render/art/generated/arena.ts`: four 640×360 layers (sky, far
+    skyline, buildings, plaza) from nine tile edits and one fix-up edit, assembled by `clean`
+    and split by the hand-pass script `scripts/art/scenes/arena.py`; five clouds and two stone
+    ledges from a props sheet. `src/render/layers/arena.ts` draws sky → drifting clouds → far →
+    buildings → plaza → signs → platforms. The lettering (gym billboard, name plate, Boissons
+    neon and chalkboard) is code (`arena-signs.ts`), because the image model cannot letter at
+    1:1; the tile edits left those faces blank. Ambient animation (cloud drift, billboard bulbs,
+    neon flicker) is a pure function of the Run tick.
 
 ## Brand art: logo, icons and share preview
 
@@ -581,7 +589,8 @@ every step is done.
 
 Add `{ x, y, w }` (y = walkable top) to `arena.platforms` in `src/core/tuning/arena.ts`. Physics
 (`src/core/run/physics.ts`) treats every platform as one-way and the renderer draws each as a stone
-ledge, so no other code changes. Keep each one less than a full jump above the surface below it
+ledge (the pipeline's 102 or 144 px ledge, or its ends and repeated blocks for any other width), so
+no other code changes. Keep each one less than a full jump above the surface below it
 (the layout tests in `tests/core/platforms.test.ts` check this).
 
 ### An event

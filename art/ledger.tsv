@@ -1,1 +1,12 @@
 time	root	name	model	cost_usd	file	credited	note
+2026-10-01T13:21:42	art	arena_r2c1	google/gemini-3.1-flash-image	0.101706	arena_r2c1.png	yes	Arena tile r2c1 (#28)
+2026-10-01T13:23:28	art	arena_r0c0	google/gemini-3.1-flash-image	0.1016225	arena_r0c0.png	yes	Arena tile r0c0 (#28)
+2026-10-01T13:23:48	art	arena_r0c1	google/gemini-3.1-flash-image	0.101616	arena_r0c1.png	yes	Arena tile r0c1 (#28)
+2026-10-01T13:24:11	art	arena_r0c2	google/gemini-3.1-flash-image	0.1016665	arena_r0c2.png	yes	Arena tile r0c2 (#28)
+2026-10-01T13:24:32	art	arena_r1c0	google/gemini-3.1-flash-image	0.101645	arena_r1c0.png	yes	Arena tile r1c0 (#28)
+2026-10-01T13:25:04	art	arena_r1c1	google/gemini-3.1-flash-image	0.1016395	arena_r1c1.png	yes	Arena tile r1c1 (#28)
+2026-10-01T13:25:28	art	arena_r1c2	google/gemini-3.1-flash-image	0.101645	arena_r1c2.png	yes	Arena tile r1c2 (#28)
+2026-10-01T13:25:50	art	arena_r2c0	google/gemini-3.1-flash-image	0.1016435	arena_r2c0.png	yes	Arena tile r2c0 (#28)
+2026-10-01T13:26:12	art	arena_r2c2	google/gemini-3.1-flash-image	0.1016605	arena_r2c2.png	yes	Arena tile r2c2 (#28)
+2026-10-01T13:32:58	art	arena_fix_center	google/gemini-3.1-flash-image	0.101656	arena_fix_center.png	yes	Arena centre fix: skyline, sun, step end (#28)
+2026-10-01T13:35:24	art	arena_props	google/gemini-3.1-flash-image	0.1016235	arena_props.png	yes	Arena ledges and clouds (#28)

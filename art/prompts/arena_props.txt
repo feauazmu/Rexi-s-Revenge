@@ -1,0 +1,7 @@
+The attached image is a sheet of seven flat draft sprites for the Arena, a city plaza at sunset, on a pure #00FF00 green background, each with a white buffer around it. Redraw every sprite in place as crisp, finished, professional pixel art (modern commercial 16-bit quality), at exactly the same pixel size, position and outer size, so each one still fits its slot.
+
+1) and 3) (top left and second row left): two one-way stone ledges the player stands on, 144 and 102 pixels wide. Each is a weathered mauve-grey stone slab: a bright warm sunlit top edge (the walkable surface, perfectly straight and flat along its whole length), a lip, a face of stone blocks with regular vertical joints, a little chipping and texture, a dark cool underside, and a small stepped stone corbel bracket under each end. A clean 1-pixel near-black outline all around. Both ledges are the same design, only the length differs.
+
+2), 4), 5), 6), 7): five puffy sunset clouds of different sizes: soft rounded tops in cool mauve and violet, bellies lit from below by the setting sun in coral, peach and warm orange, with clean stepped pixel edges and a little checkerboard dither between the tones. Flat bottoms. No outline on the clouds.
+
+Keep the pure #00FF00 background and the white buffer around each sprite. Nothing else on the sheet, no text.

@@ -11,7 +11,8 @@ Errors (exit 1):
 Warnings (errors with --strict):
   - lone pixels with no opaque neighbour (crumbs from the slicer);
   - weak outline: under 70% of a sprite's silhouette edge is dark ink (ADR 0002: 1 px outline on
-    characters, enemies, props and icons; scenes are exempt).
+    characters, enemies, props and icons; scenes, `scene`-class audit globs and sprites whose
+    `post` entry says `"outline": false`, such as clouds, are exempt).
 Prints the palette colours used, so unused ramps and over-use show up.
 """
 import glob
@@ -65,14 +66,19 @@ def lint(path, palette_spec, outlined=True):
 
 
 def targets(project):
-    out = [(path, spec, kind != "scene") for _, kind, spec, path in project.outputs()]
+    def outlined(sheet, kind, path):
+        name = os.path.splitext(os.path.basename(path))[0]
+        post = project.sheets[sheet].get("post", {}).get(name, {})
+        return kind != "scene" and post.get("outline", True)
+
+    out = [(path, spec, outlined(sheet, kind, path)) for sheet, kind, spec, path in project.outputs()]
     for name, cfg in project.parts.items():
         d = project.path(cfg.get("out", os.path.join("parts", name)))
         out += [(f, cfg.get("palette", "character"), True) for f in sorted(glob.glob(os.path.join(d, "*.png")))]
     for pattern, spec in project.manifest.get("audit", {}).items():
         if pattern.startswith("_"):
             continue
-        out += [(f, spec, True) for f in sorted(glob.glob(project.path(pattern), recursive=True))]
+        out += [(f, spec, spec != "scene") for f in sorted(glob.glob(project.path(pattern), recursive=True))]
     seen, unique = set(), []
     for t in out:                      # first entry per file wins (sheet outputs before globs)
         if t[0] not in seen and os.path.exists(t[0]):

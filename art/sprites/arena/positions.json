@@ -1,0 +1,58 @@
+{
+  "cloud_a": {
+    "h": 10,
+    "sheet": "arena_props",
+    "w": 44,
+    "x": 170,
+    "y": 9
+  },
+  "cloud_b": {
+    "h": 13,
+    "sheet": "arena_props",
+    "w": 52,
+    "x": 130,
+    "y": 40
+  },
+  "cloud_c": {
+    "h": 22,
+    "sheet": "arena_props",
+    "w": 101,
+    "x": 7,
+    "y": 71
+  },
+  "cloud_d": {
+    "h": 18,
+    "sheet": "arena_props",
+    "w": 80,
+    "x": 131,
+    "y": 71
+  },
+  "cloud_e": {
+    "h": 14,
+    "sheet": "arena_props",
+    "w": 63,
+    "x": 7,
+    "y": 107
+  },
+  "ledge_102": {
+    "h": 17,
+    "sheet": "arena_props",
+    "w": 102,
+    "x": 5,
+    "y": 39
+  },
+  "ledge_144": {
+    "h": 17,
+    "sheet": "arena_props",
+    "w": 144,
+    "x": 5,
+    "y": 7
+  },
+  "scene": {
+    "h": 360,
+    "sheet": "arena",
+    "w": 640,
+    "x": 0,
+    "y": 0
+  }
+}
