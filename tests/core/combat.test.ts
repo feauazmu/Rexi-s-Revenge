@@ -22,7 +22,7 @@ const centerOf = (x: number, y: number) => ({
 describe('Firing the Mazo Automático', () => {
   it('fires while the trigger is held, at the tuned fire rate', () => {
     const game = driveEmptyArena();
-    const events = game.holdFireToward({ x: 400, y: 50 }, 3);
+    const events = game.holdFireToward({ x: 533, y: 67 }, 3);
     const shots = eventsOf(events, 'weapon-fired');
     expect(shots.length).toBeGreaterThanOrEqual(Math.floor(3 / mazo.fireInterval) - 1);
     expect(shots.length).toBeLessThanOrEqual(Math.ceil(3 / mazo.fireInterval) + 1);
@@ -36,20 +36,20 @@ describe('Firing the Mazo Automático', () => {
 
   it('does not fire without the trigger', () => {
     const game = driveEmptyArena();
-    expect(eventsOf(game.seconds(2, { aim: { x: 400, y: 50 } }), 'weapon-fired')).toHaveLength(0);
+    expect(eventsOf(game.seconds(2, { aim: { x: 533, y: 67 } }), 'weapon-fired')).toHaveLength(0);
     expect(runOf(game.view).projectiles).toHaveLength(0);
   });
 
   it('has unlimited ammo', () => {
     const game = driveEmptyArena();
-    const shots = eventsOf(game.holdFireToward({ x: 400, y: 50 }, 60), 'weapon-fired');
+    const shots = eventsOf(game.holdFireToward({ x: 533, y: 67 }, 60), 'weapon-fired');
     expect(shots.length).toBeGreaterThan(400);
     expect(runOf(game.view).rexi.weapon).toEqual({ id: 'mazo-automatico', ammo: null });
   });
 
   it('sends gavels from the muzzle toward the aim point', () => {
     const game = driveEmptyArena();
-    const target = { x: 400, y: 40 };
+    const target = { x: 533, y: 53 };
     game.ticks(1, { aim: target, fire: true });
     game.ticks(10, { aim: target });
 
@@ -70,7 +70,7 @@ describe('Firing the Mazo Automático', () => {
 
   it('removes gavels once they leave the screen', () => {
     const game = driveEmptyArena();
-    game.ticks(1, { aim: { x: 479, y: 0 }, fire: true });
+    game.ticks(1, { aim: { x: 639, y: 0 }, fire: true });
     game.seconds(3);
     expect(runOf(game.view).projectiles).toHaveLength(0);
   });
@@ -78,33 +78,33 @@ describe('Firing the Mazo Automático', () => {
 
 describe('Destroying the Maletín-cóptero', () => {
   it('spawns scripted Enemies at their tick and position', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60, 30)], tuning: holdStill() } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80, 30)], tuning: holdStill() } });
     game.ticks(30);
     expect(runOf(game.view).enemies).toHaveLength(0);
 
     const spawned = eventsOf(game.ticks(1), 'enemy-spawned');
     expect(spawned).toEqual([expect.objectContaining({ kind: 'maletin-coptero' })]);
     const [enemy] = runOf(game.view).enemies;
-    expect(enemy).toMatchObject({ kind: 'maletin-coptero', craft: 'lawyer', x: 300 });
+    expect(enemy).toMatchObject({ kind: 'maletin-coptero', craft: 'lawyer', x: 400 });
     expect(enemy?.health).toBe(maletin.health);
   });
 
   it('hovers in place when it does not drift', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: holdStill() } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: holdStill() } });
     const ys: number[] = [];
     for (let i = 0; i < 120; i++) {
       game.ticks(1);
       ys.push(runOf(game.view).enemies[0]?.y ?? NaN);
     }
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(maletin.hoverAmplitude);
-    expect(Math.max(...ys)).toBeLessThanOrEqual(60 + maletin.hoverAmplitude + 1e-9);
-    expect(Math.min(...ys)).toBeGreaterThanOrEqual(60 - maletin.hoverAmplitude - 1e-9);
-    expect(runOf(game.view).enemies[0]?.x).toBe(300);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(80 + maletin.hoverAmplitude + 1e-9);
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(80 - maletin.hoverAmplitude - 1e-9);
+    expect(runOf(game.view).enemies[0]?.x).toBe(400);
   });
 
   it('takes damage from each gavel that hits it', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: holdStill() } });
-    const events = game.holdFireToward(centerOf(300, 60), 1);
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: holdStill() } });
+    const events = game.holdFireToward(centerOf(400, 80), 1);
     const hits = eventsOf(events, 'enemy-hit');
     expect(hits.length).toBeGreaterThan(0);
     expect(new Set(hits.map((h) => `${h.kind}:${h.damage}`))).toEqual(
@@ -114,8 +114,8 @@ describe('Destroying the Maletín-cóptero', () => {
   });
 
   it('is destroyed after enough hits, emitting enemy-destroyed once', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: holdStill() } });
-    const events = game.holdFireToward(centerOf(300, 60), 5);
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: holdStill() } });
+    const events = game.holdFireToward(centerOf(400, 80), 5);
 
     const hits = eventsOf(events, 'enemy-hit');
     expect(hits).toHaveLength(Math.ceil(maletin.health / mazo.damage));
@@ -126,7 +126,7 @@ describe('Destroying the Maletín-cóptero', () => {
       craft: 'lawyer',
       points: maletin.points,
     });
-    expect(destroyed[0]?.x).toBeCloseTo(300 + maletin.width / 2, 0);
+    expect(destroyed[0]?.x).toBeCloseTo(400 + maletin.width / 2, 0);
 
     const run = runOf(game.view);
     expect(run.enemies).toHaveLength(0);
@@ -137,17 +137,17 @@ describe('Destroying the Maletín-cóptero', () => {
   it('needs fewer hits when the Weapon damage is tuned up', () => {
     const game = drive({
       overrides: {
-        spawns: [maletinAt(300, 60)],
+        spawns: [maletinAt(400, 80)],
         tuning: holdStill({ weapons: { 'mazo-automatico': { damage: 4 } } }),
       },
     });
-    const events = game.holdFireToward(centerOf(300, 60), 5);
+    const events = game.holdFireToward(centerOf(400, 80), 5);
     expect(eventsOf(events, 'enemy-hit')).toHaveLength(Math.ceil(maletin.health / 4));
     expect(eventsOf(events, 'enemy-destroyed')).toHaveLength(1);
   });
 
   it('is not hurt by shots that miss', () => {
-    const game = drive({ overrides: { spawns: [maletinAt(300, 60)], tuning: holdStill() } });
+    const game = drive({ overrides: { spawns: [maletinAt(400, 80)], tuning: holdStill() } });
     const events = game.holdFireToward({ x: 0, y: 0 }, 3);
     expect(eventsOf(events, 'enemy-hit')).toHaveLength(0);
     expect(runOf(game.view).enemies[0]?.health).toBe(maletin.health);

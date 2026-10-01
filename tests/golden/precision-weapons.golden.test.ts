@@ -13,11 +13,11 @@ describe('Precision Weapon goldens', () => {
         tuning: holdStill(),
         spawns: [
           weaponCrate('citaciones-teledirigidas', ON_REXI.x, { y: ON_REXI.y }),
-          { kind: 'maletin-coptero', x: 300, y: 36 },
+          { kind: 'maletin-coptero', x: 400, y: 48 },
         ],
       },
     });
-    const aim = { x: 420, y: 200 };
+    const aim = { x: 560, y: 267 };
     game.ticks(1, { aim });
     game.holdFireToward(aim, 0.93);
     game.ticks(4, { aim });
@@ -32,12 +32,12 @@ describe('Precision Weapon goldens', () => {
         tuning: holdStill(),
         spawns: [
           weaponCrate('sentencia-firme', ON_REXI.x, { y: ON_REXI.y }),
-          { kind: 'maletin-coptero', x: 220, y: 140 },
-          { kind: 'maletin-coptero', x: 360, y: 74 },
+          { kind: 'maletin-coptero', x: 293, y: 187 },
+          { kind: 'maletin-coptero', x: 480, y: 99 },
         ],
       },
     });
-    const aim = { x: 372, y: 83 };
+    const aim = { x: 496, y: 111 };
     game.ticks(4, { aim });
     game.ticks(1, { aim, fire: true });
     game.ticks(2, { aim });

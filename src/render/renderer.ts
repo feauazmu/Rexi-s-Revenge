@@ -41,7 +41,7 @@ const SCREEN_LAYERS: readonly RunLayer[] = [drawHud, drawDialogueBox, drawCrossh
 
 export interface RendererOptions {
   /**
-   * The bundled 480×270 title illustration (`public/title.png`), already decoded by the
+   * The bundled 640×360 title illustration (`public/title.png`), already decoded by the
    * platform. Without it the Title screen draws its code-drawn backdrop.
    */
   readonly titleIllustration?: Bitmap | null;
@@ -64,7 +64,7 @@ function drawRun(
 
 export interface Renderer {
   /**
-   * Draws one complete 480×270 frame of `view`, with the touch controls on top when an
+   * Draws one complete 640×360 frame of `view`, with the touch controls on top when an
    * `overlay` is given. Pure: same inputs, same pixels.
    */
   render(surface: Surface, view: GameView, overlay?: TouchOverlayView | null): void;

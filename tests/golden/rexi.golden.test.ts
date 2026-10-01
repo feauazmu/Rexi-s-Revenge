@@ -10,7 +10,7 @@ import { cropImage, tileImages } from '../support/sheet';
 import { expectGolden } from './golden';
 
 const TILE = 72;
-const ahead = { x: 400, y: 200 };
+const ahead = { x: 533, y: 267 };
 
 /** A square crop of the current frame centered on Rexi. */
 function rexiTile(game: Driver) {
@@ -54,8 +54,8 @@ describe('Rexi goldens', () => {
 
   it('rexi-running-frame: running right while firing', async () => {
     const game = driveEmptyArena();
-    game.seconds(0.4, { move: 1, aim: { x: 460, y: 150 } });
-    game.ticks(1, { move: 1, aim: { x: 460, y: 150 }, fire: true });
+    game.seconds(0.4, { move: 1, aim: { x: 613, y: 200 } });
+    game.ticks(1, { move: 1, aim: { x: 613, y: 200 }, fire: true });
     await expectGolden('rexi-running-frame', renderView(game.view));
   });
 
@@ -72,7 +72,7 @@ describe('Rexi goldens', () => {
 
   it('rexi-hurt: hurt reaction after an Enemy paper hits him, normal and blink frames', async () => {
     // A Maletín-cóptero firing perfectly aimed papers at Rexi.
-    const shooter: ScriptedSpawn = { kind: 'maletin-coptero', x: 300, y: 60 };
+    const shooter: ScriptedSpawn = { kind: 'maletin-coptero', x: 400, y: 80 };
     const game = driveEmptyArena({
       overrides: {
         spawns: [shooter],

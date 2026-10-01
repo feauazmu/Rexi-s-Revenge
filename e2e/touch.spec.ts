@@ -13,11 +13,11 @@ function app(page: Page) {
   return page.locator('#app');
 }
 
-/** Taps the point (x, y) given in game coordinates (480×270). */
+/** Taps the point (x, y) given in game coordinates (640×360). */
 async function tapGame(page: Page, x: number, y: number): Promise<void> {
   const box = await page.locator('.game-canvas').boundingBox();
   if (!box) throw new Error('game canvas has no layout box');
-  await page.touchscreen.tap(box.x + (x * box.width) / 480, box.y + (y * box.height) / 270);
+  await page.touchscreen.tap(box.x + (x * box.width) / 640, box.y + (y * box.height) / 360);
 }
 
 /** Number of distinct colors in a canvas (1 means blank). */
@@ -51,25 +51,25 @@ test.describe('phone in landscape', () => {
 
     // Title and Cómo jugar: a tap anywhere starts.
     await page.waitForTimeout(600);
-    await tapGame(page, 240, 135);
+    await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'how-to-play');
     await page.waitForTimeout(600);
-    await tapGame(page, 240, 135);
+    await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
     await expect(app(page)).toHaveAttribute('data-touch-controls', 'play');
 
     // Pause button (top right), then the menu's back button resumes.
-    await tapGame(page, 467, 31);
+    await tapGame(page, 621, 39);
     await expect(app(page)).toHaveAttribute('data-screen', 'paused');
     await expect(app(page)).toHaveAttribute('data-touch-controls', 'menu');
-    await tapGame(page, 396, 236);
+    await tapGame(page, 528, 315);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
 
     // Pause again; d-pad up wraps to Salir, confirm returns to the Title.
-    await tapGame(page, 467, 31);
+    await tapGame(page, 621, 39);
     await expect(app(page)).toHaveAttribute('data-screen', 'paused');
-    await tapGame(page, 52, 214 - 17);
-    await tapGame(page, 432, 210);
+    await tapGame(page, 69, 285 - 23);
+    await tapGame(page, 576, 280);
     await expect(app(page)).toHaveAttribute('data-screen', 'title');
 
     expect(await distinctColors(page, '.game-canvas')).toBeGreaterThan(8);
@@ -96,7 +96,7 @@ test.describe('phone in portrait', () => {
     await page.setViewportSize({ width: 839, height: 412 });
     await page.goto('');
     await page.waitForTimeout(600);
-    await tapGame(page, 240, 135);
+    await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
 
     await page.setViewportSize({ width: 412, height: 839 });

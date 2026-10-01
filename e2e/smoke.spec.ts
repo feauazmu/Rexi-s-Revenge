@@ -43,8 +43,8 @@ test('boots the production build on the Title without errors and draws it', asyn
 
   const canvas = page.locator('canvas');
   await expect(canvas).toHaveCount(1);
-  await expect(canvas).toHaveAttribute('width', '480');
-  await expect(canvas).toHaveAttribute('height', '270');
+  await expect(canvas).toHaveAttribute('width', '640');
+  await expect(canvas).toHaveAttribute('height', '360');
 
   await expect.poll(() => screenOf(page)).toBe('title');
   await expect.poll(() => distinctCanvasColors(page)).toBeGreaterThan(8);
@@ -203,8 +203,8 @@ test('scales the canvas by a whole number with letterboxing', async ({ page }) =
   await page.goto('');
   const box = await page.locator('canvas').boundingBox();
   expect(box).not.toBeNull();
-  expect(box?.width).toBe(960);
-  expect(box?.height).toBe(540);
-  expect(box?.x).toBe(160);
-  expect(box?.y).toBe(130);
+  expect(box?.width).toBe(1280);
+  expect(box?.height).toBe(720);
+  expect(box?.x).toBe(0);
+  expect(box?.y).toBe(40);
 });

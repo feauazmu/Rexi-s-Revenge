@@ -17,7 +17,7 @@ const sellosCrate = (x: number, options?: Parameters<typeof weaponCrate>[2]) =>
   weaponCrate('lluvia-de-sellos', x, options);
 
 /** Far from Rexi's spawn point, so he never touches it unless he walks there. */
-const FAR_X = 360;
+const FAR_X = 480;
 
 function onlyCrate(game: { readonly view: Parameters<typeof runOf>[0] }): CrateView {
   const list = runOf(game.view).crates;

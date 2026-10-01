@@ -77,7 +77,7 @@ function untilEvent(
 
 describe('Banca Artillada movement', () => {
   it('drifts slowly: never faster than its drift speed (plus the hover bob)', () => {
-    const game = bancaAt(300, 60);
+    const game = bancaAt(400, 80);
     const bobPerTick = (2 * Math.PI * banca.hoverAmplitude) / banca.hoverPeriod / 60;
     let previous = bancaOf(game);
     for (let t = 0; t < secondsToTicks(20); t++) {
@@ -97,7 +97,7 @@ describe('Banca Artillada movement', () => {
   });
 
   it('settles at its standoff distance from Rexi, inside its altitude band', () => {
-    const game = bancaAt(380, 60);
+    const game = bancaAt(507, 80);
     game.seconds(15);
     const enemy = bancaOf(game) ?? expect.unreachable();
     const rexi = runOf(game.view).rexi;
@@ -107,7 +107,7 @@ describe('Banca Artillada movement', () => {
   });
 
   it('follows Rexi when he runs, keeping to its side', () => {
-    const game = bancaAt(300, 60);
+    const game = bancaAt(400, 80);
     game.seconds(10);
     game.seconds(1, { move: 1 });
     game.seconds(12);
@@ -117,7 +117,7 @@ describe('Banca Artillada movement', () => {
   });
 
   it('crosses over Rexi to his other side when he pins it against the edge', () => {
-    const game = bancaAt(380, 60);
+    const game = bancaAt(507, 80);
     game.seconds(4);
     game.seconds(3, { move: 1 });
     game.seconds(15);
@@ -127,7 +127,7 @@ describe('Banca Artillada movement', () => {
   });
 
   it('never leaves the Arena once inside it', () => {
-    const game = bancaAt(380, 60);
+    const game = bancaAt(507, 80);
     for (let t = 0; t < secondsToTicks(40); t++) {
       game.ticks(1, { move: t % 400 < 200 ? 1 : -1 });
       const enemy = bancaOf(game) ?? expect.unreachable();
@@ -137,26 +137,26 @@ describe('Banca Artillada movement', () => {
   });
 
   it('flies in on its own from just outside the Arena edge', () => {
-    const game = bancaAt(SCREEN_WIDTH, 60);
+    const game = bancaAt(SCREEN_WIDTH, 80);
     game.seconds(8);
     const enemy = bancaOf(game) ?? expect.unreachable();
     expect(enemy.x + enemy.w).toBeLessThanOrEqual(SCREEN_WIDTH - banca.marginX + EPSILON);
   });
 
   it('holds its position (hover bob only) when its drift speed is zero', () => {
-    const game = bancaAt(300, 60, holdStill());
+    const game = bancaAt(400, 80, holdStill());
     const xs = new Set<number>();
     for (let t = 0; t < secondsToTicks(5); t++) {
       game.ticks(1, { move: 1 });
       xs.add(bancaOf(game)?.x ?? NaN);
     }
-    expect(xs).toEqual(new Set([300]));
+    expect(xs).toEqual(new Set([400]));
   });
 });
 
 describe('Banca Artillada rocket volleys', () => {
   it('fires volleys of rockets, a short gap apart, every volley interval', () => {
-    const game = bancaAt(300, 60, withBanca({ firstVolleyDelay: 1, volleyInterval: 4 }));
+    const game = bancaAt(400, 80, withBanca({ firstVolleyDelay: 1, volleyInterval: 4 }));
     const fireTicks: number[] = [];
     for (let t = 1; t <= secondsToTicks(9.5 + banca.volleyWindup); t++) {
       const fired = eventsOf(game.ticks(1), 'enemy-fired');
@@ -181,7 +181,7 @@ describe('Banca Artillada rocket volleys', () => {
   });
 
   it('telegraphs each volley: a windup climbing to 1 before the first rocket, then firing', () => {
-    const game = bancaAt(300, 60, withBanca({ firstVolleyDelay: 1 }, holdStill()));
+    const game = bancaAt(400, 80, withBanca({ firstVolleyDelay: 1 }, holdStill()));
     game.seconds(1 - 1 / 60);
     expect(bancaOf(game)?.pose).toEqual({ facing: null, attack: 'idle', windup: 0 });
     const windups: number[] = [];
@@ -206,7 +206,7 @@ describe('Banca Artillada rocket volleys', () => {
   });
 
   it('launches visible enemy rockets from its two pods, alternating', () => {
-    const game = bancaAt(300, 60, withBanca({ firstVolleyDelay: 0.5 }, holdStill()));
+    const game = bancaAt(400, 80, withBanca({ firstVolleyDelay: 0.5 }, holdStill()));
     untilEvent(game, 'enemy-fired');
     const enemy = bancaOf(game) ?? expect.unreachable();
     const first = rocketsOf(game)[0] ?? expect.unreachable();
@@ -220,7 +220,7 @@ describe('Banca Artillada rocket volleys', () => {
   });
 
   it('rockets leave at launch speed and accelerate up to their top speed', () => {
-    const game = bancaAt(300, 40, withBanca({ firstVolleyDelay: 0.5, volleySize: 1 }));
+    const game = bancaAt(400, 53, withBanca({ firstVolleyDelay: 0.5, volleySize: 1 }));
     untilEvent(game, 'enemy-fired');
     const rocket = rocketsOf(game)[0] ?? expect.unreachable();
     expect(speed(rocket)).toBeLessThan(
@@ -241,8 +241,8 @@ describe('Banca Artillada rocket volleys', () => {
 
   it('rockets steer toward Rexi for their homing time, then fly straight', () => {
     const game = bancaAt(
-      340,
-      40,
+      453,
+      53,
       // Fires half a second in, windup included, so the rocket clears Rexi's head.
       withBanca(
         { firstVolleyDelay: 0.5 - banca.volleyWindup, volleySize: 1, volleySpread: 0 },
@@ -282,8 +282,8 @@ describe('Banca Artillada rocket volleys', () => {
 
   it('a rocket that reaches Rexi hurts him for its damage', () => {
     const game = bancaAt(
-      300,
-      60,
+      400,
+      80,
       withBanca({ firstVolleyDelay: 0.5, volleySpread: 0 }, holdStill()),
     );
     const [hit] = eventsOf(untilEvent(game, 'rexi-hit'), 'rexi-hit');
@@ -293,8 +293,8 @@ describe('Banca Artillada rocket volleys', () => {
   it('fires volleys faster as the ramp raises the fire rate', () => {
     const volleysIn = (fireRate: number) => {
       const game = bancaAt(
-        300,
-        60,
+        400,
+        80,
         withBanca(
           { firstVolleyDelay: 2, volleyInterval: 2 },
           { director: { stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }] } },
@@ -312,8 +312,8 @@ describe('Banca Artillada rocket volleys', () => {
 describe('Banca Artillada as an Enemy', () => {
   /** Kills a one-hit Banca parked at (60, 60) and returns the destruction tick's events. */
   function destroyOne(tuning: TuningOverrides = {}): { game: Driver; events: GameEvent[] } {
-    const game = bancaAt(60, 60, withBanca({ health: 1 }, holdStill(tuning)));
-    const aim = { x: 60 + banca.width / 2, y: 60 + banca.height / 2 };
+    const game = bancaAt(80, 80, withBanca({ health: 1 }, holdStill(tuning)));
+    const aim = { x: 80 + banca.width / 2, y: 80 + banca.height / 2 };
     const events = untilEvent(game, 'enemy-destroyed', { aim, fire: true });
     return { game, events };
   }
@@ -352,9 +352,9 @@ describe('Banca Artillada as an Enemy', () => {
 });
 
 describe('Destroying a Banca Artillada always triggers a Quip', () => {
-  const SPOT = { x: 300, y: 150 };
+  const SPOT = { x: 400, y: 200 };
   const AT_MALETIN = { x: SPOT.x + maletin.width / 2, y: SPOT.y + maletin.height / 2 };
-  const BANCA = { x: 40, y: 50 };
+  const BANCA = { x: 53, y: 67 };
   const AT_BANCA = { x: BANCA.x + banca.width / 2, y: BANCA.y + banca.height / 2 };
 
   function quipGame(quips: TuningOverrides['quips']): Driver {

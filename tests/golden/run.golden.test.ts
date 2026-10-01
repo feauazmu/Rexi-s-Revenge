@@ -9,8 +9,8 @@ import { holdStill } from '../support/fixtures';
 import { renderView } from '../support/render-node';
 import { expectGolden } from './golden';
 
-const maletin: ScriptedSpawn = { kind: 'maletin-coptero', x: 320, y: 70 };
-const atMaletin = { x: 332, y: 79 };
+const maletin: ScriptedSpawn = { kind: 'maletin-coptero', x: 427, y: 93 };
+const atMaletin = { x: 443, y: 105 };
 
 describe('Run goldens', () => {
   it('run-idle: Rexi standing, aiming at a hovering Maletín-cóptero', async () => {
@@ -28,7 +28,7 @@ describe('Run goldens', () => {
 
   it('arena-platform: the Arena with drifted clouds, Rexi standing on the left ledge', async () => {
     const game = drive({ seed: 1, overrides: { spawns: [] } });
-    const aim = { x: 300, y: 100 };
+    const aim = { x: 400, y: 133 };
     game.ticks(1, { aim });
     game.seconds(0.45, { aim, move: -1, jump: true });
     game.seconds(4, { aim });
@@ -40,7 +40,7 @@ describe('Run goldens', () => {
 
   it('run-jump-aim-left: Rexi airborne, aiming up and to the left', async () => {
     const game = drive({ seed: 1, overrides: { spawns: [maletin], tuning: holdStill() } });
-    const aim = { x: 40, y: 30 };
+    const aim = { x: 53, y: 40 };
     game.ticks(1, { jump: true, aim });
     game.seconds(0.25, { aim, move: -1, fire: true, jump: true });
     await expectGolden('run-jump-aim-left', renderView(game.view));
@@ -50,12 +50,12 @@ describe('Run goldens', () => {
     const game = drive({
       seed: 1,
       overrides: {
-        spawns: [maletin, { kind: 'maletin-coptero', x: 200, y: 50, atTick: 600 }],
+        spawns: [maletin, { kind: 'maletin-coptero', x: 267, y: 67, atTick: 600 }],
         tuning: holdStill(),
       },
     });
     game.holdFireToward(atMaletin, 3);
-    game.seconds(62.25, { aim: { x: 212, y: 59 } });
+    game.seconds(62.25, { aim: { x: 283, y: 79 } });
     await expectGolden('run-hud', renderView(game.view));
   });
 
@@ -86,16 +86,16 @@ describe('Run goldens', () => {
       seed: 2,
       overrides: {
         spawns: [
-          { kind: 'maletin-coptero', x: 60, y: 120 },
-          { kind: 'maletin-coptero', x: 250, y: 90 },
-          { kind: 'maletin-coptero', x: 380, y: 50, atTick: 1 },
+          { kind: 'maletin-coptero', x: 80, y: 160 },
+          { kind: 'maletin-coptero', x: 333, y: 120 },
+          { kind: 'maletin-coptero', x: 507, y: 67, atTick: 1 },
         ],
         tuning: holdStill({
           enemies: { 'maletin-coptero': { fireIntervalMin: 9, fireIntervalMax: 9 } },
         }),
       },
     });
-    game.seconds(0.5, { aim: { x: 262, y: 99 } });
+    game.seconds(0.5, { aim: { x: 349, y: 132 } });
     await expectGolden('enemy-maletin-coptero', renderView(game.view));
   });
 
@@ -105,13 +105,13 @@ describe('Run goldens', () => {
       overrides: {
         spawns: [
           // Dropped its drawer 30 ticks before the snapshot.
-          { kind: 'archivador-artillado', x: 150, y: 40 },
+          { kind: 'archivador-artillado', x: 200, y: 53 },
           // Most of the way through lowering its drawer out of the bomb bay.
-          { kind: 'archivador-artillado', x: 300, y: 30, atTick: 35 },
+          { kind: 'archivador-artillado', x: 400, y: 40, atTick: 35 },
           // Still waiting for its first drop.
-          { kind: 'archivador-artillado', x: 56, y: 50, atTick: 70 },
+          { kind: 'archivador-artillado', x: 75, y: 67, atTick: 70 },
           // Next to the Maletín-cóptero, for scale.
-          { kind: 'maletin-coptero', x: 400, y: 96 },
+          { kind: 'maletin-coptero', x: 533, y: 128 },
         ],
         tuning: holdStill({
           rexi: { maxHealth: 1_000_000 },
@@ -122,7 +122,7 @@ describe('Run goldens', () => {
         }),
       },
     });
-    game.ticks(111, { aim: { x: 412, y: 105 } });
+    game.ticks(111, { aim: { x: 549, y: 140 } });
     const [falling, arming, waiting] = runOf(game.view).enemies.filter(
       (e) => e.kind === 'archivador-artillado',
     );
@@ -141,15 +141,15 @@ describe('Run goldens', () => {
       seed: 2,
       overrides: {
         spawns: [
-          { kind, x: 40, y: 60 },
-          { kind, x: 400, y: 128, atTick: 10 },
-          { kind, x: 20, y: 96, atTick: 40 },
+          { kind, x: 53, y: 80 },
+          { kind, x: 533, y: 171, atTick: 10 },
+          { kind, x: 27, y: 128, atTick: 40 },
         ],
         tuning: { enemies: { [kind]: { fireIntervalMin: 1, fireIntervalMax: 1 } } },
       },
     });
     // Rexi runs right, so the first one turns toward him and the second keeps facing him.
-    game.ticks(86, { move: 1, aim: { x: 360, y: 80 } });
+    game.ticks(86, { move: 1, aim: { x: 480, y: 107 } });
     const poses = runOf(game.view).enemies.map((e) => e.pose);
     expect(poses).toMatchObject([
       { facing: 1, attack: 'firing', windup: 0 },
@@ -165,13 +165,13 @@ describe('Run goldens', () => {
       seed: 2,
       overrides: {
         spawns: [
-          { kind: 'banca-artillada', x: 24, y: 40 },
-          { kind: 'banca-artillada', x: 300, y: 64, atTick: 1 },
+          { kind: 'banca-artillada', x: 32, y: 53 },
+          { kind: 'banca-artillada', x: 400, y: 85, atTick: 1 },
         ],
         tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 99 } } }),
       },
     });
-    game.seconds(0.5, { aim: { x: 328, y: 79 } });
+    game.seconds(0.5, { aim: { x: 437, y: 105 } });
     await expectGolden('enemy-banca-artillada', renderView(game.view));
   });
 
@@ -180,11 +180,11 @@ describe('Run goldens', () => {
     const game = drive({
       seed: 1,
       overrides: {
-        spawns: [{ kind: 'banca-artillada', x: 300, y: 50 }],
+        spawns: [{ kind: 'banca-artillada', x: 400, y: 67 }],
         tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 0.5 } } }),
       },
     });
-    const aim = { x: 328, y: 65 };
+    const aim = { x: 437, y: 87 };
     game.seconds(0.5 + banca.volleyWindup * 0.9, { aim });
     const pose = runOf(game.view).enemies[0]?.pose;
     expect(pose?.attack).toBe('windup');
@@ -196,11 +196,11 @@ describe('Run goldens', () => {
     const game = drive({
       seed: 1,
       overrides: {
-        spawns: [{ kind: 'banca-artillada', x: 300, y: 50 }],
+        spawns: [{ kind: 'banca-artillada', x: 400, y: 67 }],
         tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 0.5 } } }),
       },
     });
-    const aim = { x: 328, y: 65 };
+    const aim = { x: 437, y: 87 };
     // Past the windup (the pods glowing), most of the way through the volley.
     game.seconds(0.5 + defaultTuning.enemies['banca-artillada'].volleyWindup, { aim });
     game.ticks(32, { aim });
@@ -216,7 +216,7 @@ describe('Crate goldens', () => {
 
   it('crate-falling: a Lluvia de Sellos Crate under its parachute', async () => {
     const game = drive({ seed: 1, overrides: { spawns: [weaponCrate('lluvia-de-sellos', 300)] } });
-    game.seconds(2, { aim: { x: 309, y: 110 } });
+    game.seconds(2, { aim: { x: 412, y: 147 } });
     await expectGolden('crate-falling', renderView(game.view));
   });
 
@@ -231,7 +231,7 @@ describe('Crate goldens', () => {
         ],
       },
     });
-    game.ticks(451, { aim: { x: 300, y: 200 } });
+    game.ticks(451, { aim: { x: 400, y: 267 } });
     const [flashing, steady] = runOf(game.view).crates;
     expect(flashing).toMatchObject({ blinking: true, ticksLeft: 150 });
     expect(steady).toMatchObject({ blinking: true, ticksLeft: 156 });
@@ -246,7 +246,7 @@ describe('Crate goldens', () => {
         tuning: holdStill(),
       },
     });
-    const aim = { x: 190, y: 150 };
+    const aim = { x: 253, y: 200 };
     game.ticks(1, { aim });
     game.holdFireToward(aim, 1.6);
     game.ticks(6, { aim });
@@ -295,7 +295,7 @@ describe('Power-up goldens', () => {
         ],
       },
     });
-    game.seconds(2, { aim: { x: 300, y: 200 } });
+    game.seconds(2, { aim: { x: 400, y: 267 } });
     await expectGolden('crate-power-ups', renderView(game.view));
   });
 
@@ -341,7 +341,7 @@ describe('Crate goldens', () => {
 
   it('crate-falling: a Lluvia de Sellos Crate under its parachute', async () => {
     const game = drive({ seed: 1, overrides: { spawns: [weaponCrate('lluvia-de-sellos', 300)] } });
-    game.seconds(2, { aim: { x: 309, y: 110 } });
+    game.seconds(2, { aim: { x: 412, y: 147 } });
     await expectGolden('crate-falling', renderView(game.view));
   });
 
@@ -356,7 +356,7 @@ describe('Crate goldens', () => {
         ],
       },
     });
-    game.ticks(451, { aim: { x: 300, y: 200 } });
+    game.ticks(451, { aim: { x: 400, y: 267 } });
     const [flashing, steady] = runOf(game.view).crates;
     expect(flashing).toMatchObject({ blinking: true, ticksLeft: 150 });
     expect(steady).toMatchObject({ blinking: true, ticksLeft: 156 });
@@ -371,7 +371,7 @@ describe('Crate goldens', () => {
         tuning: holdStill(),
       },
     });
-    const aim = { x: 190, y: 150 };
+    const aim = { x: 253, y: 200 };
     game.ticks(1, { aim });
     game.holdFireToward(aim, 1.6);
     game.ticks(6, { aim });

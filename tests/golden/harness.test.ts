@@ -21,8 +21,8 @@ function pixelAt(image: RgbaImage, x: number, y: number): number[] {
 describe('golden-image harness', () => {
   let dir: string;
   const frame = (): RgbaImage => {
-    const game = drive({ overrides: { spawns: [{ kind: 'maletin-coptero', x: 300, y: 60 }] } });
-    game.seconds(0.5, { fire: true, aim: { x: 312, y: 69 } });
+    const game = drive({ overrides: { spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }] } });
+    game.seconds(0.5, { fire: true, aim: { x: 416, y: 92 } });
     return renderView(game.view);
   };
 

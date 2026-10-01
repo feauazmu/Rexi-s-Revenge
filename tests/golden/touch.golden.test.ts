@@ -33,14 +33,14 @@ describe('Touch goldens', () => {
     const game = drive({
       seed: 1,
       device: 'touch',
-      overrides: { spawns: [{ kind: 'maletin-coptero', x: 320, y: 70 }], tuning: holdStill() },
+      overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
     });
     const touch = createTouchController();
     play(game, touch, 1);
-    touch.down(1, { x: 70, y: 200 });
-    touch.move(1, { x: 86, y: 196 });
-    touch.down(2, { x: 410, y: 170 });
-    touch.move(2, { x: 424, y: 156 });
+    touch.down(1, { x: 93, y: 267 });
+    touch.move(1, { x: 115, y: 261 });
+    touch.down(2, { x: 547, y: 227 });
+    touch.move(2, { x: 565, y: 208 });
     play(game, touch, 20);
     touch.down(3, { x: TOUCH_LAYOUT.jump.x, y: TOUCH_LAYOUT.jump.y });
     play(game, touch, 6);

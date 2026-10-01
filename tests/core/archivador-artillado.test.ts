@@ -79,7 +79,7 @@ function expectGap(gap: number, seconds: number): void {
 describe('Archivador Artillado patrol', () => {
   it('patrols edge to edge at its patrol speed, turning back at the margins', () => {
     // Far from Rexi's column it never stops to drop a drawer.
-    const path = track(archivadorAt(300, 40, { tuning: withArchivador({ dropRange: 0 }) }), 30);
+    const path = track(archivadorAt(400, 53, { tuning: withArchivador({ dropRange: 0 }) }), 30);
     const xs = path.map((e) => e.x);
     expect(Math.min(...xs)).toBeLessThan(archivador.patrolMarginX + 2);
     expect(Math.max(...xs)).toBeGreaterThan(
@@ -103,7 +103,7 @@ describe('Archivador Artillado patrol', () => {
   });
 
   it('keeps high, inside its altitude band', () => {
-    const path = track(archivadorAt(300, 40, { tuning: withArchivador({ dropRange: 0 }) }), 20);
+    const path = track(archivadorAt(400, 53, { tuning: withArchivador({ dropRange: 0 }) }), 20);
     for (const e of path) {
       expect(e.y).toBeGreaterThanOrEqual(archivador.patrolMinY - archivador.hoverAmplitude - 1e-9);
       expect(e.y).toBeLessThanOrEqual(archivador.patrolMaxY + archivador.hoverAmplitude + 1e-9);
@@ -111,7 +111,7 @@ describe('Archivador Artillado patrol', () => {
   });
 
   it('climbs back up into its band when placed too low', () => {
-    const game = archivadorAt(300, 150, { tuning: withArchivador({ dropRange: 0 }) });
+    const game = archivadorAt(400, 200, { tuning: withArchivador({ dropRange: 0 }) });
     game.seconds(5);
     expect(enemyOf(game)?.y).toBeLessThanOrEqual(archivador.patrolMaxY + archivador.hoverAmplitude);
   });
@@ -273,7 +273,7 @@ describe('Archivador Artillado drawer bombs', () => {
 
 describe('Archivador Artillado in the Enemy catalog', () => {
   it('is Lawyer Craft, and destroying it awards its points', () => {
-    const spot = { x: 300, y: 40 };
+    const spot = { x: 400, y: 53 };
     const game = drive({
       overrides: {
         spawns: [{ kind: 'archivador-artillado', ...spot }],

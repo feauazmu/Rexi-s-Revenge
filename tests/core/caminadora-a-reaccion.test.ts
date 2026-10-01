@@ -64,7 +64,7 @@ function ticksUntil(game: Driver, type: GameEvent['type'], limit = 60 * 30): num
 
 describe('Caminadora a Reacción strafing', () => {
   it('strafes edge to edge across the whole Arena', () => {
-    const path = track(caminadoraAt(200, 90, HOLD_FIRE), 12);
+    const path = track(caminadoraAt(267, 120, HOLD_FIRE), 12);
     const xs = path.map((e) => e.x);
     expect(Math.min(...xs)).toBeLessThanOrEqual(caminadora.strafeMarginX + 2);
     expect(Math.max(...xs) + caminadora.width).toBeGreaterThanOrEqual(
@@ -77,7 +77,7 @@ describe('Caminadora a Reacción strafing', () => {
   });
 
   it('moves horizontally at its strafe speed, climbing slower than that', () => {
-    const path = track(caminadoraAt(200, 90, HOLD_FIRE), 12);
+    const path = track(caminadoraAt(267, 120, HOLD_FIRE), 12);
     path.slice(1).forEach((e, i) => {
       const previous = path[i] ?? expect.unreachable();
       expect(Math.abs(e.x - previous.x)).toBeLessThanOrEqual(caminadora.strafeSpeed / 60 + 1e-9);
@@ -91,7 +91,7 @@ describe('Caminadora a Reacción strafing', () => {
   });
 
   it('changes altitude between passes, inside its altitude band', () => {
-    const path = track(caminadoraAt(200, 90, HOLD_FIRE), 30);
+    const path = track(caminadoraAt(267, 120, HOLD_FIRE), 30);
     const ys = path.map((e) => e.y);
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(10);
     for (const y of ys) {
@@ -101,7 +101,7 @@ describe('Caminadora a Reacción strafing', () => {
   });
 
   it('faces the way it flies, turning around at each edge', () => {
-    const path = track(caminadoraAt(200, 90, HOLD_FIRE), 12);
+    const path = track(caminadoraAt(267, 120, HOLD_FIRE), 12);
     const facings = new Set<number>();
     path.slice(1).forEach((e, i) => {
       // Each tick it moves the way it faced at the start of that tick.
@@ -117,7 +117,7 @@ describe('Caminadora a Reacción strafing', () => {
     ['left', -caminadora.width],
     ['right', SCREEN_WIDTH],
   ])('flies in from just outside the %s edge', (_side, x) => {
-    const game = caminadoraAt(x, 90, HOLD_FIRE);
+    const game = caminadoraAt(x, 120, HOLD_FIRE);
     game.seconds(1.5);
     const enemy = enemyOf(game) ?? expect.unreachable();
     expect(enemy.x).toBeGreaterThanOrEqual(caminadora.strafeMarginX);
@@ -125,8 +125,8 @@ describe('Caminadora a Reacción strafing', () => {
   });
 
   it('holds still when its strafe speed is zero', () => {
-    const path = track(caminadoraAt(200, 90, { ...HOLD_FIRE, strafeSpeed: 0 }), 5);
-    expect(new Set(path.map((e) => `${e.x},${e.y}`))).toEqual(new Set(['200,90']));
+    const path = track(caminadoraAt(267, 120, { ...HOLD_FIRE, strafeSpeed: 0 }), 5);
+    expect(new Set(path.map((e) => `${e.x},${e.y}`))).toEqual(new Set(['267,120']));
   });
 });
 
@@ -134,7 +134,7 @@ describe('Caminadora a Reacción bursts', () => {
   const burstTuning = { fireIntervalMin: 2, fireIntervalMax: 2 };
 
   it('fires bursts of bullets spaced a few ticks apart', () => {
-    const game = caminadoraAt(200, 90, burstTuning);
+    const game = caminadoraAt(267, 120, burstTuning);
     const fireTicks: number[] = [];
     for (let t = 1; t <= secondsToTicks(3); t++) {
       if (eventsOf(game.ticks(1), 'enemy-fired').length > 0) fireTicks.push(t);
@@ -148,7 +148,7 @@ describe('Caminadora a Reacción bursts', () => {
   });
 
   it('stops and winds up before each burst, then strafes on while firing', () => {
-    const game = caminadoraAt(200, 90, burstTuning);
+    const game = caminadoraAt(267, 120, burstTuning);
     game.seconds(2 - 0.1);
     const windup: EnemyView[] = [];
     let firstShotAt = -1;
@@ -169,7 +169,7 @@ describe('Caminadora a Reacción bursts', () => {
   });
 
   it('aims the whole burst where Rexi was when it started, as a straight line', () => {
-    const game = caminadoraAt(300, 80, { ...burstTuning, strafeSpeed: 0 });
+    const game = caminadoraAt(400, 107, { ...burstTuning, strafeSpeed: 0 });
     game.seconds(2 + caminadora.windup + 0.02);
     // Rexi runs away mid-burst: the remaining bullets keep the same heading.
     game.seconds(0.5, { move: -1 });
@@ -187,11 +187,11 @@ describe('Caminadora a Reacción bursts', () => {
   });
 
   it.each([
-    ['ahead of it', 30, 1],
-    ['behind it', 160, -1],
+    ['ahead of it', 40, 1],
+    ['behind it', 213, -1],
   ])('faces Rexi when he is %s, and fires forward', (_where, x, towardRexi) => {
     // Both spawn left of center, heading right; Rexi stands between them.
-    const game = caminadoraAt(x, 90, { ...burstTuning, strafeSpeed: 0 });
+    const game = caminadoraAt(x, 120, { ...burstTuning, strafeSpeed: 0 });
     game.ticks(1);
     expect(enemyOf(game)?.pose.facing).toBe(1);
     ticksUntil(game, 'enemy-fired');
@@ -204,7 +204,7 @@ describe('Caminadora a Reacción bursts', () => {
     const rexi = defaultTuning.rexi;
     const game = drive({
       overrides: {
-        spawns: [{ kind: KIND, x: rexi.spawnX + 60, y: 120 }],
+        spawns: [{ kind: KIND, x: rexi.spawnX + 80, y: 160 }],
         tuning: { enemies: { [KIND]: { ...burstTuning, strafeSpeed: 0 } } },
       },
     });
@@ -214,7 +214,7 @@ describe('Caminadora a Reacción bursts', () => {
 
   it('bursts more often as the ramp raises the fire rate', () => {
     const bursts = (fireRate: number) => {
-      const game = caminadoraAt(200, 90, burstTuning, {
+      const game = caminadoraAt(267, 120, burstTuning, {
         director: { stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }] },
       });
       game.seconds(20);
@@ -225,7 +225,7 @@ describe('Caminadora a Reacción bursts', () => {
 });
 
 describe('Caminadora a Reacción destruction', () => {
-  const SPOT = { x: 300, y: 100 };
+  const SPOT = { x: 400, y: 133 };
   const AIM = { x: SPOT.x + caminadora.width / 2, y: SPOT.y + caminadora.height / 2 };
 
   function target(tuning: TuningOverrides = {}): Driver {

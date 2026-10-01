@@ -15,10 +15,10 @@ const LABELS: Readonly<Record<PauseMenuItem, string>> = {
   quit: strings.pause.quit,
 };
 
-const PANEL_W = 176;
-const ROW_H = 18;
-const HEADER_H = 40;
-const PANEL_Y = 66;
+const PANEL_W = 224;
+const ROW_H = 22;
+const HEADER_H = 46;
+const PANEL_Y = 104;
 
 /** A small gavel pointing at the selected entry. */
 const CURSOR = defineSprite({ k: ui.ink, g: ui.gold, G: ui.goldDeep, h: '#8a5a2a' }, [
@@ -58,16 +58,16 @@ const UNCHECKED = defineSprite({ k: ui.ink, w: ui.keyFace }, [
 export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
   const { surface, view } = dc;
 
-  const h = HEADER_H + menu.items.length * ROW_H + 10;
+  const h = HEADER_H + menu.items.length * ROW_H + 12;
   const x = Math.round((SCREEN_WIDTH - PANEL_W) / 2);
   drawPanel(surface, x, PANEL_Y, PANEL_W, h);
 
   const center = x + PANEL_W / 2;
-  drawOutlinedText(dc, fonts.large, strings.pause.title, center, PANEL_Y + 6, ui.gold, {
+  drawOutlinedText(dc, fonts.large, strings.pause.title, center, PANEL_Y + 8, ui.gold, {
     align: 'center',
   });
-  surface.fillRect(x + 12, PANEL_Y + HEADER_H - 6, PANEL_W - 24, 1, ui.panelEdge);
-  surface.fillRect(x + 12, PANEL_Y + HEADER_H - 5, PANEL_W - 24, 1, ui.ink);
+  surface.fillRect(x + 14, PANEL_Y + HEADER_H - 7, PANEL_W - 28, 1, ui.panelEdge);
+  surface.fillRect(x + 14, PANEL_Y + HEADER_H - 6, PANEL_W - 28, 1, ui.ink);
 
   const font = fonts.regular;
   menu.items.forEach((item, i) => {
@@ -75,15 +75,15 @@ export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
     const selected = i === menu.selected;
     const textTop = rowTop + Math.floor((ROW_H - 7) / 2) - (font.baseline - 7);
     if (selected) {
-      surface.fillRect(x + 6, rowTop, PANEL_W - 12, ROW_H - 2, ui.panelLight);
-      surface.fillRect(x + 6, rowTop + ROW_H - 3, PANEL_W - 12, 1, ui.ink);
+      surface.fillRect(x + 8, rowTop, PANEL_W - 16, ROW_H - 2, ui.panelLight);
+      surface.fillRect(x + 8, rowTop + ROW_H - 3, PANEL_W - 16, 1, ui.ink);
       const nudge = blinkOn(view.tick) ? 0 : 1;
-      surface.drawBitmap(dc.sprites.get(CURSOR), x + 12 + nudge, rowTop + 4);
+      surface.drawBitmap(dc.sprites.get(CURSOR), x + 16 + nudge, rowTop + 6);
     }
-    drawOutlinedText(dc, font, LABELS[item], x + 28, textTop, selected ? ui.gold : ui.text);
+    drawOutlinedText(dc, font, LABELS[item], x + 34, textTop, selected ? ui.gold : ui.text);
     if (item === 'mute-music') {
       const box = view.musicMuted ? CHECK : UNCHECKED;
-      surface.drawBitmap(dc.sprites.get(box), x + PANEL_W - 24, rowTop + 3);
+      surface.drawBitmap(dc.sprites.get(box), x + PANEL_W - 28, rowTop + 5);
     }
   });
 }

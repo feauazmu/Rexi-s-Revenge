@@ -7,7 +7,7 @@ function scriptedInput(tick: number): InputFramePatch {
   return {
     move: Math.sin(tick / 23) > 0 ? 1 : -1,
     jump: tick % 50 < 3,
-    aim: { x: 240 + 200 * Math.cos(tick / 40), y: 60 + 40 * Math.sin(tick / 17) },
+    aim: { x: 320 + 267 * Math.cos(tick / 40), y: 80 + 53 * Math.sin(tick / 17) },
     fire: tick % 90 < 60,
   };
 }
@@ -17,8 +17,8 @@ function playScript(seed: number, ticks: number) {
     seed,
     overrides: {
       spawns: [
-        { kind: 'maletin-coptero', x: 300, y: 60 },
-        { kind: 'maletin-coptero', x: 100, y: 40, atTick: 120 },
+        { kind: 'maletin-coptero', x: 400, y: 80 },
+        { kind: 'maletin-coptero', x: 133, y: 53, atTick: 120 },
       ],
     },
   });

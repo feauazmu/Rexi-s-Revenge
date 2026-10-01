@@ -39,9 +39,9 @@ export const cratesTuning: CratesTuning = {
   firstDrop: 8,
   dropInterval: 10,
   dropIntervalJitter: 3,
-  spawnMargin: 24,
-  size: 18,
-  fallSpeed: 60,
+  spawnMargin: 32,
+  size: 24,
+  fallSpeed: 80,
   lifetime: 10,
   blinkTime: 3,
   weights: {

@@ -141,7 +141,7 @@ describe('Cómo jugar', () => {
 
 describe('Pause', () => {
   const staged = () =>
-    drive({ overrides: { spawns: [{ kind: 'maletin-coptero', x: 300, y: 60 }] } });
+    drive({ overrides: { spawns: [{ kind: 'maletin-coptero', x: 400, y: 80 }] } });
 
   it('opens the pause menu on Continuar', () => {
     const game = staged();
@@ -158,7 +158,7 @@ describe('Pause', () => {
     game.ticks(1, { pause: true });
     const frozen = runOf(game.view);
 
-    const events = game.seconds(10, { move: -1, jump: true, fire: true, aim: { x: 300, y: 60 } });
+    const events = game.seconds(10, { move: -1, jump: true, fire: true, aim: { x: 400, y: 80 } });
     expect(events).toEqual([]);
     expect(runOf(game.view)).toEqual(frozen);
     expect(game.view.screen).toBe('paused');

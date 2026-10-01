@@ -5,6 +5,7 @@
  */
 import type { Vec2 } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { HUD_WEAPON_ICON } from '../hud/hud';
 import { ui } from '../screens/ui';
 import { defineSprite, type SpriteDef } from '../sprite';
 import type { Color } from '../surface';
@@ -99,14 +100,14 @@ function drawCentered(dc: DrawContext, sprite: SpriteDef, cx: number, cy: number
 // Sticks
 
 const R = L.stick.radius;
-const STICK_REST_RING = ringSprite(R - 4, 1, GHOST, true);
-const STICK_REST_KNOB = discSprite(5, { g: GHOST }, (dx, dy) => (checker(dx, dy) ? 'g' : '.'));
+const STICK_REST_RING = ringSprite(R - 5, 1, GHOST, true);
+const STICK_REST_KNOB = discSprite(7, { g: GHOST }, (dx, dy) => (checker(dx, dy) ? 'g' : '.'));
 const STICK_BASE_OUTER = ringSprite(R + 1, 1, ui.ink, false);
 const STICK_BASE_RING = ringSprite(R, 1, RING, false);
 const STICK_BASE_INNER = ringSprite(R - 1, 1, GHOST, true);
-const STICK_KNOB = discSprite(8, { k: ui.ink, f: KNOB, w: ui.keyFace }, (dx, dy) => {
-  if (!inDisc(7, dx, dy)) return 'k';
-  return inDisc(2, dx + 2, dy + 2) ? 'w' : 'f';
+const STICK_KNOB = discSprite(11, { k: ui.ink, f: KNOB, w: ui.keyFace }, (dx, dy) => {
+  if (!inDisc(10, dx, dy)) return 'k';
+  return inDisc(3, dx + 3, dy + 3) ? 'w' : 'f';
 });
 
 function drawStick(dc: DrawContext, stick: { origin: Vec2; knob: Vec2 } | null, rest: Vec2) {
@@ -139,13 +140,15 @@ const ARROW_ROWS = {
 const glyph = (rows: readonly string[], color: Color) => defineSprite({ '#': color }, rows);
 
 const JUMP_ARROW = defineSprite({ '#': ui.text, k: ui.ink }, [
-  '..k#k..',
-  '.k###k.',
-  'k#####k',
-  'kk###kk',
-  '.k###k.',
-  '.k###k.',
-  '.kkkkk.',
+  '...k#k...',
+  '..k###k..',
+  '.k#####k.',
+  'k#######k',
+  'kkk###kkk',
+  '..k###k..',
+  '..k###k..',
+  '..k###k..',
+  '..kkkkk..',
 ]);
 const JUMP_IDLE = ghostDisc(L.jump.r, RED);
 const JUMP_PRESSED = solidDisc(L.jump.r, RED, RED_LIGHT);
@@ -163,9 +166,9 @@ function drawPause(dc: DrawContext, pressed: boolean): void {
   const { x, y } = L.pause;
   drawCentered(dc, pressed ? PAUSE_PRESSED : PAUSE_IDLE, x, y);
   const { surface } = dc;
-  for (const bx of [x - 3, x + 1]) {
-    surface.fillRect(bx - 1, y - 4, 4, 9, ui.ink);
-    surface.fillRect(bx, y - 3, 2, 7, ui.keyFace);
+  for (const bx of [x - 4, x + 2]) {
+    surface.fillRect(bx - 1, y - 6, 5, 13, ui.ink);
+    surface.fillRect(bx, y - 5, 3, 11, ui.keyFace);
   }
 }
 
@@ -173,11 +176,12 @@ function drawPause(dc: DrawContext, pressed: boolean): void {
 function drawWeaponHint(dc: DrawContext, pressed: boolean): void {
   const { surface } = dc;
   const color = pressed ? ui.gold : GHOST;
-  // The HUD draws the icon at (6, 16), 11×10; brackets sit 2 px outside it.
-  const left = 3;
-  const top = 13;
-  const right = 19;
-  const bottom = 28;
+  // Brackets sit 2 px outside the HUD's Weapon icon.
+  const { x, y, w, h } = HUD_WEAPON_ICON;
+  const left = x - 3;
+  const top = y - 3;
+  const right = x + w + 2;
+  const bottom = y + h + 2;
   const arm = 3;
   for (const [cx, cy, sx, sy] of [
     [left, top, 1, 1],
@@ -225,7 +229,7 @@ function drawRoundButton(dc: DrawContext, button: RoundButton, pressed: boolean)
 // ---------------------------------------------------------------------------------------------
 // Menu d-pad: a plus-shaped pad with one key per direction.
 
-const DPAD_KEY = 15;
+const DPAD_KEY = 19;
 const DPAD_ARROWS = {
   up: glyph(ARROW_ROWS.up, ui.text),
   down: glyph(ARROW_ROWS.down, ui.text),

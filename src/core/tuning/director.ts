@@ -93,25 +93,25 @@ export const directorTuning = {
       weight: 60,
       maxOnScreen: null,
       edges: ['left', 'right'],
-      minY: 30,
-      maxY: 140,
+      minY: 40,
+      maxY: 187,
     },
-    // Patrols high, so it enters within its patrol band (tuning.enemies, 24..60).
+    // Patrols high, so it enters within its patrol band (tuning.enemies, 32..80).
     'archivador-artillado': {
       from: 60,
       weight: 20,
       maxOnScreen: 2,
       edges: ['left', 'right'],
-      minY: 24,
-      maxY: 56,
+      minY: 32,
+      maxY: 75,
     },
     'caminadora-a-reaccion': {
       from: 60,
       weight: 20,
       maxOnScreen: null,
       edges: ['left', 'right'],
-      minY: 70,
-      maxY: 130,
+      minY: 93,
+      maxY: 173,
     },
     // The heavy set piece: from two minutes in, and never two at once.
     'banca-artillada': {
@@ -119,8 +119,8 @@ export const directorTuning = {
       weight: 15,
       maxOnScreen: 1,
       edges: ['left', 'right'],
-      minY: 36,
-      maxY: 80,
+      minY: 48,
+      maxY: 107,
     },
   },
 } as const satisfies DirectorTuning;

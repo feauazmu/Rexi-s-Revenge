@@ -30,16 +30,16 @@ export interface RexiTuning {
 }
 
 export const rexiTuning: RexiTuning = {
-  width: 14,
-  height: 30,
+  width: 19,
+  height: 40,
   maxHealth: 100,
-  spawnX: 120,
-  runSpeed: 120,
-  jumpSpeed: 340,
+  spawnX: 160,
+  runSpeed: 160,
+  jumpSpeed: 453,
   jumpCutFactor: 0.45,
-  shoulderOffsetX: 15.5,
-  shoulderOffsetY: 6.5,
-  muzzleReach: 19,
+  shoulderOffsetX: 20.5,
+  shoulderOffsetY: 8.5,
+  muzzleReach: 25,
   invulnerability: 1,
   hurtDuration: 0.3,
 };
