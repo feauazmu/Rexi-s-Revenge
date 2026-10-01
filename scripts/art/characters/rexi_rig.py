@@ -11,9 +11,10 @@ Every frame is layered from parts, never redrawn freehand:
                 22.5 degree steps) and mirrored for facing left: 16 directions;
   * shoulder    the robe's lapel from arm_v1, drawn over the arm's root at every angle.
 The master was drawn with the sleeve on the near arm. Rexi's sleeve is on his RIGHT arm
-(CONTEXT.md; rexi_common.TATTOO_SIDE), and facing right the camera sees his left side: so facing
-right the near arm is plain (detattoo) and the aiming arm (his right arm) wears the sleeve;
-facing left the frame is mirrored and the near arm, now his right arm, keeps the master's sleeve.
+(CONTEXT.md; rexi_common.TATTOO_SIDE), and facing right the camera sees his right side (#26): so
+facing right the near arm keeps the master's sleeve and he aims with the far arm, his plain left arm;
+facing left the frame is mirrored, the near arm (now his left) is detattooed and the aiming arm
+(now his right) wears the sleeve. The production rig is rexi.py.
 
     from rexi_rig import Rig
     rig = Rig(); frame = rig.frame("run", 0, facing=1)
@@ -44,7 +45,7 @@ ANGLES = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90]
 
 SKIN = set("abcde")
 TATTOO_INK = set("MNL")
-ROBE = set("knrR")
+ROBE = set("knurR")   # robeMid (u) only appears in the keys re-snapped to 56 colours (rexi.py)
 
 
 def rgba(code):
@@ -62,16 +63,14 @@ def load(name):
 
 
 def blit(dst, src, x0, y0, mask=None):
-    """Alpha-stamp src onto dst at integer (x0, y0)."""
-    h, w = src.shape[:2]
-    for y in range(h):
-        Y = y0 + y
-        if not 0 <= Y < dst.shape[0]:
-            continue
-        for x in range(w):
-            X = x0 + x
-            if 0 <= X < dst.shape[1] and src[y, x, 3] and (mask is None or mask[y, x]):
-                dst[Y, X] = src[y, x]
+    """Alpha-stamp src onto dst at integer (x0, y0), clipped; `mask` limits which src pixels."""
+    keep = src[..., 3] > 0
+    if mask is not None:
+        keep &= mask.astype(bool)
+    ys, xs = np.nonzero(keep)
+    X, Y = xs + x0, ys + y0
+    ok = (X >= 0) & (Y >= 0) & (X < dst.shape[1]) & (Y < dst.shape[0])
+    dst[Y[ok], X[ok]] = src[ys[ok], xs[ok]]
     return dst
 
 
@@ -142,7 +141,7 @@ def detattoo(sp, x0, x1, y0, y1, ink=frozenset("MNL"), passes=2):
                     continue              # silhouette outline of the arm: keep
                 skin = [n for n in ns if n in SKIN and n not in ink]
                 if skin:
-                    plain[y, x] = rgba(max(set(skin), key=skin.count))
+                    plain[y, x] = rgba(max(sorted(set(skin)), key=skin.count))   # sorted: ties break alike every run
     return plain
 
 
@@ -208,7 +207,7 @@ class Rig:
         """Paint the sleeve on the aiming arm's upper segment, shoulder to elbow, as one piece: a
         lion head at the shoulder (mane in leather3/leather4, face in skin, features in
         leather2) whose mane flows into a columned courthouse (pediment, three columns, steps)
-        that ends at the elbow. Used whenever the aiming arm is Rexi's right arm (facing right)."""
+        that ends at the elbow. Used whenever the aiming arm is Rexi's right arm (facing left)."""
         a = arm.copy()
         px, py = self.arm_pivot
         sleeve = [
@@ -283,8 +282,8 @@ class Rig:
         W, H = CANVAS
         bx, by = BODY
         out = np.zeros((H, W, 4), np.uint8)
-        # facing right the near arm is Rexi's left arm; facing left (mirrored) it is his right arm
-        near_is_right = facing == -1
+        # facing right the near arm is Rexi's right arm; facing left (mirrored) it is his left arm
+        near_is_right = facing == 1
         inked = near_is_right == (TATTOO_SIDE == "right")       # does the near arm wear the sleeve?
         upper = self.upper if inked else self.upper_plain
         if key:

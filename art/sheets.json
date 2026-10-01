@@ -3,7 +3,7 @@
   "templates": {
     "rexi_x4": {
       "type": "editsheet",
-      "sprite": "../reference/manu-pipeline/master_side.png",
+      "sprite": "sprites/rexi/master.png",
       "n": 4
     },
     "enemy_slots": {
@@ -169,6 +169,57 @@
     "arena_props": {
       "type": "scene_tiles",
       "draft": "drafts/arena_props.png"
+    },
+    "pose_run_c": {
+      "type": "poseguide",
+      "_doc": "Rexi's missing run keys (#26), slot order up A, passing B, up B, passing B (second try). Grid rows: head top 36, neck 47, hip 70, knee 84, soles 99. Near leg dark.",
+      "poses": [
+        {
+          "head": [3, 39],
+          "neck": [2, 45],
+          "hip": [0, 67],
+          "kneeN": [-3, 82],
+          "footN": [-10, 96],
+          "kneeF": [8, 78],
+          "footF": [9, 90],
+          "twotone": true
+        },
+        {
+          "head": [3, 41],
+          "neck": [2, 46],
+          "hip": [0, 69],
+          "kneeF": [0, 84],
+          "footF": [0, 99],
+          "kneeN": [7, 79],
+          "footN": [0, 91],
+          "twotone": true
+        },
+        {
+          "head": [3, 39],
+          "neck": [2, 45],
+          "hip": [0, 67],
+          "kneeF": [-3, 82],
+          "footF": [-10, 96],
+          "kneeN": [8, 78],
+          "footN": [9, 90],
+          "twotone": true
+        },
+        {
+          "head": [3, 41],
+          "neck": [2, 46],
+          "hip": [0, 69],
+          "kneeF": [0, 84],
+          "footF": [0, 99],
+          "kneeN": [8, 77],
+          "footN": [2, 89],
+          "twotone": true
+        }
+      ]
+    },
+    "portrait_x3": {
+      "type": "editsheet",
+      "sprite": "sprites/rexi/portrait_draft.png",
+      "n": 3
     }
   },
   "sheets": {
@@ -379,6 +430,95 @@
           }
         }
       }
+    },
+    "_rexi_doc": "Rexi (#26). The first five entries re-snap the version C prototype's committed grids (copied from reference/manu-pipeline/grid, prompts and sidecars there) to the full character class, so the 56-colour palette's robeMid, skinWarm and skin5 steps reach him. The rig is scripts/art/characters/rexi.py.",
+    "master_34_v5": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/master_34_v5.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["m34_a", "m34_b", "m34_c"]
+    },
+    "keys_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_v1.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_contact", "key_passing", "key_jump", "key_hurt"]
+    },
+    "keys_run_b": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_run_b.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_downA", "key_contactB", "key_downB", null]
+    },
+    "keys_air": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/keys_air.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_rise", "key_fall", "key_land", "key_hurt2"]
+    },
+    "arm_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "../reference/manu-pipeline/prompts/arm_v1.txt",
+      "pitch": 11.466666666666667,
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["arm_forward_a", "arm_forward_b"]
+    },
+    "rexi_sleeve_v1": {
+      "_doc": "Its rexi_x4 was built from master.png before the SLEEVE patch existed (the prototype hand pass on the re-snapped m34_b): a rebuild of rexi_x4 now includes the sleeve.",
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_sleeve_v1.txt",
+      "style": true,
+      "refs": ["templates/rexi_x4.png", "templates/ref_sheet_side.png"],
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["sleeve_a", "sleeve_b", "sleeve_c", "sleeve_d"]
+    },
+    "rexi_run_v1": {
+      "kind": "sprite",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_run_v1.txt",
+      "style": true,
+      "refs": [
+        "templates/rexi_x4.png",
+        "templates/pose_run_c.png",
+        "../reference/manu-pipeline/raw/keys_run_b.png"
+      ],
+      "keep_white": true,
+      "fill_holes": true,
+      "palette": "character",
+      "names": ["key_upA", "key_passingB", "key_upB", "key_passingB2"]
+    },
+    "rexi_portrait_v1": {
+      "kind": "icon",
+      "out": "sprites/rexi/src",
+      "prompt": "prompts/rexi_portrait_v1.txt",
+      "keep_white": true,
+      "fill_holes": true,
+      "refs": ["templates/portrait_x3.png", "templates/ref_sheet_front.png"],
+      "canvas": [40, 40],
+      "palette": "icon",
+      "names": ["portrait_a", "portrait_b", "portrait_c"]
     }
   },
   "parts": {
@@ -483,6 +623,21 @@
       ],
       "format": "rle",
       "out": "src/render/art/generated"
+    },
+    "rexi": {
+      "_doc": "Rexi's body frames (both facings), lapel cap and aiming arms, written by scripts/art/characters/rexi.py build.",
+      "sprites": ["frames/rexi/**/*.png"],
+      "format": "rle",
+      "out": "src/render/art/generated",
+      "data": {
+        "rexiArt": "frames/rexi/rexi.json"
+      }
+    },
+    "rexi-portrait": {
+      "_doc": "The Dialogue Box portrait, written by scripts/art/characters/rexi.py portrait.",
+      "sprites": ["sprites/rexi/portrait.png"],
+      "format": "rows",
+      "out": "src/render/art/generated"
     }
   },
   "audit": {
@@ -490,6 +645,9 @@
     "sprites/record/*.png": "icon",
     "enemies/**/*.png": "enemy",
     "projectiles/*.png": "enemy",
-    "sprites/arena/layers/*.png": "scene"
+    "sprites/arena/layers/*.png": "scene",
+    "frames/rexi/**/*.png": "character",
+    "sprites/rexi/portrait*.png": "icon",
+    "sprites/rexi/*.png": "character"
   }
 }

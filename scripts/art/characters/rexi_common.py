@@ -8,8 +8,8 @@ Importing this puts scripts/art on sys.path, so the character scripts use the pi
                committed frames stay reproducible after the palette grew to 56; the art pass
                may re-snap to the full "character" class instead (robeMid, skinWarm, steel).
 - TATTOO_SIDE  "right": Rexi's sleeve is on his right arm (CONTEXT.md). Facing right the camera
-               sees his left side, so the sleeve is on the far arm (the aiming arm); facing left
-               it is on the near arm.
+               sees his right side, so the sleeve is on the near arm and he aims with the far arm,
+               his plain left arm; facing left it is on the aiming arm (#26).
 """
 import os
 import sys

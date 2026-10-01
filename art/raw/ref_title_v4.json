@@ -1,0 +1,32 @@
+{
+  "modality": "image",
+  "prompt": "Edit the attached title-screen illustration and keep it identical in every way (composition, framing, pose, the gavel, the face, the robe, the clothes, the background, the sunset palette, the 16-bit pixel-art style with crisp hard pixels, the empty sky in the upper left) except for ONE change: remove the tattoo completely. The upper arm holding the gavel (on the viewer's right) currently has a dark tattoo: erase all of its ink and repaint that upper arm as plain bare tanned skin with the same muscle shading, highlights and outline as the bare flexing arm on the viewer's left. After the edit neither arm has any tattoo or ink at all. Absolutely no text, no letters, no logo.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/title-source-v2.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.067836,
+  "created_at": "2026-10-01T11:23:37.807Z",
+  "asset": {
+    "file": "ref_title_v4.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_v4.txt",
+    "style": false,
+    "references": ["reference/title-source-v2.png"],
+    "note": "Title illustration step 1: tattoo removed from the gavel arm (Refs #26)",
+    "spent_after_usd": 2.085894
+  }
+}

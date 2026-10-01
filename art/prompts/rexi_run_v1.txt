@@ -1,0 +1,9 @@
+Edit image 1. It shows 4 identical pixel-art copies of Rexi, a very muscular judge in a sleeveless black robe, grey trousers and brown boots, facing right. Image 2 is a pose guide with a stick figure in the same 4 slots: the DARK grey leg is his NEAR leg (closest to the viewer) and the LIGHT grey leg is his FAR leg. Image 3 shows other poses of the same run cycle, already drawn: match their style, stride, how the trousers and boots are drawn and how the robe's hem swings.
+
+Change ONLY his legs, boots and the robe's lower half in each copy to match the guide. Both arms stay exactly as in the copy.
+1) run, up (after the near leg's step): the whole body 2 pixels higher; the near leg stretched out BEHIND him, pushing off the ground on its toes; the far leg swinging FORWARD with the knee bent and lifted, its boot in the air in front of him; the robe's hem swinging back.
+2) run, passing (far leg supporting): the FAR leg straight under his body, its boot flat on the ground bearing his weight; the NEAR leg bent at the knee and lifted, its boot clearly OFF THE GROUND, 8 pixels higher than the far boot, passing beside the far leg; the body 1 pixel higher; the robe hanging straight. The two legs must NOT both be straight.
+3) run, up (after the far leg's step): the whole body 2 pixels higher; the FAR leg stretched out BEHIND him, pushing off on its toes; the NEAR leg swinging FORWARD with the knee bent and lifted, its boot in the air in front of him; the robe's hem swinging back.
+4) the same as 2) (far leg supporting, near knee lifted, near boot 8 pixels off the ground), drawn again.
+
+Keep everything else exactly identical to the copy: the same head, hair, face, tank top, both arms (the near arm with its sleeve tattoo hanging at his side, the far fist), colours, pixel size, height and position. Chunky pixel art at exactly the same pixel size, 1-pixel dark outline, no anti-aliasing, flat pure white background, no guide lines, no text.

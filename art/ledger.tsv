@@ -1,22 +1,34 @@
 time	root	name	model	cost_usd	file	credited	note
 2026-10-01T13:19:09	art	icons	google/gemini-3.1-flash-image	0.101786	icons.png	yes	Refs #29
+2026-10-01T13:20:10	art	ref_rexi_sheet_v3	google/gemini-3.1-flash-image	0.0679835	ref_rexi_sheet_v3.png	yes	Rexi character sheet: right-arm sleeve as one piece (Refs #26)
+2026-10-01T13:20:58	art	ref_rexi_sheet_v4	google/gemini-3.1-flash-image	0.0681785	ref_rexi_sheet_v4.png	yes	Rexi character sheet: sleeve ends at the elbow, inset redrawn (Refs #26)
 2026-10-01T13:21:42	art	arena_r2c1	google/gemini-3.1-flash-image	0.101706	arena_r2c1.png	yes	Arena tile r2c1 (#28)
+2026-10-01T13:23:22	art	ref_title_v3	google/gemini-3.1-flash-image	0.068496	ref_title_v3.png	yes	Title illustration: sleeve moved to the right (flexing) arm (Refs #26)
 2026-10-01T13:23:25	art	enemy_maletin	google/gemini-3.1-flash-image	0.102235	enemy_maletin.png	yes	
 2026-10-01T13:23:28	art	arena_r0c0	google/gemini-3.1-flash-image	0.1016225	arena_r0c0.png	yes	Arena tile r0c0 (#28)
 2026-10-01T13:23:48	art	arena_r0c1	google/gemini-3.1-flash-image	0.101616	arena_r0c1.png	yes	Arena tile r0c1 (#28)
+2026-10-01T13:23:50	art	ref_title_v4	google/gemini-3.1-flash-image	0.067836	ref_title_v4.png	yes	Title illustration step 1: tattoo removed from the gavel arm (Refs #26)
 2026-10-01T13:23:55	art	enemy_archivador	google/gemini-3.1-flash-image	0.102215	enemy_archivador.png	yes	
 2026-10-01T13:24:11	art	arena_r0c2	google/gemini-3.1-flash-image	0.1016665	arena_r0c2.png	yes	Arena tile r0c2 (#28)
 2026-10-01T13:24:15	art	enemy_caminadora	google/gemini-3.1-flash-image	0.1022095	enemy_caminadora.png	yes	
 2026-10-01T13:24:32	art	arena_r1c0	google/gemini-3.1-flash-image	0.101645	arena_r1c0.png	yes	Arena tile r1c0 (#28)
 2026-10-01T13:24:37	art	enemy_banca	google/gemini-3.1-flash-image	0.102233	enemy_banca.png	yes	
+2026-10-01T13:24:50	art	ref_title_v5	google/gemini-3.1-flash-image	0.06846	ref_title_v5.png	yes	Title illustration step 2: sleeve added to the right (flexing) arm (Refs #26)
 2026-10-01T13:25:04	art	arena_r1c1	google/gemini-3.1-flash-image	0.1016395	arena_r1c1.png	yes	Arena tile r1c1 (#28)
 2026-10-01T13:25:05	art	projectiles	google/gemini-3.1-flash-image	0.101746	projectiles.png	yes	
 2026-10-01T13:25:28	art	arena_r1c2	google/gemini-3.1-flash-image	0.101645	arena_r1c2.png	yes	Arena tile r1c2 (#28)
 2026-10-01T13:25:33	art	enemy_banca_v2	google/gemini-3.1-flash-image	0.1022565	enemy_banca_v2.png	yes	
 2026-10-01T13:25:50	art	arena_r2c0	google/gemini-3.1-flash-image	0.1016435	arena_r2c0.png	yes	Arena tile r2c0 (#28)
+2026-10-01T13:26:00	art	ref_title_v6	google/gemini-3.1-flash-image	0.0684555	ref_title_v6.png	yes	Title illustration step 2, on the mirrored image (the model inked the gavel arm in v5): sleeve on the flexing arm (Refs #26)
 2026-10-01T13:26:12	art	arena_r2c2	google/gemini-3.1-flash-image	0.1016605	arena_r2c2.png	yes	Arena tile r2c2 (#28)
+2026-10-01T13:26:45	art	ref_title_v7	google/gemini-3.1-flash-image	0.0684695	ref_title_v7.png	yes	Title illustration: arms swap roles, gavel and sleeve on his right arm (v5/v6 kept inking the gavel arm) (Refs #26)
 2026-10-01T13:27:12	art	enemy_banca_v3	google/gemini-3.1-flash-image	0.1022605	enemy_banca_v3.png	yes	
+2026-10-01T13:27:28	art	ref_title_plate	google/gemini-3.1-flash-image	0.067826	ref_title_plate.png	yes	Title illustration: empty background plate for compositing (Refs #26)
 2026-10-01T13:27:34	art	projectiles_v2	google/gemini-3.1-flash-image	0.10175	projectiles_v2.png	yes	
 2026-10-01T13:31:31	art	record	google/gemini-3.1-flash-image	0.1016295	record.png	yes	Refs #29
+2026-10-01T13:32:25	art	rexi_sleeve_v1	google/gemini-3.1-flash-image	0.1022395	rexi_sleeve_v1.png	yes	Rexi master: right-arm sleeve on the near arm (Refs #26)
 2026-10-01T13:32:58	art	arena_fix_center	google/gemini-3.1-flash-image	0.101656	arena_fix_center.png	yes	Arena centre fix: skyline, sun, step end (#28)
 2026-10-01T13:35:24	art	arena_props	google/gemini-3.1-flash-image	0.1016235	arena_props.png	yes	Arena ledges and clouds (#28)
+2026-10-01T13:38:36	art	rexi_run_v1	google/gemini-3.1-flash-image	0.102827	rexi_run_v1.png	yes	Rexi run keys: up A, passing B (twice), up B (Refs #26)
+2026-10-01T14:01:18	art	rexi_portrait_v1	google/gemini-3.1-flash-image	0.1021075	rexi_portrait_v1.png	yes	Dialogue Box portrait redrawn with the right-arm sleeve (Refs #26)
+2026-10-01T14:17:25	art	ref_title_v8	google/gemini-3.1-flash-image	0.0684535	ref_title_v8.png	yes	Title illustration, same composition: rough sleeve pasted on the flexing (right) arm, cleaned up (Refs #26)

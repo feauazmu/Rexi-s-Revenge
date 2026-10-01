@@ -1,0 +1,33 @@
+{
+  "modality": "image",
+  "prompt": "Edit the first attached image (the title-screen illustration) and keep it identical in every way: the composition and framing, the pose (the gavel raised in the hand on the viewer's right, the clenched fist flexing on the viewer's left), the face, the robe, the clothes, the background, the sunset palette, the 16-bit pixel-art style with crisp hard pixels, and the empty sky in the upper left.\n\nThe ONLY change: the flexing arm on the viewer's left already has a rough, roughly pasted tattoo on its upper arm. Redraw that tattoo in place, on the same arm and the same area, as a clean, finished sleeve tattoo that follows the shape and shading of the bulging bicep: one continuous piece of dark sepia-black ink with continuous linework, a roaring lion's head on the bicep whose flowing mane streams toward the elbow and turns into the fluted columns and pediment of a classical courthouse, as in the second attached image (the character sheet's sleeve). Keep it on this arm only and only from the shoulder to the elbow; the forearm and fist stay bare. Do not add any tattoo to the arm holding the gavel: it stays bare skin.\n\nAbsolutely no text, no letters, no logo.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "1K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/art/templates/ref_title_hint.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-a60cbdea4c4affc5c/reference/rexi-character-sheet.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.0684535,
+  "created_at": "2026-10-01T12:17:09.717Z",
+  "asset": {
+    "file": "ref_title_v8.png",
+    "media_type": "image/png",
+    "width": 1376,
+    "height": 768,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/ref_title_v8.txt",
+    "style": false,
+    "references": ["art/templates/ref_title_hint.png", "reference/rexi-character-sheet.png"],
+    "note": "Title illustration, same composition: rough sleeve pasted on the flexing (right) arm, cleaned up (Refs #26)",
+    "spent_after_usd": 2.734754
+  }
+}

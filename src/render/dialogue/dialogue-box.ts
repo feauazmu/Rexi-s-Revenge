@@ -4,8 +4,8 @@ import { masterPalette as P } from '../palette';
 import { strings } from '../strings';
 import type { Color } from '../surface';
 import { drawText, fonts, type BitmapFont } from '../text';
+import { sprites as portrait } from '../art/generated/rexi-portrait';
 import { fillCutRect } from '../frame';
-import { REXI_PORTRAIT } from './rexi-portrait';
 
 /** Frame colors (master palette): a marble border lit at the top, a robe panel, gold accents. */
 const ink = {
@@ -149,7 +149,7 @@ function drawFrame(dc: DrawContext, x: number, y: number, w: number, h: number, 
 function drawPortrait(dc: DrawContext, dy: number): void {
   const { x, y, w, h } = PORTRAIT_FRAME;
   drawFrame(dc, x, y + dy, w, h, false);
-  dc.surface.drawBitmap(dc.sprites.get(REXI_PORTRAIT), x + 2, y + 2 + dy);
+  dc.surface.drawBitmap(dc.sprites.get(portrait.portrait), x + 2, y + 2 + dy);
 }
 
 function drawPanel(dc: DrawContext, dy: number): void {

@@ -10,6 +10,7 @@
   "arena_r2c0": 11.467,
   "arena_r2c1": 11.467,
   "arena_r2c2": 11.467,
+  "arm_v1": 11.467,
   "enemy_archivador": 11.467,
   "enemy_banca": 11.467,
   "enemy_banca_v2": 11.467,
@@ -17,7 +18,17 @@
   "enemy_caminadora": 11.467,
   "enemy_maletin": 11.467,
   "icons": 11.467,
+  "keys_air": 11.467,
+  "keys_run_b": 11.467,
+  "keys_v1": 11.467,
+  "master_34_v5": 11.467,
+  "master_side_v1": 11.467,
+  "master_side_v2": 11.467,
+  "master_side_v4": 11.467,
   "projectiles": 11.467,
   "projectiles_v2": 11.467,
-  "record": 11.467
+  "record": 11.467,
+  "rexi_portrait_v1": 11.467,
+  "rexi_run_v1": 11.467,
+  "rexi_sleeve_v1": 11.467
 }

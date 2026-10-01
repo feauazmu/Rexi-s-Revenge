@@ -1,6 +1,12 @@
 /** Lluvia de Sellos: a short-range spread of rubber stamps. */
 import { describe, expect, it } from 'vitest';
-import { defaultTuning, secondsToTicks, type ScriptedSpawn, type Vec2 } from '../../src/core';
+import {
+  defaultTuning,
+  secondsToTicks,
+  type ScriptedSpawn,
+  type TuningOverrides,
+  type Vec2,
+} from '../../src/core';
 import { driveEmptyArena, eventsOf, ON_REXI, runOf, weaponCrate } from '../support/driver';
 
 const sellos = defaultTuning.weapons['lluvia-de-sellos'];
@@ -8,8 +14,8 @@ const maletin = defaultTuning.enemies['maletin-coptero'];
 const sellosCrate = weaponCrate('lluvia-de-sellos', ON_REXI.x, { y: ON_REXI.y });
 
 /** Rexi holding the Lluvia de Sellos, plus any Enemies. */
-const armed = (enemies: readonly ScriptedSpawn[] = []) => {
-  const game = driveEmptyArena({ overrides: { spawns: [sellosCrate, ...enemies] } });
+const armed = (enemies: readonly ScriptedSpawn[] = [], tuning?: TuningOverrides) => {
+  const game = driveEmptyArena({ overrides: { spawns: [sellosCrate, ...enemies], tuning } });
   game.ticks(1);
   expect(runOf(game.view).rexi.weapon.id).toBe('lluvia-de-sellos');
   return game;
@@ -58,11 +64,23 @@ describe('Lluvia de Sellos', () => {
     expect(shots.length).toBe(Math.ceil((3 * 60) / secondsToTicks(sellos.fireInterval)));
   });
 
-  /** Three Maletín-cópteros at `distance` px from the muzzle, one per edge and center of the fan. */
+  /** Maletín-cópteros that hold still, so only the fan decides what is hit. */
+  const still: TuningOverrides = {
+    enemies: { 'maletin-coptero': { driftSpeed: 0, hoverAmplitude: 0 } },
+  };
+
+  /**
+   * Three Maletín-cópteros at `distance` px from the muzzle, one per edge and center of the fan.
+   * The muzzle is read from the view with Rexi already aiming along the fan's center line.
+   */
   function fanOfEnemies(distance: number) {
     const probe = armed();
-    const { muzzle } = runOf(probe.view).rexi;
     const aimAngle = -40;
+    const rad = (aimAngle * Math.PI) / 180;
+    const { shoulder } = runOf(probe.view).rexi;
+    const aim = { x: shoulder.x + Math.cos(rad) * 200, y: shoulder.y + Math.sin(rad) * 200 };
+    probe.ticks(1, { aim });
+    const { muzzle } = runOf(probe.view).rexi;
     const spawns = [-sellos.spreadAngle / 2, 0, sellos.spreadAngle / 2].map(
       (offset): ScriptedSpawn => {
         const a = ((aimAngle + offset) * Math.PI) / 180;
@@ -73,14 +91,12 @@ describe('Lluvia de Sellos', () => {
         };
       },
     );
-    const rad = (aimAngle * Math.PI) / 180;
-    const aim = { x: muzzle.x + Math.cos(rad) * 133, y: muzzle.y + Math.sin(rad) * 133 };
     return { spawns, aim };
   }
 
   it('hits several close Enemies with one shot', () => {
     const { spawns, aim } = fanOfEnemies(110);
-    const game = armed(spawns);
+    const game = armed(spawns, still);
     const events = [...game.ticks(1, { aim, fire: true }), ...game.seconds(1, { aim })];
     expect(eventsOf(events, 'weapon-fired')).toHaveLength(1);
     const hitEnemies = new Set(eventsOf(events, 'enemy-hit').map((e) => e.enemyId));
@@ -90,7 +106,7 @@ describe('Lluvia de Sellos', () => {
 
   it('does not reach Enemies far away', () => {
     const { spawns, aim } = fanOfEnemies(sellos.projectileSpeed * sellos.projectileLifetime + 53);
-    const game = armed(spawns);
+    const game = armed(spawns, still);
     const events = [...game.ticks(1, { aim, fire: true }), ...game.seconds(1, { aim })];
     expect(eventsOf(events, 'enemy-hit')).toHaveLength(0);
   });

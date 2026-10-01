@@ -63,7 +63,7 @@ describe('Combat feedback goldens', () => {
     });
     game.seconds(0.3, { aim: atMaletin });
     fireUntil(game, 'enemy-destroyed');
-    game.ticks(4, { aim: atMaletin });
+    game.ticks(3, { aim: atMaletin });
     const { shake } = runOf(game.view).effects;
     expect(Math.abs(shake.x) + Math.abs(shake.y)).toBeGreaterThanOrEqual(2);
     await expectGolden('effects-screen-shake', renderView(game.view));

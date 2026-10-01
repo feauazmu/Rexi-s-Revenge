@@ -1,13 +1,14 @@
-import type { RexiView } from '../../core';
+import { TICKS_PER_SECOND, type RexiView } from '../../core';
 import { aimStep } from './arm';
-import { LEG_FRAMES, type BackArmFrame, type BodyPose } from './body';
+import { REXI_ANIMS as anims, type BodyFrame } from './art';
 
 /**
  * Picks Rexi's animation frame from his view and the Run tick (never a clock). Pure, so the
- * same view always gives the same pose.
+ * same view always gives the same pose. The animation table (frames, fps) is the art pipeline's
+ * (`ANIMS` in `scripts/art/characters/rexi.py`); this maps game state onto it.
  */
 export interface RexiPose {
-  readonly body: BodyPose;
+  readonly frame: BodyFrame;
   /** Discrete arm direction, see `aimStep`. */
   readonly armStep: number;
   /** Pixels the arm is pulled back along the aim by the last shot's kick. */
@@ -18,91 +19,66 @@ export interface RexiPose {
   readonly flash: boolean;
 }
 
-/** Ticks per frame of the six-frame run cycle (a full stride in 24 ticks ≈ 64 px at run speed). */
-export const RUN_FRAME_TICKS = 4;
-/** Length of one idle breath, ticks. */
-export const BREATH_TICKS = 72;
+/** Ticks each frame of an animation is shown. */
+function frameTicks(fps: number): number {
+  return TICKS_PER_SECOND / fps;
+}
+
+/** The frame of a looping animation at `tick`. */
+function looped(frames: readonly BodyFrame[], fps: number, tick: number): BodyFrame {
+  const i = Math.floor(tick / frameTicks(fps)) % frames.length;
+  return frames[i] ?? frames[0] ?? 'rest';
+}
+
+/**
+ * The frame of a one-shot animation with `left` ticks to go, counted from its end (the view
+ * knows how long a reaction has left, not how long it lasts). Holds the first frame before that.
+ */
+function fromEnd(frames: readonly BodyFrame[], fps: number, left: number): BodyFrame {
+  const fromLast = Math.min(frames.length - 1, Math.floor((left - 1) / frameTicks(fps)));
+  return frames[frames.length - 1 - fromLast] ?? 'rest';
+}
+
 /** Vertical speed below which an airborne Rexi is at the apex of his jump, px/s. */
-const APEX_SPEED = 45;
+const APEX_SPEED = 60;
 
-const RUN_BOB = [0, 1, -1, 0, 1, -1] as const;
-const RUN_SWING: readonly BackArmFrame[] = ['forward', 'forward', 'hang', 'back', 'back', 'hang'];
-
-const still = { upperX: 0, upperY: 0, headX: 0, headY: 0 } as const;
-
-function idlePose(tick: number): BodyPose {
-  // Inhale for the middle half of the breath; the head trails the chest by a few ticks.
-  const phase = tick % BREATH_TICKS;
-  const inhaleStart = BREATH_TICKS / 4;
-  const inhaleEnd = (BREATH_TICKS * 3) / 4;
-  const upperY = phase >= inhaleStart && phase < inhaleEnd ? -1 : 0;
-  let headY = 0;
-  if (phase >= inhaleStart && phase < inhaleStart + 4) headY = 1;
-  if (phase >= inhaleEnd && phase < inhaleEnd + 4) headY = -1;
-  return {
-    legs: LEG_FRAMES.stand,
-    robe: 'stand',
-    backArm: 'hang',
-    hurt: false,
-    ...still,
-    upperY,
-    headY,
-  };
-}
-
-function runPose(rexi: RexiView, tick: number): BodyPose {
-  let frame = Math.floor(tick / RUN_FRAME_TICKS) % LEG_FRAMES.run.length;
-  // Backpedaling (moving away from the aim side) plays the cycle in reverse.
-  if (Math.sign(rexi.vx) !== rexi.facing) frame = LEG_FRAMES.run.length - 1 - frame;
-  return {
-    legs: LEG_FRAMES.run[frame] ?? LEG_FRAMES.stand,
-    robe: frame % 2 === 0 ? 'runA' : 'runB',
-    backArm: RUN_SWING[frame] ?? 'hang',
-    hurt: false,
-    ...still,
-    upperY: RUN_BOB[frame] ?? 0,
-  };
-}
-
-function airPose(rexi: RexiView): BodyPose {
-  // Flying on Día de Pierna's jets keeps the knees tucked (the flames fire from the soles).
-  if (rexi.vy < -APEX_SPEED || rexi.flying) {
-    return { legs: LEG_FRAMES.jump, robe: 'jump', backArm: 'back', hurt: false, ...still };
+function bodyFrame(rexi: RexiView, tick: number): BodyFrame {
+  if (rexi.hurtTicks > 0) {
+    // The hurt frames read the same backwards (hurt_0, hurt_1, hurt_1, hurt_0).
+    const { frames, fps } = anims.hurt;
+    return fromEnd(frames, fps, rexi.hurtTicks);
   }
-  if (rexi.vy > APEX_SPEED) {
-    return {
-      legs: LEG_FRAMES.fall,
-      robe: 'fall',
-      backArm: 'flung',
-      hurt: false,
-      ...still,
-      headY: -1,
-    };
+  const [rise, apex, fall, land] = anims.jump.frames;
+  if (!rexi.grounded) {
+    // Flying on Día de Pierna's jets keeps the knees tucked (the flames fire from the soles).
+    if (rexi.flying) return apex;
+    if (rexi.vy < -APEX_SPEED) return rise;
+    if (rexi.vy > APEX_SPEED) return fall;
+    return apex;
   }
-  return { legs: LEG_FRAMES.jump, robe: 'stand', backArm: 'back', hurt: false, ...still };
+  // The landing squat, for one frame of the jump's timing.
+  if (rexi.landedTicks < frameTicks(anims.jump.fps) / 2) return land;
+  if (Math.abs(rexi.vx) > 1) {
+    // Backpedaling (moving away from the aim side) plays the cycle in reverse.
+    const run = Math.sign(rexi.vx) === rexi.facing ? anims.run : anims['run-back'];
+    return looped(run.frames, run.fps, tick);
+  }
+  return looped(anims.idle.frames, anims.idle.fps, tick);
 }
 
 /** Rexi's pose for this frame. `tick` is the Run tick (frozen while paused). */
 export function rexiPose(rexi: RexiView, tick: number): RexiPose {
-  let body: BodyPose;
-  if (!rexi.grounded) body = airPose(rexi);
-  else if (Math.abs(rexi.vx) > 1) body = runPose(rexi, tick);
-  else body = idlePose(tick);
-
-  const hurt = rexi.hurtTicks > 0;
-  if (hurt) {
-    // Recoil from the hit: lean back, head thrown back, far arm flung out.
-    body = { ...body, hurt: true, backArm: 'flung', upperX: -1, headX: -1, headY: -1 };
-  }
-
   // Red blink through the hurt reaction and the invulnerability window after a hit.
   const blinkTicks = Math.max(rexi.hurtTicks, rexi.invulnerableTicks);
-  const age = rexi.shotAge;
+  // The shot: recoil and muzzle flash per frame of the shoot animation, which lasts one
+  // Mazo Automático fire interval.
+  const { recoil, flash, fps } = anims.shoot;
+  const shotFrame = Math.floor(rexi.shotAge / frameTicks(fps));
   return {
-    body,
+    frame: bodyFrame(rexi, tick),
     armStep: aimStep(rexi.shoulder, rexi.aim, rexi.facing),
-    recoil: age < 2 ? 2 : age < 4 ? 1 : 0,
-    muzzleFlash: age < 2 ? 2 : age < 3 ? 1 : 0,
+    recoil: recoil[shotFrame] ?? 0,
+    muzzleFlash: flash[shotFrame] ?? 0,
     flash: blinkTicks > 0 && Math.floor(blinkTicks / 3) % 2 === 1,
   };
 }

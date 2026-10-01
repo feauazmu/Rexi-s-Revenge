@@ -69,7 +69,7 @@ An art root is a directory with a `sheets.json` manifest. `--root` defaults to `
 - **Names:** sprites are named in reading order (rows by bottom edge, then left to right). `null` skips a size anchor or a reject.
 - **Canvases:** `char` sheets put each sprite on a fixed `canvas` with the soles on row `feet` and the torso (or its template slot, `slots`) on column `cx`. `icon` sheets centre on a fixed `canvas`.
 - **Palette classes** (`palette.py`): `character` (no sky, glass, neon or foliage ramps), `enemy` (no sky or foliage), `prop` (no sky), `icon` and `scene` (everything). A `sprite` sheet defaults to `prop`, so an Enemy sheet sets `"palette": "enemy"`. A sheet may instead give `{"ramps": [...]}` or `{"colors": [...]}`. The prototype pins its 26 original colours.
-- **Facing:** draw facing right. Facing left is a mirror, plus code that moves asymmetric details. Rexi's sleeve is on his **right** arm, so facing right it is on the far (aiming) arm, and facing left on the near arm (`characters/rexi_common.py`, `TATTOO_SIDE`).
+- **Facing:** draw facing right. Facing left is a mirror, plus code that moves asymmetric details. Rexi's sleeve is on his **right** arm. Facing right the camera sees his right side, so the sleeve is on the near arm and he aims with the far arm (his plain left arm); facing left it is on the aiming arm, and the near arm is plain (`characters/rexi.py`, `characters/rexi_common.py` `TATTOO_SIDE`).
 - **Money:** one image per call. `gen` refuses any call that would pass the $10 cap (`ledger.py` has the per-model estimates). Every render gets a new name, so the record stays complete.
 
 ## Manifest (`sheets.json`)
@@ -240,6 +240,22 @@ Outputs are `<name>.png` and `<name>_<layer>.png`.
 - idle 8, run 6, run-back 6, jump 4, hurt 4, shoot 4 and aim 16 frames;
 - the aiming arm pre-rotated into 9 angles and mirrored.
 
+## Rexi in the game (`characters/rexi.py`, #26)
+
+The production rig builds on the prototype. Its generated keys are re-snapped in `art/` to the full character class (the prototype's grids are copied to `art/grid/`, its prompts and sidecars stay in `reference/manu-pipeline/`), and `rexi_run_v1` adds the run cycle's missing up and passing keys. It writes body frames without the aiming arm, so the game composes the arm per direction and Weapon:
+
+```sh
+uv run -q --with pillow --with numpy python scripts/art/characters/rexi.py build   # master, portrait, frames/rexi/
+npm run art -- export                                                              # src/render/art/generated/rexi*.ts
+```
+
+- **Master:** `sprites/rexi/master.png`, the prototype's hand pass on the re-snapped `m34_b`, plus the sleeve on the near arm as a pixel-text patch (`SLEEVE`). The image model inked the whole arm into a brown mass (`rexi_sleeve_v1`, kept on record), so the sleeve is drawn by hand: one continuous piece, the lion's mane ringing its face and flowing into the courthouse's pediment, columns and steps at the elbow. `PLAIN` is the same arm without ink (his left arm, the near arm facing left).
+- **Body frames** (`frames/rexi/body/{right,left}/`): 17 per facing on one 57×82 canvas. The lower body comes from a key aligned by its head; the torso is the master's; the near arm is the master's, cut out once and swung about the shoulder per frame (a row shear up to 15°, so the sleeve's 1 px linework survives; RotSprite past that). The hurt frames keep their key's head and torso, with the master's near arm moved to the key's shoulder. Facing left is the mirror with the plain near arm.
+- **Animations** (`ANIMS`): idle 8 (breath, blink), run 8 (contact, down, passing, up for each leg; no pose used twice), run-back 8 (reversed), jump 4 (rise, apex, fall, land), hurt 4 (over the 0.3 s hurt reaction; the game adds the red blink), shoot 3 (recoil and muzzle flash over 0.12 s, the Mazo Automático's fire interval). Aiming needs no table: the game draws the 16 arm directions over the idle body.
+- **Aiming arm** (`frames/rexi/arm/<weapon>/{plain,inked}/<angle>.png`): `arm_forward_a` with a 1 px outline, holding each Weapon (`WEAPONS`, pixel text), inked with `ARM_SLEEVE` for facing left, RotSprite-rotated into 9 angles. `rexi.json` holds the pivots, each Weapon's muzzle reach, and per body frame the shoulder, the lapel cap's place and the two boot soles (the Día de Pierna jets' anchors).
+- **Portrait** (`sprites/rexi/portrait.png`): an edit (`rexi_portrait_v1`) of the old code-drawn portrait mirrored so the flexed arm is his right arm, with the forearm's stray ink and a keyed-out patch of the tank top fixed in pixel text.
+- **References** (`characters/rexi_refs.py`): the character sheet and the title illustration regenerated with the right-arm sleeve, the title in its old composition (the previous versions are kept as `-v2`). See CREDITS.md and the script's docstring for how each was made.
+
 ## Export
 
 `export_ts.py` writes one module per `exports` entry. The sprites are keyed by their path relative to the matched files' common folder (`'idle/00'`):
@@ -299,13 +315,12 @@ npm run art -- audit --root reference/manu-pipeline
 
 `characters/rexi_templates.py` holds the prototype's own templates and pose guides, which the generic builders in `templates.py` grew out of.
 
-**Sleeve correction (#31).** The prototype was drawn with the sleeve on the near arm, which is his left arm facing right. The rig now follows CONTEXT.md:
+**Sleeve side (#31, corrected in #26).** The prototype was drawn with the sleeve on the near arm. Facing right the camera sees his right side, so that is his right arm, as CONTEXT.md wants (#31 had read it as his left arm and moved the sleeve; the owner corrected that in #26). The rig now:
 
-- Facing right, the near arm is plain (`detattoo`), and the aiming arm, his right arm, wears a continuous lion-to-courthouse sleeve in pixel text.
-- Facing left, the mirrored near arm (now his right) keeps the master's sleeve.
-- The hurt keys' own near arm is detattooed too.
+- facing right, keeps the master's sleeve on the near arm and aims with the plain far arm;
+- facing left, detattoos the mirrored near arm (now his left) and inks the aiming arm (now his right) with a lion-to-courthouse sleeve in pixel text.
 
-The prompt files describe the right-arm sleeve. The sidecars keep each prompt as it was sent. The aiming arm also gained its missing 1 px outline (found by the audit).
+The prompt files and their sidecars keep the prompts as they were sent. The aiming arm also gained its missing 1 px outline (found by the audit).
 
 ### Lessons (on top of manus-garden's)
 
@@ -314,6 +329,9 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 - **"Raise the near arm" raised the far arm.** Name arms as the character's left and right, plus near and far, in every prompt.
 - **The model drew the stretched air poses' legs 10–15 px too long.** Deleting the most redundant trouser rows (`shorten`) fixes this without resampling.
 - **The robe snapped to outline black.** The hand pass moves its inside to `night`. With the 56-colour palette, `robeMid` gives the folds a step of their own.
+- **(#26) The model will not move a tattoo to the other arm.** Asked to move the sleeve, it changed nothing or inked the arm holding the gavel, even after the old ink was removed first. What worked: hand it a picture where rough ink already sits on the right arm, and ask it to redraw that ink (the sheet's front view mirrored in place; the sheet's sleeve pasted onto the title's flexing arm). It may still ink the gavel arm too; the clean arm pastes back, since an edit keeps the picture's geometry.
+- **(#26) At 64 px a generated sleeve is a smudge.** The edit inked the whole arm, forearm included. A 10×15 px sleeve drawn as pixel text, two ink tones over three skin tones, reads as one continuous piece.
+- **(#26) Rotating a small tattooed limb resamples its linework.** A row shear keeps it for small swings.
 
 ### Lessons from the Enemy pass (#27)
 
@@ -354,7 +372,7 @@ Lessons:
 | `export_ts.py`                        | The TypeScript export (rows and RLE).                                                                   |
 | `preview.py`, `audit.py`              | Contact sheets; palette and pixel-rule lint.                                                            |
 | `pixtext.py`, `reduce.py`             | Pixel text (one fixed code per colour); exact 2:1 reduction.                                            |
-| `characters/`                         | Rexi's prototype: shared setup, templates, hand pass, rig and exports.                                  |
+| `characters/`                         | Rexi: the production rig (`rexi.py`), the reference images (`rexi_refs.py`) and the prototype.          |
 | `enemies.py`                          | Hand pass for the Enemies and projectiles (#27): ink, patches, debris chunks, hatch split.              |
 | `ui/`                                 | Hand pass for the UI art: the 16×16 icons (`icons.py`) and the court record ornaments (`record.py`).    |
 | `tests/`                              | pytest: ledger and cap, grid recovery, snap, fit, RotSprite, IK, audit, export, prototype reproduction. |

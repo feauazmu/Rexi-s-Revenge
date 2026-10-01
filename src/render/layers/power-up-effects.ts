@@ -1,6 +1,7 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type ActivePowerUpView, type RunView } from '../../core';
 import type { DrawContext } from '../draw-context';
-import { BODY_ANCHOR_X, BODY_HEIGHT, BODY_WIDTH } from '../rexi/body';
+import { masterPalette as P } from '../palette';
+import { bodyOrigin, bodyPoint, bootsOf, type BodyFrame } from '../rexi/art';
 import { defineSprite } from '../sprite';
 import type { Color } from '../surface';
 
@@ -26,7 +27,7 @@ function shownPowerUp(run: RunView, id: ActivePowerUpView['id']): ActivePowerUpV
 // ── Pre-entreno ──────────────────────────────────────────────────────────────────────────
 
 /** The slowed world's cool tint: a sparse dot dither (one pixel in sixteen; no alpha blending). */
-const SLOW_TINT = defineSprite({ c: '#6cc4f0' }, [
+const SLOW_TINT = defineSprite({ c: P.glass3 }, [
   'c.......'.repeat(SCREEN_WIDTH / 8),
   '........'.repeat(SCREEN_WIDTH / 8),
   '....c...'.repeat(SCREEN_WIDTH / 8),
@@ -50,7 +51,7 @@ const SPEED_LINES = [
   { up: 12, length: 7, phase: 1 },
   { up: 5, length: 11, phase: 4 },
 ] as const;
-const SPEED_LINE_COLORS: readonly Color[] = ['#ffffff', '#bfe8ff'];
+const SPEED_LINE_COLORS: readonly Color[] = [P.white, P.steel3];
 /** Gap between Rexi's trailing edge and the nearest line, px. */
 const SPEED_LINE_GAP = 3;
 /** The lines stream back over this many pixels before wrapping, px. */
@@ -67,48 +68,47 @@ function drawSpeedLines(dc: DrawContext, run: RunView): void {
     const drift = (run.tick + line.phase) % SPEED_LINE_TRAVEL;
     const near = trailingEdge + behind * (SPEED_LINE_GAP + drift);
     const x = behind < 0 ? near - line.length : near;
-    const color = SPEED_LINE_COLORS[i % SPEED_LINE_COLORS.length] ?? '#ffffff';
+    const color = SPEED_LINE_COLORS[i % SPEED_LINE_COLORS.length] ?? P.white;
     dc.surface.fillRect(x, feet - line.up, line.length, 1, color);
   });
 }
 
 // ── Día de Pierna ────────────────────────────────────────────────────────────────────────
 
-const FLAME_PALETTE = { W: '#fff8e0', Y: '#ffd84a', R: '#f06a2a', r: '#a83a1a' } as const;
-/** A jet flame under one boot: two flickering frames, 3 px wide. */
+/** The jets' fire ramp: light core, gold, orange, red tip. */
+const FLAME_PALETTE = { W: P.light, Y: P.gold, R: P.skyOrange, r: P.red3 } as const;
+/** A jet flame under one boot: two flickering frames, 5 px wide, centered on the sole. */
 // prettier-ignore
 const JET_FLAME = [
-  defineSprite(FLAME_PALETTE, ['WYW', 'YWY', 'RYR', 'RYR', '.R.', '.R.', '.r.']),
-  defineSprite(FLAME_PALETTE, ['WYW', 'RWR', 'RYR', '.Y.', '.R.', '.r.', '...']),
+  defineSprite(FLAME_PALETTE, ['.WWW.', 'YWWWY', 'YYWYY', 'RYWYR', 'RYYYR', '.RYR.', '.RYR.', '..R..', '..r..', '..r..']),
+  defineSprite(FLAME_PALETTE, ['.WWW.', 'YWWWY', 'RYWYR', 'RYYYR', '.RYR.', '.RYR.', '..R..', '..R..', '..r..', '.....']),
 ] as const;
 const JET_FLAME_TICKS = 2;
-/**
- * Where the flames fire from on Rexi's 32×38 body canvas (facing right): the center column of
- * each boot and the row just under the soles of the tucked `jump` legs (src/render/rexi/body.ts),
- * the pose he flies in.
- */
-const SOLE_COLUMNS = [12, 21] as const;
-const BELOW_SOLES_ROW = 35;
 /** Exhaust puffs streaming down from each flame: offset across, size, color. */
 const EXHAUST = [
-  { dx: 0, size: 2, color: '#e0d8d0' },
-  { dx: 1, size: 2, color: '#b8b0a8' },
-  { dx: 0, size: 1, color: '#8a8480' },
+  { dx: 1, size: 3, color: P.grey3 },
+  { dx: 2, size: 2, color: P.grey2 },
+  { dx: 1, size: 2, color: P.grey1 },
 ] as const satisfies readonly { dx: number; size: number; color: Color }[];
 /** Puffs travel this far below the flame before wrapping, px. */
-const EXHAUST_TRAVEL = 15;
+const EXHAUST_TRAVEL = 20;
 
-/** Día de Pierna: jet flames and exhaust from his boots while the thrust pushes him. */
-function drawJetTrail(dc: DrawContext, run: RunView): void {
+/**
+ * Día de Pierna: jet flames and exhaust from his boots while the thrust pushes him, anchored
+ * under the soles of the body frame he is drawn in (the pipeline's per-frame boot anchors).
+ */
+function drawJetTrail(dc: DrawContext, run: RunView, frame: BodyFrame): void {
   const { rexi } = run;
   if (!rexi.flying) return;
-  const left = Math.round(rexi.x + rexi.w / 2) - BODY_ANCHOR_X;
-  const top = Math.round(rexi.y + rexi.h) - BODY_HEIGHT + BELOW_SOLES_ROW;
-  SOLE_COLUMNS.forEach((column, boot) => {
-    const x = left + (rexi.facing === 1 ? column : BODY_WIDTH - 1 - column) - 1;
+  const origin = bodyOrigin(rexi, rexi.facing);
+  bootsOf(frame).forEach(([bx, by], boot) => {
+    const sole = bodyPoint(bx, by, rexi.facing);
+    const flame0 = JET_FLAME[0];
+    const x = origin.x + sole.x - Math.floor(flame0.width / 2);
+    const top = origin.y + sole.y;
     // The boots flicker out of step, so the pair never pulses as one.
-    const frame = Math.floor(run.tick / JET_FLAME_TICKS + boot) % JET_FLAME.length;
-    const flame = JET_FLAME[frame] ?? JET_FLAME[0];
+    const flame =
+      JET_FLAME[Math.floor(run.tick / JET_FLAME_TICKS + boot) % JET_FLAME.length] ?? flame0;
     dc.surface.drawBitmap(dc.sprites.get(flame), x, top);
     EXHAUST.forEach((puff, i) => {
       const fall = (run.tick + boot * 5 + i * (EXHAUST_TRAVEL / EXHAUST.length)) % EXHAUST_TRAVEL;
@@ -117,8 +117,8 @@ function drawJetTrail(dc: DrawContext, run: RunView): void {
   });
 }
 
-/** Drawn behind Rexi's figure: the trails his Power-ups leave as he moves. */
-export function drawRexiTrails(dc: DrawContext, run: RunView): void {
+/** Drawn behind Rexi's figure: the trails his Power-ups leave as he moves (`frame`: his body frame). */
+export function drawRexiTrails(dc: DrawContext, run: RunView, frame: BodyFrame): void {
   drawSpeedLines(dc, run);
-  drawJetTrail(dc, run);
+  drawJetTrail(dc, run, frame);
 }

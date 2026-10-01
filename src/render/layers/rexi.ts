@@ -5,31 +5,33 @@ import {
   translatedContext,
   type DrawContext,
 } from '../draw-context';
-import { armSprite, FIST_REACH, stepDirection } from '../rexi/arm';
+import { armAngleIndex, stepDirection } from '../rexi/arm';
 import {
-  ARM_PIVOT,
-  BODY_ANCHOR_X,
-  BODY_HEIGHT,
-  BODY_WIDTH,
+  armReach,
+  armSprite,
+  bodyOrigin,
+  bodyPoint,
   bodySprite,
   capSprite,
-} from '../rexi/body';
+  shoulderOf,
+} from '../rexi/art';
 import { heldWeapons } from '../rexi/held-weapons';
 import { drawRexiTrails } from './power-up-effects';
-import { rexiPalette } from '../rexi/palette';
-import { rexiPose } from '../rexi/pose';
-import { palette } from '../palette';
+import { rexiPose, type RexiPose } from '../rexi/pose';
+import { masterPalette as P } from '../palette';
 import { defineSprite } from '../sprite';
 import type { Color } from '../surface';
 
+/** The shot's flash at the muzzle: a small and a big star in the fire ramp's light end. */
+const FLASH = { y: P.gold, l: P.light, w: P.white };
 // prettier-ignore
 const MUZZLE_FLASH = [
-  defineSprite(rexiPalette, ['.y.', 'yty', '.y.']),
-  defineSprite(rexiPalette, ['..y..', '.yty.', 'yttty', '.yty.', '..y..']),
+  defineSprite(FLASH, ['..y..', '.yly.', 'ylwly', '.yly.', '..y..']),
+  defineSprite(FLASH, ['...y...', '..yly..', '.ylwly.', 'ylwwwly', '.ylwly.', '..yly..', '...y...']),
 ] as const;
 
-/** Inmunidad Judicial's glow: a 1 px outline alternating gold and white. */
-const IMMUNITY_GLOW: readonly Color[] = ['#ffd84a', '#fff8e0'];
+/** Inmunidad Judicial's glow: a 1 px outline alternating gold and light. */
+const IMMUNITY_GLOW: readonly Color[] = [P.gold, P.light];
 const IMMUNITY_GLOW_TICKS = 4;
 /** During its last seconds the glow flickers, warning that it is about to end. */
 const IMMUNITY_WARNING_TICKS = 120;
@@ -41,11 +43,12 @@ const OUTLINE_OFFSETS = [
 ] as const;
 
 /**
- * Rexi, over the trails his Power-ups leave (Pre-entreno's speed lines, Día de Pierna's jet) and
+ * Rexi, over the trails his Power-ups leave (Pre-entreno's speed lines, Día de Pierna's jets) and
  * outlined by a glow while Inmunidad Judicial protects him.
  */
 export function drawRexi(dc: DrawContext, run: RunView): void {
-  drawRexiTrails(dc, run);
+  const pose = rexiPose(run.rexi, run.tick);
+  drawRexiTrails(dc, run, pose.frame);
   const immunity = run.rexi.powerUps.find((p) => p.id === 'inmunidad-judicial');
   const flickerOff =
     immunity !== undefined &&
@@ -53,54 +56,52 @@ export function drawRexi(dc: DrawContext, run: RunView): void {
     Math.floor(immunity.ticksLeft / IMMUNITY_GLOW_TICKS) % 2 === 1;
   if (immunity && !flickerOff) {
     const color =
-      IMMUNITY_GLOW[Math.floor(run.tick / IMMUNITY_GLOW_TICKS) % IMMUNITY_GLOW.length] ??
-      palette.white;
+      IMMUNITY_GLOW[Math.floor(run.tick / IMMUNITY_GLOW_TICKS) % IMMUNITY_GLOW.length] ?? P.white;
     const glow = silhouetteContext(dc, color);
-    for (const [dx, dy] of OUTLINE_OFFSETS) drawFigure(translatedContext(glow, dx, dy), run);
+    for (const [dx, dy] of OUTLINE_OFFSETS) {
+      drawFigure(translatedContext(glow, dx, dy), run, pose);
+    }
   }
-  drawFigure(dc, run);
+  drawFigure(dc, run, pose);
 }
 
 /**
- * Rexi's figure: the composed body for his pose, then the aiming arm with his Weapon in one of
- * 16 directions, the deltoid cap over the arm's root. The sleeve tattoo on his right upper arm is
- * part of the body, arm and cap sprites (whichever of them is his right arm for the facing).
+ * Rexi's figure (pipeline art, ADR 0002): the body frame for his pose and facing, then the
+ * aiming arm holding his Weapon in one of 16 directions at the frame's shoulder, the lapel over
+ * its root, and the muzzle flash. The sleeve is on his right arm in every facing: in the body
+ * frame facing right (the near arm) and on the aiming arm facing left. `pose` is
+ * `rexiPose(run.rexi, run.tick)`.
  */
-function drawFigure(dc: DrawContext, run: RunView): void {
+export function drawFigure(dc: DrawContext, run: RunView, pose: RexiPose): void {
   const { surface, sprites } = dc;
   const { rexi } = run;
   const { facing } = rexi;
-  const pose = rexiPose(rexi, run.tick);
 
-  // The body canvas stands on the hitbox's bottom edge, centered on it.
-  const left = Math.round(rexi.x + rexi.w / 2) - BODY_ANCHOR_X;
-  const top = Math.round(rexi.y + rexi.h) - BODY_HEIGHT;
-  surface.drawBitmap(sprites.get(bodySprite(pose.body, facing, pose.flash)), left, top);
+  const origin = bodyOrigin(rexi, facing);
+  surface.drawBitmap(sprites.get(bodySprite(pose.frame, facing, pose.flash)), origin.x, origin.y);
 
-  // Upper-body offsets are authored facing right; mirror them with the body.
-  const ux = pose.body.upperX * facing;
-  const uy = pose.body.upperY;
-  const pivotX = left + ux + (facing === 1 ? ARM_PIVOT.x : BODY_WIDTH - 1 - ARM_PIVOT.x);
-  const pivotY = top + uy + ARM_PIVOT.y;
-
-  const weapon = heldWeapons[rexi.weapon.id];
-  const arm = armSprite(weapon, pose.armStep, facing, pose.flash);
+  const art = heldWeapons[rexi.weapon.id];
+  const arm = armSprite(art, armAngleIndex(pose.armStep), facing, pose.flash);
   const step = stepDirection(pose.armStep);
   const dir = { x: step.x * facing, y: step.y };
   const kickX = Math.round(-dir.x * pose.recoil);
   const kickY = Math.round(-dir.y * pose.recoil);
+  const s = shoulderOf(pose.frame);
+  const shoulder = bodyPoint(s.x, s.y, facing);
+  const pivotX = origin.x + shoulder.x;
+  const pivotY = origin.y + shoulder.y;
   surface.drawBitmap(
     sprites.get(arm.sprite),
-    pivotX - arm.pivotX + kickX,
-    pivotY - arm.pivotY + kickY,
+    Math.round(pivotX - arm.pivotX) + kickX,
+    Math.round(pivotY - arm.pivotY) + kickY,
   );
 
-  const cap = capSprite(facing, pose.flash);
-  surface.drawBitmap(sprites.get(cap.sprite), left + ux + cap.x, top + uy + cap.y);
+  const cap = capSprite(pose.frame, facing, pose.flash);
+  surface.drawBitmap(sprites.get(cap.sprite), origin.x + cap.x, origin.y + cap.y);
 
   const flash = pose.muzzleFlash > 0 ? MUZZLE_FLASH[pose.muzzleFlash - 1] : undefined;
   if (flash) {
-    const reach = FIST_REACH + weapon.length + 2;
+    const reach = armReach(art) + 2;
     drawSpriteCentered(
       dc,
       flash,
