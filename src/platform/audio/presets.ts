@@ -599,6 +599,62 @@ export const SOUND_PRESETS = {
     minGap: 0.2,
     ...UI,
   },
+  /** Pre-entreno kicks in: time winds down, a tape-stop "wooowww" sinking under a low hum. */
+  'slow-motion': {
+    patch: {
+      peak: 0.32,
+      layers: [
+        {
+          wave: 'square',
+          freq: 880,
+          freqEnd: 110,
+          slide: 0.55,
+          vibrato: { rate: 5, depth: 0.03 },
+          env: { attack: 0.01, hold: 0.45, decay: 0.2 },
+          filter: { type: 'lowpass', cutoff: 4000, cutoffEnd: 500 },
+        },
+        {
+          wave: 'sine',
+          freq: 220,
+          freqEnd: 55,
+          slide: 0.55,
+          env: { attack: 0.02, hold: 0.45, decay: 0.2 },
+          gain: 0.5,
+        },
+      ],
+    },
+    maxVoices: 1,
+    minGap: 0.2,
+    ...UI,
+  },
+  /** Día de Pierna kicks in: a jet ignites, a rising noise roar over a climbing square. */
+  'jet-ignite': {
+    patch: {
+      peak: 0.32,
+      layers: [
+        {
+          wave: 'noise',
+          freq: WHITE,
+          env: { attack: 0.03, hold: 0.3, decay: 0.2 },
+          filter: { type: 'bandpass', cutoff: 500, cutoffEnd: 2600, q: 1.2 },
+          gain: 0.9,
+        },
+        {
+          wave: 'square',
+          duty: 0.3,
+          freq: 140,
+          freqEnd: 560,
+          slide: 0.35,
+          env: { hold: 0.3, decay: 0.15 },
+          filter: { type: 'lowpass', cutoff: 2400 },
+          gain: 0.45,
+        },
+      ],
+    },
+    maxVoices: 1,
+    minGap: 0.2,
+    ...UI,
+  },
   /** A Power-up wears off: the same stairs, falling. */
   'power-up-end': {
     patch: {

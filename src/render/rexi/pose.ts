@@ -65,7 +65,8 @@ function runPose(rexi: RexiView, tick: number): BodyPose {
 }
 
 function airPose(rexi: RexiView): BodyPose {
-  if (rexi.vy < -APEX_SPEED) {
+  // Flying on Día de Pierna's jets keeps the knees tucked (the flames fire from the soles).
+  if (rexi.vy < -APEX_SPEED || rexi.flying) {
     return { legs: LEG_FRAMES.jump, robe: 'jump', backArm: 'back', hurt: false, ...still };
   }
   if (rexi.vy > APEX_SPEED) {

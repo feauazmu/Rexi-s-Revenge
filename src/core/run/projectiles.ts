@@ -5,6 +5,7 @@ import type { RunContext } from './context';
 import { puffSmoke } from './effects';
 import { damageEnemy } from './enemies/system';
 import { detonate } from './explosives';
+import { enemyTimeScale } from './power-ups/pre-entreno';
 import { canHurtRexi, damageRexi } from './rexi';
 import type { Blast, ProjectileHoming, ProjectileState, ProjectileThrust } from './state';
 
@@ -81,23 +82,33 @@ export function spawnProjectile(ctx: RunContext, spawn: ProjectileSpawn): Projec
   return projectile;
 }
 
-/** Moves every projectile, resolves hits and removes spent ones. */
+/**
+ * Moves every projectile, resolves hits and removes spent ones. Enemy projectiles run on Enemy
+ * time (Pre-entreno slows their flight, homing and lifetime); Rexi's always run at full speed.
+ */
 export function stepProjectiles(ctx: RunContext): void {
   const { state } = ctx;
-  state.projectiles = state.projectiles.filter((p) => stepProjectile(ctx, p));
+  const enemyScale = enemyTimeScale(ctx);
+  state.projectiles = state.projectiles.filter((p) =>
+    stepProjectile(ctx, p, p.owner === 'enemy' ? enemyScale : 1),
+  );
 }
 
-/** Advances one projectile one tick; returns false when it is spent. */
-function stepProjectile(ctx: RunContext, p: ProjectileState): boolean {
+/**
+ * Advances one projectile one tick, with its clock running at `scale` of normal (Pre-entreno
+ * slows Enemy projectiles' flight, homing, thrust and lifetime); returns false when it is spent.
+ */
+function stepProjectile(ctx: RunContext, p: ProjectileState, scale: number): boolean {
   const { state } = ctx;
+  const dt = DT * scale;
   const bottomBefore = p.y + p.h;
-  if (p.homing) steer(ctx, p, p.homing);
-  p.vy += p.gravity * DT;
-  if (p.thrust) accelerate(p, p.thrust);
-  p.x += p.vx * DT;
-  p.y += p.vy * DT;
+  if (p.homing) steer(ctx, p, p.homing, dt, scale);
+  p.vy += p.gravity * dt;
+  if (p.thrust) accelerate(p, p.thrust, dt);
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
   p.age += 1;
-  p.ttl -= 1;
+  p.ttl -= scale;
   if (p.trailInterval !== null && p.age % p.trailInterval === 0) puffSmoke(ctx, tailOf(p));
 
   if (p.owner === 'rexi') {
@@ -135,10 +146,10 @@ function stepProjectile(ctx: RunContext, p: ProjectileState): boolean {
   return isNearScreen(p);
 }
 
-function accelerate(p: ProjectileState, thrust: ProjectileThrust): void {
+function accelerate(p: ProjectileState, thrust: ProjectileThrust, dt: number): void {
   const speed = Math.hypot(p.vx, p.vy);
   if (speed === 0) return;
-  const next = Math.min(thrust.maxSpeed, speed + thrust.acceleration * DT);
+  const next = Math.min(thrust.maxSpeed, speed + thrust.acceleration * dt);
   p.vx *= next / speed;
   p.vy *= next / speed;
 }
@@ -181,10 +192,16 @@ function landingSurface(
 }
 
 /** Turns a homing projectile toward its nearest target by at most its turn rate, keeping its speed. */
-function steer(ctx: RunContext, p: ProjectileState, homing: ProjectileHoming): void {
+function steer(
+  ctx: RunContext,
+  p: ProjectileState,
+  homing: ProjectileHoming,
+  dt: number,
+  scale: number,
+): void {
   if (homing.ticksLeft !== null) {
     if (homing.ticksLeft <= 0) return;
-    homing.ticksLeft -= 1;
+    homing.ticksLeft -= scale;
   }
   const target = homingTarget(ctx, p);
   if (!target) return;
@@ -194,7 +211,7 @@ function steer(ctx: RunContext, p: ProjectileState, homing: ProjectileHoming): v
   const wanted = Math.atan2(to.y - from.y, to.x - from.x);
   // Shortest signed angle from the heading to the target, in (-π, π].
   const error = Math.atan2(Math.sin(wanted - heading), Math.cos(wanted - heading));
-  const maxTurn = homing.turnRate * DT;
+  const maxTurn = homing.turnRate * dt;
   const turned = rotate({ x: p.vx, y: p.vy }, clamp(error, -maxTurn, maxTurn));
   p.vx = turned.x;
   p.vy = turned.y;

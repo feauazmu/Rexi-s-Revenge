@@ -32,6 +32,8 @@ export const POWER_UP_IDS = [
   'receso', // Receso (instant heal)
   'inmunidad-judicial', // Inmunidad Judicial (timed)
   'creatina', // Creatina (timed)
+  'pre-entreno', // Pre-entreno (timed)
+  'dia-de-pierna', // Día de Pierna (timed)
 ] as const;
 export type PowerUpId = (typeof POWER_UP_IDS)[number];
 

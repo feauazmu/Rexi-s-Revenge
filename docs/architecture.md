@@ -161,9 +161,22 @@ where it was. Scripted spawns replace the Director's spawning, but the ramp cloc
   draws one icon + seconds-left row per entry under the Weapon row (the icon blinks in the last 2 s).
 - **Effects live where they apply.** Each timed Power-up's file exports an effect hook built on
   `isPowerUpActive(rexi, id)` (`active.ts`), and the subsystem it changes calls that hook:
-  `hasInmunidadJudicial` in `canHurtRexi` (all damage blocked; Enemy projectiles fly through) and
+  `hasInmunidadJudicial` in `canHurtRexi` (all damage blocked; Enemy projectiles fly through),
   `rexiDamageMultiplier` in `damageEnemy` (Creatina, applied when a hit lands, so it covers every
-  Weapon and splash). The renderer reads `RexiView.powerUps` for looks such as Inmunidad's glow.
+  Weapon and splash), `enemyTimeScale` in `stepEnemies` and `stepProjectiles` (Pre-entreno), and
+  `applyFlightThrust` / `stopAtFlightCeiling` around Rexi's body step in `stepRexi` (Día de Pierna).
+- **Enemy time** (Pre-entreno): `stepEnemies` hands behaviors `DT * enemyTimeScale(ctx)`, so
+  movement and attack cooldowns slow together; Enemy projectiles fly, home and age out (`ttl`) on
+  the same scaled time. Rexi, his projectiles, Crates, the Director and the ramp clock keep real
+  time. `enemy.age` and `projectile.age` still count ticks (animation only).
+- **Flight** (Día de Pierna): while it is active and jump is held, thrust (stronger than gravity)
+  pushes Rexi up until he climbs at `riseSpeed`; he stops at `ceiling` (hovering there while jump
+  stays held), falls normally on release and when it ends. On touch the jump button drives it,
+  since the core only sees the held `jump`. `RexiView.flying` is true on thrusting ticks.
+- The renderer reads `RexiView.powerUps` for looks: Inmunidad's glow (`layers/rexi.ts`), and in
+  `layers/power-up-effects.ts` Pre-entreno's cool tint over the slowed world (a world layer under
+  Rexi) with speed lines behind him, and Día de Pierna's boot jets (from `flying`). Each flickers
+  in its last 2 s.
 
 Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's projectiles hurt Enemies;
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
@@ -436,13 +449,15 @@ is code, like the art.
    - Timed: `{ id, kind: 'timed' }` — the system already handles the timer, events, view and HUD timer.
      Export an effect hook from the same file (`isPowerUpActive(ctx.state.rexi, id)` plus its tuning)
      and call it from the subsystem it changes, e.g. Pre-entreno scaling the `dt` the Enemy and
-     Enemy-projectile steps use, or Día de Pierna changing Rexi's jump in `stepRexi`.
+     Enemy-projectile steps use, or Día de Pierna adding thrust in `stepRexi`.
 4. Draw its icon (at most 12×12) in `src/render/hud/power-up-icons.ts` and add its Spanish name to
-   `strings.powerUps`. A visible effect on Rexi reads `run.rexi.powerUps` in the renderer.
-5. Test through a scripted Crate: `powerUpCrate(id, ON_REXI.x, { y: ON_REXI.y })` from
+   `strings.powerUps`. A visible effect reads `run.rexi.powerUps` in the renderer
+   (`src/render/layers/power-up-effects.ts`).
+5. Give a timed one its start sound in `POWER_UP_START_SOUNDS` (`src/platform/audio/sound-map.ts`).
+6. Test through a scripted Crate: `powerUpCrate(id, ON_REXI.x, { y: ON_REXI.y })` from
    `tests/support/driver.ts` hands it to Rexi on the first tick.
 
-`Record<…Id, …>` catalogs (tuning, Crate weights, behavior, icons, names) make the typecheck fail until
+`Record<…Id, …>` catalogs (tuning, Crate weights, behavior, icons, names, start sounds) make the typecheck fail until
 every step is done.
 
 ### A platform

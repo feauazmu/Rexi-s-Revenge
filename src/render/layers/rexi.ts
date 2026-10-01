@@ -15,6 +15,7 @@ import {
   capSprite,
 } from '../rexi/body';
 import { heldWeapons } from '../rexi/held-weapons';
+import { drawRexiTrails } from './power-up-effects';
 import { rexiPalette } from '../rexi/palette';
 import { rexiPose } from '../rexi/pose';
 import { palette } from '../palette';
@@ -39,8 +40,12 @@ const OUTLINE_OFFSETS = [
   [0, 1],
 ] as const;
 
-/** Rexi, outlined by a glow while Inmunidad Judicial protects him. */
+/**
+ * Rexi, over the trails his Power-ups leave (Pre-entreno's speed lines, Día de Pierna's jet) and
+ * outlined by a glow while Inmunidad Judicial protects him.
+ */
 export function drawRexi(dc: DrawContext, run: RunView): void {
+  drawRexiTrails(dc, run);
   const immunity = run.rexi.powerUps.find((p) => p.id === 'inmunidad-judicial');
   const flickerOff =
     immunity !== undefined &&

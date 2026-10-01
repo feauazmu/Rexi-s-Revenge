@@ -39,6 +39,8 @@ export interface Body extends Box {
 export interface RexiState extends Body {
   /** True from a jump's take-off until it is cut short or starts falling. */
   rising: boolean;
+  /** True on ticks Día de Pierna's thrust is pushing him (it is active and jump is held). */
+  flying: boolean;
   health: number;
   readonly maxHealth: number;
   facing: 1 | -1;
@@ -103,7 +105,7 @@ export interface ProjectileState extends Box {
   /** Steers toward its target (see `ProjectileSpawn.homing`); null when it flies straight. */
   homing: ProjectileHoming | null;
   readonly damage: number;
-  /** Ticks left before the projectile disappears. */
+  /** Ticks left before the projectile disappears (on Enemy time for Enemy projectiles). */
   ttl: number;
   /** Ticks since fired. */
   age: number;
@@ -127,7 +129,7 @@ export interface ProjectileBounce {
 export interface ProjectileHoming {
   /** Fastest turn toward the target, radians per second. */
   readonly turnRate: number;
-  /** Ticks of steering left; null steers for its whole flight. */
+  /** Ticks of steering left (fractional under Pre-entreno); null steers for its whole flight. */
   ticksLeft: number | null;
 }
 

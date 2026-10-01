@@ -6,6 +6,7 @@ import {
   type GameEvent,
   type GameEventOf,
   type GameEventType,
+  type TimedPowerUpId,
   type WeaponId,
 } from '../../core';
 import type { SoundId } from './presets';
@@ -16,6 +17,8 @@ import type { SoundId } from './presets';
  * - an Enemy: its firing sound in `ENEMY_FIRE_SOUNDS` (its explosion follows its tuned
  *   `explosion` size automatically);
  * - an explosive projectile (Weapon or Enemy): nothing; its blast's sound follows its preset size;
+ * - a timed Power-up: its start sound in `POWER_UP_START_SOUNDS` (instant ones sound through
+ *   their own event, e.g. Receso's `rexi-healed`);
  * - an event kind: its rule in `EVENT_SOUNDS` (return null to keep it silent).
  * The `Record`s fail to typecheck until the new id or event kind has its entry.
  */
@@ -40,6 +43,14 @@ export const ENEMY_FIRE_SOUNDS: Readonly<Record<EnemyKind, SoundId>> = {
   'archivador-artillado': 'cannon-pomp', // the bomb bay lets a drawer go
   'caminadora-a-reaccion': 'gatling-tat',
   'banca-artillada': 'cannon-pomp', // each rocket leaving a pod
+};
+
+/** The sound each timed Power-up makes as it kicks in (and when picked up again). */
+export const POWER_UP_START_SOUNDS: Readonly<Record<TimedPowerUpId, SoundId>> = {
+  'inmunidad-judicial': 'power-up-start',
+  creatina: 'power-up-start',
+  'pre-entreno': 'slow-motion',
+  'dia-de-pierna': 'jet-ignite',
 };
 
 export const EXPLOSION_SOUNDS: Readonly<Record<ExplosionSize, SoundId>> = {
@@ -90,7 +101,7 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
   // Every second character, so fast typing stays a chatter instead of a buzz.
   'quip-character': ({ index }) => (index % 2 === 0 ? 'dialogue-blip' : null),
   'dialogue-closed': () => null,
-  'power-up-started': () => 'power-up-start',
+  'power-up-started': ({ powerUp }) => POWER_UP_START_SOUNDS[powerUp],
   'power-up-ended': () => 'power-up-end',
   'rexi-healed': () => 'power-up-start', // Receso: the instant Power-up kicks in
 };
