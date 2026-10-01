@@ -16,6 +16,7 @@ import {
   type TuningOverrides,
 } from '../../src/core';
 import { drive, eventsOf, runOf, type Driver } from '../support/driver';
+import { holdStill } from '../support/fixtures';
 
 const fx = defaultTuning.effects;
 const maletin = defaultTuning.enemies['maletin-coptero'];
@@ -42,7 +43,7 @@ function arena(
   tuning: TuningOverrides = oneShotKills,
   options: Partial<GameOptions> = {},
 ): Driver {
-  return drive({ ...options, overrides: { spawns, tuning } });
+  return drive({ ...options, overrides: { spawns, tuning: holdStill(tuning) } });
 }
 
 /** Fires at `target` tick by tick until an Enemy is destroyed; returns the ticks it took. */

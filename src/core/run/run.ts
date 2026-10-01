@@ -6,11 +6,13 @@ import type { Rng } from '../rng';
 import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
 import type { RunContext } from './context';
+import { createDirector } from './director';
 import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effects';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, stepRexi } from './rexi';
+import { advanceRampClock } from './ramp';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
 import { stepWeapons } from './weapons/system';
@@ -37,6 +39,7 @@ export interface Run {
 export function createRun(deps: RunDeps): Run {
   const state: RunState = {
     tick: 0,
+    rampTicks: 0,
     rexi: createRexi(deps.tuning),
     enemies: [],
     projectiles: [],
@@ -44,6 +47,7 @@ export function createRun(deps: RunDeps): Run {
     stats: { score: 0, enemiesDestroyed: 0 },
     ended: false,
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
+    director: createDirector(deps.tuning),
   };
   let events: GameEvent[] = [];
   const ctx: RunContext = {
@@ -54,17 +58,26 @@ export function createRun(deps: RunDeps): Run {
     nextId: deps.nextId,
   };
 
+  /**
+   * One tick of Run simulation. Anything that freezes the Run (pause, Hit-stop) skips this
+   * whole call, which also keeps the ramp clock still.
+   */
+  const simulate = (input: InputFrame): void => {
+    stepEffects(ctx);
+    stepSpawning(ctx);
+    stepRexi(ctx, input);
+    stepWeapons(ctx, input);
+    stepEnemies(ctx);
+    stepProjectiles(ctx);
+    state.tick += 1;
+    advanceRampClock(state);
+  };
+
   return {
     step(input) {
       events = [];
       if (state.ended) return events;
-      stepEffects(ctx);
-      stepSpawning(ctx);
-      stepRexi(ctx, input);
-      stepWeapons(ctx, input);
-      stepEnemies(ctx);
-      stepProjectiles(ctx);
-      state.tick += 1;
+      simulate(input);
       if (state.rexi.health <= 0) endRun(ctx);
       return events;
     },
@@ -90,6 +103,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
   const { rexi } = state;
   return {
     tick: state.tick,
+    rampTicks: state.rampTicks,
     arena: {
       width: SCREEN_WIDTH,
       height: SCREEN_HEIGHT,

@@ -19,7 +19,7 @@ const maletinAt = (x: number, y: number, atTick = 0): ScriptedSpawn => ({
   atTick,
 });
 
-/** A Maletín-cóptero that fires a perfectly aimed paper every `interval` seconds. */
+/** A Maletín-cóptero that hovers in place and fires a perfectly aimed paper every `interval` seconds. */
 function sharpshooter(interval: number, extra: TuningOverrides = {}): TuningOverrides {
   return {
     ...extra,
@@ -28,6 +28,7 @@ function sharpshooter(interval: number, extra: TuningOverrides = {}): TuningOver
         fireIntervalMin: interval,
         fireIntervalMax: interval,
         aimError: 0,
+        driftSpeed: 0,
         ...extra.enemies?.['maletin-coptero'],
       },
     },
@@ -249,7 +250,7 @@ describe('End of the Run', () => {
 describe('Projectile bookkeeping', () => {
   it('stays bounded over a long Run: papers that miss leave the Arena', () => {
     const game = drive({
-      overrides: { tuning: { rexi: { maxHealth: 1_000_000 } } },
+      overrides: { spawns: [maletinAt(300, 60)], tuning: { rexi: { maxHealth: 1_000_000 } } },
     });
     let peak = 0;
     let fired = 0;

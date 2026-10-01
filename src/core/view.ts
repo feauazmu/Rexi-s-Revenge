@@ -30,6 +30,11 @@ export interface BoxView {
 export interface RunView {
   /** Simulated Run ticks (frozen while paused). */
   readonly tick: number;
+  /**
+   * The ramp clock, in ticks: Run time that counts toward the spawn Director's difficulty
+   * ramp. Excludes pause and Hit-stop.
+   */
+  readonly rampTicks: number;
   readonly arena: ArenaView;
   readonly rexi: RexiView;
   readonly enemies: readonly EnemyView[];

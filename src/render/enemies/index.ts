@@ -4,7 +4,8 @@ import { palette } from '../palette';
 import type { SpriteDef } from '../sprite';
 import { drawMaletinCoptero, maletinCopteroDebris } from './maletin-coptero';
 
-export type EnemyDrawer = (dc: DrawContext, enemy: EnemyView) => void;
+/** Draws one Enemy. `run` gives context such as where Rexi is (e.g. to face him). */
+export type EnemyDrawer = (dc: DrawContext, enemy: EnemyView, run: RunView) => void;
 
 /** One drawer per Enemy kind (one file per Enemy, one line per entry here). */
 const enemyDrawers: Readonly<Record<EnemyKind, EnemyDrawer>> = {
@@ -23,6 +24,6 @@ export const enemyDebris: Readonly<Record<EnemyKind, readonly SpriteDef[]>> = {
 export function drawEnemies(dc: DrawContext, run: RunView): void {
   const flashing = silhouetteContext(dc, palette.white);
   for (const enemy of run.enemies) {
-    enemyDrawers[enemy.kind](enemy.hitFlash ? flashing : dc, enemy);
+    enemyDrawers[enemy.kind](enemy.hitFlash ? flashing : dc, enemy, run);
   }
 }

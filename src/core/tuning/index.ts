@@ -1,10 +1,12 @@
 import { arenaTuning, type ArenaTuning } from './arena';
+import { directorTuning, type DirectorTuning } from './director';
 import { effectsTuning, type EffectsTuning } from './effects';
 import { enemiesTuning, type EnemiesTuning } from './enemies';
 import { rexiTuning, type RexiTuning } from './rexi';
 import { weaponsTuning, type WeaponsTuning } from './weapons';
 
 export type * from './arena';
+export type * from './director';
 export type * from './effects';
 export { EXPLOSION_SIZES } from './effects';
 export type * from './enemies';
@@ -20,6 +22,8 @@ export interface Tuning {
   readonly rexi: RexiTuning;
   readonly weapons: WeaponsTuning;
   readonly enemies: EnemiesTuning;
+  /** Spawn Director: the difficulty ramp table and each Enemy's place in it. */
+  readonly director: DirectorTuning;
   readonly effects: EffectsTuning;
 }
 
@@ -28,6 +32,7 @@ export const defaultTuning: Tuning = {
   rexi: rexiTuning,
   weapons: weaponsTuning,
   enemies: enemiesTuning,
+  director: directorTuning,
   effects: effectsTuning,
 };
 
