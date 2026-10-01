@@ -262,6 +262,10 @@ export const enemiesTuning = {
   },
   // HA3's Big Gun has 12x a drone's health; this is about 13x a Maletín-cóptero (some 20 s
   // of Mazo fire), with points to match. A rocket does three papers' worth of damage.
+  // Balance pass (#30): its volleys were 60-65 % of the damage simulated players took and
+  // ended most Runs within a minute of its arrival. Rockets homed until about 0.25 s before
+  // impact, too late to outrun at Rexi's run speed; now they fly straight for the last
+  // ~0.8 s, come three to a volley, every 6 s, and the first waits 4 s so its arrival reads.
   'banca-artillada': {
     width: 91,
     height: 45,
@@ -280,10 +284,10 @@ export const enemiesTuning = {
     altitudeChangeMax: 7,
     hoverAmplitude: 3,
     hoverPeriod: 2.4,
-    firstVolleyDelay: 3,
-    volleyInterval: 5,
+    firstVolleyDelay: 4,
+    volleyInterval: 6,
     volleyWindup: 0.5,
-    volleySize: 4,
+    volleySize: 3,
     volleySpacing: 1 / 6,
     volleySpread: 30,
     podOffsetX: 35,
@@ -292,7 +296,7 @@ export const enemiesTuning = {
     rocketAcceleration: 200,
     rocketMaxSpeed: 267,
     rocketTurnRate: 45,
-    rocketHomingTime: 1,
+    rocketHomingTime: 0.5,
     rocketDamage: 15,
     rocketExplosion: 'small',
     rocketSize: 8,

@@ -61,5 +61,6 @@ export const cratesTuning: CratesTuning = {
       'dia-de-pierna': 7,
     },
   },
-  recesoBoost: { belowHealth: 0.4, weightMultiplier: 2 },
+  // Balance pass (#30): a wider, stronger comeback window, so collecting Crates while hurt pays.
+  recesoBoost: { belowHealth: 0.5, weightMultiplier: 3 },
 };
