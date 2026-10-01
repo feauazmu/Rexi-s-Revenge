@@ -118,6 +118,28 @@ from the gameplay `rng`, and gameplay never reads them — tuning effects can't 
 - All numbers live in `src/core/tuning/effects.ts`; per-Enemy `explosion` and `debrisPieces` live in its
   Enemy tuning.
 
+### Quips and Hit-stop
+
+`src/core/quips/` holds the Quip catalog (`catalog.ts`, content rules in its header), a
+`ShuffleBag` and the **Quip director** (`createQuipDirector`, exported from the core so tests can
+drive it directly). The Run owns one director and calls it in this order every tick:
+
+1. `quips.advance()` first, on every tick: it animates the Dialogue Box (slide, typewriter,
+   linger, close) and consumes one tick of Hit-stop. While it returns true the Run skips all
+   subsystems (effects and Crate timers included) and does not advance `state.tick`, so the ramp clock and time survived exclude
+   Hit-stop. Jump and Weapon-switch presses made while frozen are applied on the first live tick.
+2. After the subsystems, every `enemy-destroyed` of the tick goes to `quips.enemyDestroyed()`,
+   unless Rexi died that tick (the Run ends without a Quip). An ended Run stops stepping, so a
+   showing Dialogue Box stays frozen on screen. Pausing freezes the director too: the game simply
+   stops stepping the Run.
+
+Trigger rules: an Enemy whose tuning entry has `alwaysQuip: true` always triggers (replacing a
+showing box); otherwise a Quip triggers only with no box showing, after `quips.cooldown` seconds
+since the last box closed, and with `quips.chance`. Craft picks the theme (`THEME_OF_CRAFT`). The
+director draws from its own seeded stream (`seed ^ QUIP_STREAM` in `game.ts`), so talking never
+changes gameplay randomness. Events: `quip-started`, `quip-character` (one per visible character,
+for the blip) and `dialogue-closed`; the view exposes `run.hitStop` and `run.dialogue`.
+
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
 Positions are game coordinates (480×270); boxes use their top-left corner.
 
@@ -134,9 +156,10 @@ It dispatches on `view.screen` through a `Record<ScreenKind, …>` of drawers; m
 - **Sprites are code** (ADR 0001): `defineSprite(palette, rows)` is a palette-indexed pixel grid; the
   `SpriteBank` rasterizes each sprite once on first use through the platform's `BitmapFactory`.
 - Layers are listed back to front in `src/render/renderer.ts`: `WORLD_LAYERS` are drawn offset by the
-  screen shake, `SCREEN_LAYERS` stay fixed: the HUD
-  (`src/render/hud/`), then the crosshair (and later the Dialogue Box). When paused, the world layers are
-  drawn without HUD and crosshair, dimmed with a checkerboard, then the HUD and the pause menu go on top.
+  screen shake, `SCREEN_LAYERS` stay fixed: the HUD (`src/render/hud/`), then the Dialogue Box
+  (`src/render/dialogue/`), then the crosshair. When paused, the world layers and the frozen Dialogue
+  Box are drawn without HUD and crosshair, dimmed with a checkerboard, then the HUD and the pause menu
+  go on top.
 - Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
   rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
@@ -172,7 +195,11 @@ drawText(dc, regular, strings.hud.score, x, y, { color, shadow?, align? });
 - **Strings catalog** (`src/render/strings.ts`): every player-facing string, in Spanish (the title
   "Rexi's Revenge" stays English). Add new UI copy there, never inline; numbers are formatted by the drawing
   code (`formatElapsed(ticks)` → `m:ss`). A test asserts every character in the catalog exists in the font.
-- Quip-length check: a Quip fits when `fonts.regular.wrap(text, dialogueTextWidth).length <= 2`.
+- Quip-length check: a Quip fits when `fonts.regular.wrap(text, DIALOGUE_TEXT_WIDTH).length <=
+DIALOGUE_MAX_LINES` (2), both exported from `src/render`. Quips are game content that drives
+  typewriter timing, so they live in the core (`QUIPS`), not in the strings catalog.
+- The Dialogue Box (`src/render/dialogue/`) lays out the whole Quip first and reveals characters
+  on those lines (`revealedLines`), so words never jump lines while typing.
 
 ## Platform shell
 

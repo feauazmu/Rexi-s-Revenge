@@ -1,4 +1,5 @@
 import { SCREEN_HEIGHT, SCREEN_WIDTH, type GameView, type RunView, type ScreenKind } from '../core';
+import { drawDialogueBox } from './dialogue/dialogue-box';
 import { translatedContext, type DrawContext } from './draw-context';
 import { drawEffects } from './effects';
 import { drawEnemies } from './enemies';
@@ -20,7 +21,7 @@ export type RunLayer = (dc: DrawContext, run: RunView) => void;
 
 /**
  * Run layers, back to front. World layers move with the screen shake; screen layers (HUD,
- * crosshair, Dialogue Box) stay fixed. New layers (Crates, Dialogue Box) slot in here.
+ * Dialogue Box, crosshair) stay fixed.
  */
 const WORLD_LAYERS: readonly RunLayer[] = [
   drawArena,
@@ -30,7 +31,7 @@ const WORLD_LAYERS: readonly RunLayer[] = [
   drawRexi,
   drawEffects,
 ];
-const SCREEN_LAYERS: readonly RunLayer[] = [drawHud, drawCrosshair];
+const SCREEN_LAYERS: readonly RunLayer[] = [drawHud, drawDialogueBox, drawCrosshair];
 
 export interface RendererOptions {
   /**
@@ -75,8 +76,9 @@ export function createRenderer(
       drawRun(dc, WORLD_LAYERS, SCREEN_LAYERS);
     },
     paused: (dc, view) => {
-      // The frozen Run, dimmed, without HUD and crosshair; then the HUD stays legible above it.
-      drawRun(dc, WORLD_LAYERS, []);
+      // The frozen Run (and Dialogue Box), dimmed, without HUD and crosshair; then the HUD stays
+      // legible above it.
+      drawRun(dc, WORLD_LAYERS, [drawDialogueBox]);
       dimScreen(dc);
       drawRun(dc, [], [drawHud]);
       if (view.pauseMenu) drawPauseMenu(dc, view.pauseMenu);

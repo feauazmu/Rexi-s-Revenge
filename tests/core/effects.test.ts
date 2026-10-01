@@ -295,7 +295,8 @@ describe('Particle budget', () => {
     const spawns = Array.from({ length: Math.floor(ticks / every) }, (_, i) =>
       maletinAt(140 + ((i * 97) % 280), 30 + ((i * 53) % 120), i * every),
     );
-    const game = arena(spawns);
+    // No Quips: Hit-stops would push the scripted spawns past the end of the loop.
+    const game = arena(spawns, { ...oneShotKills, quips: { chance: 0 } });
 
     let peak = 0;
     let kills = 0;

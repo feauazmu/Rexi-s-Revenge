@@ -29,6 +29,7 @@ export {
   resolveTuning,
   type DeepPartial,
   type ExplosionSize,
+  type QuipsTuning,
   type Tuning,
   type TuningOverrides,
 } from './tuning';
@@ -50,3 +51,12 @@ export {
   type WeaponId,
 } from './ids';
 export type { Box, Vec2 } from './math';
+export { createRng, type Rng } from './rng';
+export { QUIPS, type Quip, type QuipTheme } from './quips/catalog';
+export {
+  createQuipDirector,
+  THEME_OF_CRAFT,
+  type DestroyedEnemy,
+  type QuipDirector,
+  type QuipDirectorDeps,
+} from './quips/director';

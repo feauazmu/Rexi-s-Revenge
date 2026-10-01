@@ -42,11 +42,16 @@ export interface Game {
  */
 const START_GUARD_TICKS = secondsToTicks(0.5);
 
+/** Mixed into the seed for the Quip random stream (independent of gameplay randomness). */
+const QUIP_STREAM = 0x51e7c0de;
+
 export function createGame(options: GameOptions): Game {
   const tuning: Tuning = resolveTuning(options.overrides?.tuning);
   const rng = createRng(options.seed);
   /** Cosmetic effects draw from their own stream so they can never shift gameplay. */
   const effectsSeed = deriveSeed(options.seed, EFFECTS_STREAM);
+  /** Quips draw from their own stream so they can never shift gameplay. */
+  const quipRng = createRng(options.seed ^ QUIP_STREAM);
   const device: DeviceKind = options.device ?? 'desktop';
   const storage = resilientStorage(options.storage ?? memoryStorage());
   let { howToPlaySeen, musicMuted } = loadPreferences(storage);
@@ -83,6 +88,7 @@ export function createGame(options: GameOptions): Game {
       tuning,
       rng,
       effectsSeed,
+      quipRng,
       nextId,
       spawns: options.overrides?.spawns ?? null,
     });

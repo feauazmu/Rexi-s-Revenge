@@ -8,6 +8,7 @@ export {
   type Color,
   type Surface,
 } from './surface';
+export { DIALOGUE_MAX_LINES, DIALOGUE_TEXT_WIDTH, revealedLines } from './dialogue/dialogue-box';
 export { allStrings, strings } from './strings';
 export {
   createBitmapFont,

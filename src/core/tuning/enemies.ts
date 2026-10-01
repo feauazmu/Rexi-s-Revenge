@@ -13,6 +13,11 @@ export interface EnemyTuningBase {
   readonly explosion: ExplosionSize;
   /** Chunks of debris it breaks into when destroyed (the renderer draws each chunk). */
   readonly debrisPieces: number;
+  /**
+   * When true, destroying this Enemy always triggers a Quip, ignoring chance and cooldown and
+   * replacing a Dialogue Box that is already showing. Absent means false.
+   */
+  readonly alwaysQuip?: boolean;
 }
 
 export interface MaletinCopteroTuning extends EnemyTuningBase {
@@ -48,6 +53,7 @@ export const enemiesTuning = {
     points: 100,
     explosion: 'small',
     debrisPieces: 4,
+    alwaysQuip: false,
     hoverAmplitude: 6,
     hoverPeriod: 2,
     fireIntervalMin: 2.5,
