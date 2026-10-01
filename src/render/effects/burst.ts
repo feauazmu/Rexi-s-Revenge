@@ -1,22 +1,24 @@
 import type { BurstParticleView } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { masterPalette as P } from '../palette';
 import type { Color, Surface } from '../surface';
 
-/** Hot to cool: white core, yellow, orange, red. */
-const FIRE: readonly Color[] = ['#fffbe0', '#ffe066', '#ffa030', '#e8501e', '#a8301c'];
-const SMOKE_DARK: Color = '#4a4452';
-const SMOKE_MID: Color = '#6a6274';
-const SMOKE_LIGHT: Color = '#8c8496';
-const FLASH: readonly Color[] = ['#ffffff', '#fff4c0', '#ffe066'];
-const SPARK: readonly Color[] = ['#ffffff', '#ffe066', '#ffa030'];
+/** Hot to cool, down the palette's fire ramp: pale core, yellow, orange, ember red. */
+const FIRE: readonly Color[] = [P.light, P.sunYellow, P.skyPeach, P.skyOrange, P.redLight, P.red3];
+/** Smoke down the robe and grey ramps: purple-blue shadow, lighter cap. */
+const SMOKE_DARK: Color = P.robeMid;
+const SMOKE_MID: Color = P.robeSheen;
+const SMOKE_LIGHT: Color = P.grey1;
+const FLASH: readonly Color[] = [P.white, P.light, P.sunYellow];
+const SPARK: readonly Color[] = [P.white, P.sunYellow, P.skyPeach, P.skyOrange];
 
 /** How far through its life a particle is, 0..1. */
 const progress = (p: BurstParticleView): number => Math.min(1, p.age / Math.max(1, p.life));
 
-/** Picks the color for `t` (0..1) from a ramp. */
-function ramp(colors: readonly Color[], t: number): Color {
+/** Picks the color for `t` (0..1) from a ramp, first to last. */
+export function ramp(colors: readonly Color[], t: number): Color {
   const i = Math.min(colors.length - 1, Math.floor(t * colors.length));
-  return colors[i] ?? '#ff00ff';
+  return colors[i] ?? P.white;
 }
 
 /**

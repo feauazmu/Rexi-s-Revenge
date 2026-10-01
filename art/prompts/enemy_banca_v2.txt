@@ -1,0 +1,9 @@
+Image 1 is the template to edit. On the left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is and keep exactly his pixel size. To his right is one light grey box holding a small rough draft of the Enemy "Banca Artillada", a heavy boss gunship. Redraw the draft inside the box as finished, detailed pixel art at the same size as the draft: about 102 pixels wide and 47 pixels tall, never past the box edges. Its pixels must be exactly the same size as Rexi's pixels: one art pixel is 1/240 of the image width. Keep the flat side-on view of the draft (no perspective, no three-quarter view). Image 2 is the concept art seen from the front: use it only for materials and details, never for its size or angle.
+
+The Banca Artillada, seen flat from the side and symmetric left to right: a red weight bench press turned into a twin-rotor gunship.
+1) A long padded red bench across the middle, with stitched seams and a glossy top highlight, on a black steel frame.
+2) In the middle of the bench top, a small glass canopy, light blue with a white glint, holding a tiny gym-bro pilot: brown hair, a red headband, a black tank top, a big grin.
+3) Above the bench, a chrome barbell lies across the whole width, loaded at both ends with tall black iron weight plates that hang past the bench ends.
+4) Two short black uprights hold the barbell; each continues up into a red rotor motor with a small dark hub on top. NO rotor blades and no rotor disc: the rotors are animated in code.
+5) A round red rocket pod with four dark launch tubes hangs under each end of the bench; a dark engine housing with a small glowing grille sits under the middle, on two short legs with flat feet.
+Red in four tones from a deep maroon shadow to a coral highlight; black steel with blue-grey highlights; a 1-pixel black outline. Plain white background, no flames, no smoke, no shadow under it.

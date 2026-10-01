@@ -1,99 +1,55 @@
 import type { EnemyView } from '../../core';
+import { sprites as art } from '../art/generated/enemies';
 import type { DrawContext } from '../draw-context';
-import { defineSprite, mirrorSprite, type SpriteDef } from '../sprite';
+import { masterPalette as P } from '../palette';
+import { defineSprite, mirroredSprite, type SpriteDef } from '../sprite';
 import type { Color } from '../surface';
-
-const COLORS = {
-  k: '#1a1020', // outline
-  R: '#e8323a', // red frame, lit
-  r: '#b81c2c', // red frame
-  d: '#701424', // red frame, shade
-  w: '#ffd0c8', // shine on the jet cowlings
-  g: '#c4c8d4', // chrome, lit
-  G: '#7e8292', // chrome
-  n: '#4a4c58', // dark steel (nozzles, pylon)
-  h: '#9aa0b0', // handlebar mounts, barrel glint
-  c: '#2a2a34', // handlebar foam
-  b: '#26242e', // belt
-  B: '#44424e', // belt slats
-  s: '#2a0c12', // console screen
-  L: '#ff5a3a', // console LED digits
-  y: '#f0c040', // buttons and badge
-  o: '#ffb030', // intake fan glow
-  m: '#2c2c36', // gatling barrels
-  M: '#74748a', // gatling barrels, lit
-} as const satisfies Record<string, Color>;
+import { placeBody } from './placement';
 
 /**
- * Facing right: twin jets at the back, the belt deck in the middle, the console with its
- * handlebars at the front and the gatling under the front of the deck. The hitbox spans
- * columns 5-36 and rows 5-18; the gatling muzzle ends at the hitbox front edge, where the core
- * spawns the bullets.
+ * The pipeline sprite, facing right (art/sheets.json `enemy_caminadora`, scripts/art/enemies.py):
+ * twin jets at the back, the belt deck in the middle, the console and handlebars at the front and
+ * the gatling under the front of the deck.
  */
-const BODY_RIGHT = defineSprite(COLORS, [
-  '.....kkkkkkkkkk........................',
-  '....kngGRwwwRRRk..............kkkkkkk..',
-  '...knGgGRRRRRRRdk.....kkkkkkkkRRRRRRRk.',
-  '...knngGrrrrrrrok....khcccccccRLLsLLrk.',
-  '..kknngGrrrrrrrdk.....kkkkkkkkRsssssrk.',
-  '.kngGRwwwRRRdddk.............kRyRnRnrk.',
-  'knGgGRRRRRRRdkk..k......kkkkkkrrrrrrrk.',
-  'knngGrrrrrrrok..kGk....khcccccccrrrkk..',
-  'knngGrrrrrrrdkkkGk......kkkkkkkkkGgk...',
-  '.knGndddddddkknnnkkkkkkkkkkkkkkkGgk....',
-  '..kkkkgggggggggggggggggggggggggGgkk....',
-  '.....kbbBbbbBbbbBbbbBbbbBbbbBbbbRRrk...',
-  '....kkbBbbbBbbbBbbbBbbbBbbbBbbbbrgrk...',
-  '...kRgRRRRRRRRRRRRRRRRRRRRRRRRRRrGrk...',
-  '...krGrrrrrrrdydrrrrrrrrrrrrrrrrrrdkk..',
-  '....kddddddddddddddddddddddddddddkkkMk.',
-  '.....kkkkrkkkkkkkkkkkkrkkRRRRRMMMhMMmk.',
-  '........krkkkkkkkkkkkrk.kryrrrmmmnmmmk.',
-  '........krrrrrrrrrrrrk..kdddddkkkkkkmk.',
-  '.........kkkkkkkkkkkk....kkkkk......k..',
-]);
-const BODY_LEFT = mirrorSprite(BODY_RIGHT);
+const BODY_RIGHT = art['caminadora/body'];
 
-/** Where the hitbox sits inside BODY_RIGHT. */
-const HITBOX_LEFT = 5;
-const HITBOX_TOP = 5;
-
-/** Jet nozzles in BODY_RIGHT: the column just left of each nozzle outline and its center row. */
+/** Jet nozzles in BODY_RIGHT: the column just left of each nozzle and its center row. */
 const NOZZLES = [
-  { column: 2, row: 3 },
-  { column: -1, row: 7 },
+  { column: 3, row: 4 },
+  { column: -1, row: 11 },
 ] as const;
 
-/** Gatling barrels in BODY_RIGHT: the columns that spin, the barrel rows and the muzzle tip. */
-const BARREL_COLUMNS = [31, 33, 35] as const;
-const BARREL_ROW = 16;
-const MUZZLE = { column: 37, row: 16 } as const;
+/** Gatling barrels in BODY_RIGHT: the columns a glint runs across, their row and the muzzle. */
+const BARREL_COLUMNS = [43, 45, 47] as const;
+const BARREL_ROW = 22;
+const MUZZLE = { column: 50, row: 23 } as const;
 
+/** Afterburner colors, hottest first (the palette's fire ramp). */
 const FLAME = {
-  W: '#fff8d8',
-  Y: '#ffd040',
-  O: '#ff8a20',
-  E: '#d8341c',
+  W: P.light,
+  Y: P.sunYellow,
+  O: P.skyOrange,
+  E: P.redLight,
 } as const satisfies Record<string, Color>;
 
 /** Afterburner flicker, pointing left (away from a right-facing nose), root on the right. */
 const FLAME_FULL_RIGHT = [
-  defineSprite(FLAME, ['...EEOOYY', 'EOOYYWWWW', '...EEOOYY']),
-  defineSprite(FLAME, ['.....EOYY', '.EEOOYWWW', '....EEOYY']),
-  defineSprite(FLAME, ['....EEOYY', '..EOOYWWW', '.....EOOY']),
+  defineSprite(FLAME, ['....EEOOYY', 'EOOOYYWWWW', '....EEOOYY']),
+  defineSprite(FLAME, ['......EOYY', '..EEOOYWWW', '.....EEOYY']),
+  defineSprite(FLAME, ['.....EEOYY', '...EOOYWWW', '......EOOY']),
 ];
 /** Throttled down while it stands still winding up. */
 const FLAME_IDLE_RIGHT = [
   defineSprite(FLAME, ['..OY', 'OYWW', '..OY']),
   defineSprite(FLAME, ['...Y', '.OYW', '...O']),
 ];
-const FLAME_FULL = { right: FLAME_FULL_RIGHT, left: FLAME_FULL_RIGHT.map(mirrorSprite) };
-const FLAME_IDLE = { right: FLAME_IDLE_RIGHT, left: FLAME_IDLE_RIGHT.map(mirrorSprite) };
+const FLAME_FULL = { right: FLAME_FULL_RIGHT, left: FLAME_FULL_RIGHT.map(mirroredSprite) };
+const FLAME_IDLE = { right: FLAME_IDLE_RIGHT, left: FLAME_IDLE_RIGHT.map(mirroredSprite) };
 
 /** Muzzle flash, drawn just past the muzzle, and the windup glow at the muzzle tip. */
 const MUZZLE_FLASH = defineSprite(FLAME, ['.Y...', '..Y.Y', 'OWWWY', 'YWWWO', '..Y.Y', '.Y...']);
-const MUZZLE_FLASH_LEFT = mirrorSprite(MUZZLE_FLASH);
 const GLOW: readonly Color[] = [FLAME.O, FLAME.Y, FLAME.W, FLAME.Y];
+const GLINT: Color = P.grey3;
 
 /** Gentle 1 px engine bob, in ticks per step. */
 const BOB = [0, 0, 1, 1] as const;
@@ -118,14 +74,10 @@ export function drawCaminadoraAReaccion(dc: DrawContext, enemy: EnemyView): void
   const { surface, sprites } = dc;
   const right = enemy.pose.facing !== -1;
   const { attack } = enemy.pose;
-  const y = Math.round(enemy.y) - HITBOX_TOP + nth(BOB, Math.floor(enemy.age / BOB_TICKS));
-  const left = right
-    ? Math.round(enemy.x) - HITBOX_LEFT
-    : Math.round(enemy.x) + enemy.w + HITBOX_LEFT - BODY_RIGHT.width;
-  /** Screen x of BODY_RIGHT column `c` for the current facing. */
-  const column = (c: number) => (right ? left + c : left + BODY_RIGHT.width - 1 - c);
+  const bob = nth(BOB, Math.floor(enemy.age / BOB_TICKS));
+  const { sprite, left, top: y, column } = placeBody('caminadora', BODY_RIGHT, enemy, right, bob);
 
-  surface.drawBitmap(sprites.get(right ? BODY_RIGHT : BODY_LEFT), left, y);
+  surface.drawBitmap(sprites.get(sprite), left, y);
 
   // Afterburners: long and flickering while strafing, short while winding up.
   const flames = attack === 'windup' ? FLAME_IDLE : FLAME_FULL;
@@ -139,27 +91,27 @@ export function drawCaminadoraAReaccion(dc: DrawContext, enemy: EnemyView): void
 
   // Barrels spin up: a glint runs across them.
   const spin = Math.floor(enemy.age / (attack === 'firing' ? 1 : 3));
-  surface.fillRect(column(nth(BARREL_COLUMNS, spin)), y + BARREL_ROW, 1, 1, COLORS.g);
+  surface.fillRect(column(nth(BARREL_COLUMNS, spin)), y + BARREL_ROW, 1, 1, GLINT);
 
-  const tip = column(MUZZLE.column);
   if (attack === 'windup') {
     const glow = nth(GLOW, Math.floor(enemy.age / 3));
     surface.fillRect(column(MUZZLE.column - 1), y + MUZZLE.row, 1, 2, glow);
     return;
   }
   if (enemy.age % FLASH_PERIOD < 2) {
-    const flash = right ? MUZZLE_FLASH : MUZZLE_FLASH_LEFT;
+    const flash = right ? MUZZLE_FLASH : mirroredSprite(MUZZLE_FLASH);
+    const tip = column(MUZZLE.column + 1);
     const x = right ? tip : tip - flash.width + 1;
     surface.drawBitmap(sprites.get(flash), x, y + MUZZLE.row - 2);
   }
 }
 
-/** Chunks it breaks into when destroyed: a jet, the console, belt, gatling, handlebar, drum. */
+/** Chunks it breaks into when destroyed: a jet, the console, belt, gatling, handlebar, a jet. */
 export const caminadoraAReaccionDebris: readonly SpriteDef[] = [
-  defineSprite(COLORS, ['.kkkkkkkkk.', 'knGRwwRRRdk', 'nGgRRRRRRok', 'nGgrrrrrrdk', '.kkkkkkkkk.']),
-  defineSprite(COLORS, ['kkkkkkk', 'kRRRRRk', 'kRsLsrk', 'kRLsLrk', 'kryrnrk', 'kkkkkkk']),
-  defineSprite(COLORS, ['kkkkkkkkk', 'kgggggggk', 'kbBbbbBbk', 'kRRRRRRRk', 'kkkkkkkkk']),
-  defineSprite(COLORS, ['kkkkkkkk.', 'kRRMMMhMk', 'kyrmmmnmk', 'kkkkkkkk.']),
-  defineSprite(COLORS, ['kkkkkkk', 'hcccccc', 'kkkkkkk']),
-  defineSprite(COLORS, ['.kkk.', 'kRRrk', 'krgrk', 'krGrk', '.kkk.']),
+  art['caminadora/debris_0_jet'],
+  art['caminadora/debris_1_console'],
+  art['caminadora/debris_2_belt'],
+  art['caminadora/debris_3_gatling'],
+  art['caminadora/debris_4_handlebar'],
+  art['caminadora/debris_5_jet'],
 ];

@@ -249,12 +249,12 @@ platforms, spawn and altitude bands) was multiplied by 4/3 and rounded to the ne
 jump speed were rounded so a full jump stays 4/3 as high (about 78 px), and the platform
 reachability tests still hold. The catalog holds the resulting literal numbers, not a multiplier.
 
-**Interim art (until the art pass redraws the sprites).** Rexi, the Enemies, projectiles and icons
-keep their old pixel size, so they look small inside their larger 640×360 hitboxes: Rexi's body
-stands on the bottom center of his hitbox (his gameplay shoulder and muzzle sit a little above
-and ahead of the drawn arm), and each Enemy's art is drawn centered in its hitbox through
-`ART_BOX` in `src/render/enemies/index.ts`, the box size its art was drawn for. Gameplay is
-unchanged; only the art is small. Remove an `ART_BOX` entry when that Enemy is redrawn.
+**Interim art (until the art pass redraws the sprites).** Rexi, the icons and the other code-drawn
+sprites keep their old pixel size, so they look small inside their larger 640×360 hitboxes: Rexi's
+body stands on the bottom center of his hitbox (his gameplay shoulder and muzzle sit a little above
+and ahead of the drawn arm). Gameplay is unchanged; only the art is small. The Enemies, projectiles
+and debris are already redrawn through the pipeline (#27): each Enemy's sprite fills its real
+hitbox, placed by its hitbox offset from the exported art layout (`placeBody`).
 
 ## Seam 2: the renderer
 
@@ -535,8 +535,11 @@ effects are code, like the art; the only audio file is the music loop, `public/m
    It may spawn just outside the Arena: it must fly itself in. If the drawer needs to know which way it
    faces or when (and how far) it winds up and fires, add `pose(memory, tuning)` (it becomes `EnemyView.pose`).
 5. Register it in `src/core/run/enemies/index.ts` (one line).
-6. Draw it in `src/render/enemies/<kind>.ts` (plus the debris chunk sprites it breaks into) and register
-   the drawer and chunks in `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face
+6. Make its art through the pipeline (`scripts/art/README.md`: a sheet in `art/sheets.json`, the hand
+   pass and debris rectangles in `scripts/art/enemies.py`, exported to `src/render/art/generated/enemies.ts`),
+   draw it in `src/render/enemies/<kind>.ts` (placed with `placeBody` by its `HITBOX` offset in `enemies.py`, plus code-driven
+   rotors, flames and telegraphs) and register the drawer and its debris chunks in
+   `src/render/enemies/index.ts`. The drawer also gets the `RunView` (e.g. to face
    Rexi).
 7. Give it a firing sound in `ENEMY_FIRE_SOUNDS` (`src/platform/audio/sound-map.ts`); its explosion sound
    follows its tuned `explosion` size.
@@ -560,8 +563,10 @@ effects are code, like the art; the only audio file is the music loop, `public/m
 5. Register it in `src/core/run/weapons/index.ts`.
 6. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
-   A projectile that turns with its heading or spins can be drawn procedurally with
-   `rotatedShapeSprites` (`src/render/projectiles/rotated-shape.ts`), like the dumbbell and law book.
+   Its sprite comes from the pipeline (`art/projectiles/`, exported to
+   `src/render/art/generated/projectiles.ts`). One that turns with its heading or spins gets a
+   RotSprite `parts` bake and is drawn with `drawAimed` or `drawTumbling`
+   (`src/render/projectiles/turned.ts`, `tumble.ts`), like the law book and the dumbbell.
 7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts`, its
    look in Rexi's fist in `src/render/rexi/held-weapons.ts`, and add its Spanish name to `strings.weapons`.
 8. Give it a firing sound in `WEAPON_SOUNDS` (`src/platform/audio/sound-map.ts`); most v1 Weapons already

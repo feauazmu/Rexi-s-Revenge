@@ -5,10 +5,16 @@
 Each entry names a builder and its inputs; paths are relative to the art root:
   {"type": "editsheet", "sprite": "sprites/rexi/master.png", "n": 4}
   {"type": "lineup", "anchor": "...", "draft": "templates/x_draft_1x.png", "n": 3, "height": 64}
-  {"type": "slotsheet", "anchor": "...", "n": 3, "box": [44, 32], "ground": null}
+  {"type": "slotsheet", "anchor": "...", "n": 3, "box": [44, 32], "ground": null,
+   "draft": "templates/x_draft_1x.png", "slots": [[cx, cy], ...], "anchor_at": [cx, bottom]}
   {"type": "icongrid", "n": 11, "cell": 12, "anchor": "sprites/icons/mazo.png"}
   {"type": "poseguide", "poses": [{"head": [3, 42], "neck": [2, 47], ...}, ...]}
   {"type": "draft", "image": "../reference/arena.png", "size": [640, 360], "palette": "scene"}
+      optional "crop" [x0, y0, x1, y1] and "flip": true (mirror); a transparent image keeps only
+      its figure
+  {"type": "crop", "image": "../reference/x.png", "box": [x0, y0, x1, y1], "flip": true}
+      one view cut out of a concept sheet, passed whole as a design reference (never the whole
+      sheet: the model redraws it)
   {"type": "scene_tiles", "draft": "templates/arena_draft_1x.png", "step": [200, 113]}
 A `draft` is saved at its own size (<name>_1x.png only, not upscaled): it feeds `lineup` or
 `scene_tiles`, which write <name>_r<row>c<col>.png, one template per tile.
@@ -35,7 +41,11 @@ def build(project, name, spec):
                       spec.get("height", 64), spec.get("ground", T.GROUND))
         return [T.save(project, im, name)]
     if kind == "slotsheet":
-        im = T.slotsheet(_load(project, spec["anchor"]), spec["n"], spec["box"], spec.get("ground", T.GROUND))
+        im = T.slotsheet(_load(project, spec["anchor"]), len(spec["slots"]) if spec.get("slots") else spec["n"],
+                         spec["box"], spec.get("ground", T.GROUND),
+                         _load(project, spec["draft"]) if spec.get("draft") else None,
+                         [tuple(c) for c in spec["slots"]] if spec.get("slots") else None,
+                         tuple(spec["anchor_at"]) if spec.get("anchor_at") else None)
         return [T.save(project, im, name)]
     if kind == "icongrid":
         anchor = _load(project, spec["anchor"]) if spec.get("anchor") else None
@@ -47,10 +57,22 @@ def build(project, name, spec):
         src = _load(project, spec["image"])
         if spec.get("crop"):
             src = src.crop(tuple(spec["crop"]))
-        g = T.draft(src, tuple(spec["size"]), allowed_colors(spec.get("palette", "scene")))
+        if spec.get("flip"):
+            src = src.transpose(Image.FLIP_LEFT_RIGHT)
+        # A transparent source (an old sprite) keeps only its figure.
+        alpha = src.getchannel("A") if src.getchannel("A").getextrema()[0] < 255 else None
+        g = T.draft(src, tuple(spec["size"]), allowed_colors(spec.get("palette", "scene")), alpha)
         out = project.path("templates", name + "_1x.png")
         os.makedirs(os.path.dirname(out), exist_ok=True)
         Image.fromarray(g).save(out)
+        return [out]
+    if kind == "crop":
+        src = _load(project, spec["image"]).crop(tuple(spec["box"]))
+        if spec.get("flip"):
+            src = src.transpose(Image.FLIP_LEFT_RIGHT)
+        out = project.path("templates", name + ".png")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        src.convert("RGB").save(out)
         return [out]
     if kind == "scene_tiles":
         scene = np.asarray(_load(project, spec["draft"]))

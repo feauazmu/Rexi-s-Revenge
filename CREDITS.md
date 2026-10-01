@@ -61,10 +61,18 @@ Generations made with `scripts/art` (see its README), folded in from `art/ledger
 
 <!-- art-ledger:start -->
 
-| #   | Time                | Root  | Name     | Model                         | Cost (USD) | Note     |
-| --- | ------------------- | ----- | -------- | ----------------------------- | ---------- | -------- |
-| 1   | 2026-10-01T13:19:09 | `art` | `icons`  | google/gemini-3.1-flash-image | 0.1018     | Refs #29 |
-| 2   | 2026-10-01T13:31:31 | `art` | `record` | google/gemini-3.1-flash-image | 0.1016     | Refs #29 |
+| #   | Time                | Root  | Name               | Model                         | Cost (USD) | Note     |
+| --- | ------------------- | ----- | ------------------ | ----------------------------- | ---------- | -------- |
+| 1   | 2026-10-01T13:19:09 | `art` | `icons`            | google/gemini-3.1-flash-image | 0.1018     | Refs #29 |
+| 2   | 2026-10-01T13:23:25 | `art` | `enemy_maletin`    | google/gemini-3.1-flash-image | 0.1022     |          |
+| 3   | 2026-10-01T13:23:55 | `art` | `enemy_archivador` | google/gemini-3.1-flash-image | 0.1022     |          |
+| 4   | 2026-10-01T13:24:15 | `art` | `enemy_caminadora` | google/gemini-3.1-flash-image | 0.1022     |          |
+| 5   | 2026-10-01T13:24:37 | `art` | `enemy_banca`      | google/gemini-3.1-flash-image | 0.1022     |          |
+| 6   | 2026-10-01T13:25:05 | `art` | `projectiles`      | google/gemini-3.1-flash-image | 0.1017     |          |
+| 7   | 2026-10-01T13:25:33 | `art` | `enemy_banca_v2`   | google/gemini-3.1-flash-image | 0.1023     |          |
+| 8   | 2026-10-01T13:27:12 | `art` | `enemy_banca_v3`   | google/gemini-3.1-flash-image | 0.1023     |          |
+| 9   | 2026-10-01T13:27:34 | `art` | `projectiles_v2`   | google/gemini-3.1-flash-image | 0.1017     |          |
+| 10  | 2026-10-01T13:31:31 | `art` | `record`           | google/gemini-3.1-flash-image | 0.1016     | Refs #29 |
 
 <!-- art-ledger:end -->
 
@@ -77,7 +85,7 @@ Shared cap for all generated media (images + music): **$10.00** (raised from $5.
 | Images (12 generations)               | 0.8115                                 |
 | Music (2 generations)                 | 0.0800                                 |
 | Rexi version C images (9 generations) | 0.9219                                 |
-| Art pipeline (2 generations)          | 0.2034                                 |
-| **Running total**                     | **2.0168 of 10.00** (7.9832 remaining) |
+| Art pipeline (10 generations)         | 1.0203                                 |
+| **Running total**                     | **2.8337 of 10.00** (7.1663 remaining) |
 
 The image subtotal is summed from the unrounded costs in the JSON sidecars (and the post-processing note for the discarded sheet attempt), so it can differ by $0.0001 from the sum of the rounded table rows.

@@ -1,0 +1,219 @@
+{
+  "enemies/archivador_a": {
+    "h": 43,
+    "sheet": "enemy_archivador",
+    "w": 59,
+    "x": 40,
+    "y": 45
+  },
+  "enemies/archivador_b": {
+    "h": 43,
+    "sheet": "enemy_archivador",
+    "w": 59,
+    "x": 108,
+    "y": 45
+  },
+  "enemies/archivador_c": {
+    "h": 43,
+    "sheet": "enemy_archivador",
+    "w": 59,
+    "x": 176,
+    "y": 45
+  },
+  "enemies/banca_v2": {
+    "h": 65,
+    "sheet": "enemy_banca_v2",
+    "w": 27,
+    "x": 26,
+    "y": 37
+  },
+  "enemies/banca_v3": {
+    "h": 47,
+    "sheet": "enemy_banca_v3",
+    "w": 101,
+    "x": 99,
+    "y": 43
+  },
+  "enemies/caminadora_a": {
+    "h": 27,
+    "sheet": "enemy_caminadora",
+    "w": 51,
+    "x": 44,
+    "y": 53
+  },
+  "enemies/caminadora_b": {
+    "h": 27,
+    "sheet": "enemy_caminadora",
+    "w": 51,
+    "x": 112,
+    "y": 53
+  },
+  "enemies/caminadora_c": {
+    "h": 27,
+    "sheet": "enemy_caminadora",
+    "w": 51,
+    "x": 180,
+    "y": 53
+  },
+  "enemies/maletin_a": {
+    "h": 24,
+    "sheet": "enemy_maletin",
+    "w": 43,
+    "x": 47,
+    "y": 54
+  },
+  "enemies/maletin_b": {
+    "h": 24,
+    "sheet": "enemy_maletin",
+    "w": 43,
+    "x": 115,
+    "y": 54
+  },
+  "enemies/maletin_c": {
+    "h": 24,
+    "sheet": "enemy_maletin",
+    "w": 43,
+    "x": 183,
+    "y": 54
+  },
+  "projectiles/bullet": {
+    "h": 27,
+    "sheet": "projectiles",
+    "w": 22,
+    "x": 21,
+    "y": 78
+  },
+  "projectiles/drawer": {
+    "h": 17,
+    "sheet": "projectiles",
+    "w": 34,
+    "x": 147,
+    "y": 81
+  },
+  "projectiles/dumbbell": {
+    "h": 23,
+    "sheet": "projectiles",
+    "w": 40,
+    "x": 99,
+    "y": 25
+  },
+  "projectiles/gavel": {
+    "h": 26,
+    "sheet": "projectiles",
+    "w": 40,
+    "x": 10,
+    "y": 24
+  },
+  "projectiles/law_book": {
+    "h": 37,
+    "sheet": "projectiles",
+    "w": 33,
+    "x": 147,
+    "y": 18
+  },
+  "projectiles/paper": {
+    "h": 7,
+    "sheet": "projectiles",
+    "w": 15,
+    "x": 112,
+    "y": 87
+  },
+  "projectiles/paper_tilt": {
+    "h": 30,
+    "sheet": "projectiles",
+    "w": 29,
+    "x": 193,
+    "y": 76
+  },
+  "projectiles/rocket": {
+    "h": 39,
+    "sheet": "projectiles",
+    "w": 40,
+    "x": 59,
+    "y": 71
+  },
+  "projectiles/stamp": {
+    "h": 30,
+    "sheet": "projectiles",
+    "w": 27,
+    "x": 63,
+    "y": 21
+  },
+  "projectiles/subpoena": {
+    "h": 24,
+    "sheet": "projectiles",
+    "w": 33,
+    "x": 191,
+    "y": 25
+  },
+  "projectiles/x2/bullet": {
+    "h": 7,
+    "sheet": "projectiles_v2",
+    "w": 16,
+    "x": 111,
+    "y": 86
+  },
+  "projectiles/x2/drawer": {
+    "h": 38,
+    "sheet": "projectiles_v2",
+    "w": 36,
+    "x": 56,
+    "y": 71
+  },
+  "projectiles/x2/dumbbell": {
+    "h": 18,
+    "sheet": "projectiles_v2",
+    "w": 34,
+    "x": 102,
+    "y": 35
+  },
+  "projectiles/x2/gavel": {
+    "h": 22,
+    "sheet": "projectiles_v2",
+    "w": 33,
+    "x": 11,
+    "y": 33
+  },
+  "projectiles/x2/law_book": {
+    "h": 27,
+    "sheet": "projectiles_v2",
+    "w": 29,
+    "x": 150,
+    "y": 31
+  },
+  "projectiles/x2/paper": {
+    "h": 28,
+    "sheet": "projectiles_v2",
+    "w": 21,
+    "x": 19,
+    "y": 75
+  },
+  "projectiles/x2/paper_tilt": {
+    "h": 30,
+    "sheet": "projectiles_v2",
+    "w": 30,
+    "x": 193,
+    "y": 76
+  },
+  "projectiles/x2/rocket": {
+    "h": 14,
+    "sheet": "projectiles_v2",
+    "w": 30,
+    "x": 149,
+    "y": 82
+  },
+  "projectiles/x2/stamp": {
+    "h": 22,
+    "sheet": "projectiles_v2",
+    "w": 24,
+    "x": 62,
+    "y": 33
+  },
+  "projectiles/x2/subpoena": {
+    "h": 20,
+    "sheet": "projectiles_v2",
+    "w": 28,
+    "x": 195,
+    "y": 34
+  }
+}
