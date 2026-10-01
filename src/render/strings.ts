@@ -58,6 +58,7 @@ export const strings = {
     touch: {
       aimFire: 'Apuntar y disparar',
       switchWeapon: 'Toca el arma para cambiarla',
+      drop: 'Abajo: bajar de plataforma',
     },
     /** Shown once the screen accepts input, by device kind. */
     continueDesktop: 'Presiona cualquier tecla para empezar',
@@ -97,6 +98,8 @@ export const strings = {
       move: 'Mover',
       sign: 'Firmar',
       enter: 'Enter',
+      /** On touch devices, instead of the keycaps (the confirm button is gold). */
+      touch: 'Cruceta o deslizar: elegir letra — Botón dorado: firmar',
     },
     /** Without a top-10 Run: "Récord vigente: REX — 128450". */
     recordToBeat: 'Récord vigente:',

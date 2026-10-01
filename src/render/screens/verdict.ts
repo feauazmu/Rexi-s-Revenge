@@ -256,6 +256,11 @@ function drawFooter(dc: DrawContext, verdict: VerdictView, x: number, y: number)
       });
     } else if (view.device === 'desktop') {
       drawHints(dc, center, y + 220);
+    } else {
+      drawText(dc, fonts.regular, t.hints.touch, center, y + 224 - CAP, {
+        color: doc.ink,
+        align: 'center',
+      });
     }
   }
   const best = view.highScores[0];

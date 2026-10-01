@@ -14,25 +14,35 @@ export interface Viewport {
   readonly height: number;
 }
 
+/** Size in image pixels of what a viewport shows: the game, or the portrait rotate prompt. */
+export interface ImageSize {
+  readonly width: number;
+  readonly height: number;
+}
+
+const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
+
 /**
- * Largest integer scale (in device pixels) that fits the container, centered with letterbox
- * bars. Offsets are snapped to device pixels so game pixels stay perfectly square.
+ * Largest integer scale (in device pixels) that fits an image (by default the 480×270 game)
+ * in the container, centered with letterbox bars. Offsets are snapped to device pixels so
+ * image pixels stay perfectly square.
  */
 export function computeViewport(
   containerWidth: number,
   containerHeight: number,
   devicePixelRatio = 1,
+  image: ImageSize = GAME_SIZE,
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
   const scale = Math.max(
     1,
     Math.floor(
-      Math.min((containerWidth * dpr) / SCREEN_WIDTH, (containerHeight * dpr) / SCREEN_HEIGHT),
+      Math.min((containerWidth * dpr) / image.width, (containerHeight * dpr) / image.height),
     ),
   );
   const cssScale = scale / dpr;
-  const width = SCREEN_WIDTH * cssScale;
-  const height = SCREEN_HEIGHT * cssScale;
+  const width = image.width * cssScale;
+  const height = image.height * cssScale;
   const snap = (cssPx: number) => Math.round(cssPx * dpr) / dpr;
   return {
     scale,
@@ -49,10 +59,20 @@ export function computeViewport(
  * clamped to the screen so aiming from the letterbox bars still points somewhere sensible.
  */
 export function screenToGame(point: Vec2, viewport: Viewport): Vec2 {
-  const x = (point.x - viewport.offsetX) / viewport.cssScale;
-  const y = (point.y - viewport.offsetY) / viewport.cssScale;
+  const { x, y } = screenToGameUnclamped(point, viewport);
   return {
     x: Math.min(Math.max(x, 0), SCREEN_WIDTH),
     y: Math.min(Math.max(y, 0), SCREEN_HEIGHT),
+  };
+}
+
+/**
+ * Like {@link screenToGame} but not clamped: points over the letterbox bars land outside
+ * 0..480 × 0..270. Touch sticks use it so a thumb on a bar still moves its stick truthfully.
+ */
+export function screenToGameUnclamped(point: Vec2, viewport: Viewport): Vec2 {
+  return {
+    x: (point.x - viewport.offsetX) / viewport.cssScale,
+    y: (point.y - viewport.offsetY) / viewport.cssScale,
   };
 }

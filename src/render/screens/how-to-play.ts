@@ -224,17 +224,20 @@ function drawTouchControls(dc: DrawContext): void {
   surface.fillRect(pauseX + 2, pauseY - 4, 3, 9, ui.keyFace);
   caption(t.pause, pauseX - 14, iconY - 2, 'right');
 
-  // Left stick (move), jump button, right stick (aim + fire).
+  // Left stick (move), right stick (aim + fire) and the jump button between the right stick
+  // and the center, as in the Run's overlay.
   const stickY = PANEL.y + 78;
   drawStick(dc, PANEL.x + 56, stickY, -1);
   caption(t.move, PANEL.x + 56, stickY + 28, 'center');
+  caption(t.touch.drop, PANEL.x + 56, stickY + 42, 'center');
 
-  const jumpX = PANEL.x + PANEL.w / 2 - 10;
-  fillCircle(surface, jumpX, stickY + 6, 13, ui.ink);
-  fillCircle(surface, jumpX, stickY + 6, 12, BUTTON);
-  fillCircle(surface, jumpX - 2, stickY + 3, 6, BUTTON_LIGHT);
-  fillCircle(surface, jumpX - 1, stickY + 4, 5, BUTTON);
-  surface.drawBitmap(dc.sprites.get(JUMP_ARROW), jumpX - 3, stickY + 2);
+  const jumpX = PANEL.x + PANEL.w / 2 + 76;
+  const jumpY = stickY + 8;
+  fillCircle(surface, jumpX, jumpY, 13, ui.ink);
+  fillCircle(surface, jumpX, jumpY, 12, BUTTON);
+  fillCircle(surface, jumpX - 2, jumpY - 3, 6, BUTTON_LIGHT);
+  fillCircle(surface, jumpX - 1, jumpY - 2, 5, BUTTON);
+  surface.drawBitmap(dc.sprites.get(JUMP_ARROW), jumpX - 3, jumpY - 4);
   caption(t.jump, jumpX, stickY + 28, 'center');
 
   drawStick(dc, PANEL.x + PANEL.w - 64, stickY, 1);

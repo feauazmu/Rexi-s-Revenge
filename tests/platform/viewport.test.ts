@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeViewport, screenToGame } from '../../src/platform/viewport';
+import { computeViewport, screenToGame, screenToGameUnclamped } from '../../src/platform/viewport';
 
 describe('computeViewport', () => {
   it.each([
@@ -17,6 +17,13 @@ describe('computeViewport', () => {
     expect(vp.offsetY).toBe(y);
     expect(vp.width).toBe(480 * vp.cssScale);
     expect(vp.height).toBe(270 * vp.cssScale);
+  });
+
+  it('fits other image sizes too (the portrait rotate prompt)', () => {
+    const vp = computeViewport(390, 844, 3, { width: 144, height: 256 }); // phone portrait
+    expect(vp.scale).toBe(8); // 1170 / 144 = 8.1, 2532 / 256 = 9.9
+    expect(vp.width).toBeCloseTo(384);
+    expect(vp.height).toBeCloseTo((256 * 8) / 3);
   });
 
   it('scales in whole device pixels on high-DPI screens', () => {
@@ -66,5 +73,13 @@ describe('screenToGame', () => {
     const vp = computeViewport(1280, 720, 1);
     expect(screenToGame({ x: 10, y: 5 }, vp)).toEqual({ x: 0, y: 0 });
     expect(screenToGame({ x: 1275, y: 719 }, vp)).toEqual({ x: 480, y: 270 });
+  });
+});
+
+describe('screenToGameUnclamped', () => {
+  it('maps points over the letterbox bars outside the screen instead of clamping', () => {
+    const vp = computeViewport(1280, 720, 1); // 2×, offset (160, 90)
+    expect(screenToGameUnclamped({ x: 100, y: 60 }, vp)).toEqual({ x: -30, y: -15 });
+    expect(screenToGame({ x: 100, y: 60 }, vp)).toEqual({ x: 0, y: 0 });
   });
 });

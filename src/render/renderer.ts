@@ -17,6 +17,9 @@ import { dimScreen } from './screens/ui';
 import { dimDefeat, drawDefeatBanner, drawVerdict } from './screens/verdict';
 import { createSpriteBank } from './sprite';
 import type { Bitmap, BitmapFactory, Surface } from './surface';
+import type { TouchOverlayView } from './touch/layout';
+import { drawTouchOverlay } from './touch/overlay';
+import { drawRotatePrompt } from './touch/rotate-prompt';
 
 export type RunLayer = (dc: DrawContext, run: RunView) => void;
 
@@ -58,8 +61,16 @@ function drawRun(
 }
 
 export interface Renderer {
-  /** Draws one complete 480×270 frame of `view`. Pure: same view, same pixels. */
-  render(surface: Surface, view: GameView): void;
+  /**
+   * Draws one complete 480×270 frame of `view`, with the touch controls on top when an
+   * `overlay` is given. Pure: same inputs, same pixels.
+   */
+  render(surface: Surface, view: GameView, overlay?: TouchOverlayView | null): void;
+  /**
+   * Draws the "Gira tu teléfono" prompt on a portrait ROTATE_PROMPT_WIDTH×ROTATE_PROMPT_HEIGHT
+   * surface (touch devices held upright). `tick` drives its animation.
+   */
+  renderRotatePrompt(surface: Surface, tick: number): void;
 }
 
 /** Creates a renderer; sprites are rasterized through `createBitmap` once, on first use. */
@@ -99,9 +110,14 @@ export function createRenderer(
     },
   };
   return {
-    render(surface, view) {
+    render(surface, view, overlay) {
       surface.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, palette.letterbox);
-      screens[view.screen]({ surface, sprites, view }, view);
+      const dc: DrawContext = { surface, sprites, view };
+      screens[view.screen](dc, view);
+      if (overlay) drawTouchOverlay(dc, overlay);
+    },
+    renderRotatePrompt(surface, tick) {
+      drawRotatePrompt({ surface, sprites }, tick);
     },
   };
 }

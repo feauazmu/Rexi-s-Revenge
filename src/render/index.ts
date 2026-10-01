@@ -1,5 +1,6 @@
 /** Public interface of the renderer: a pure function from the Game core's view to pixels. */
 export { createRenderer, type Renderer, type RendererOptions } from './renderer';
+export { ROTATE_PROMPT_HEIGHT, ROTATE_PROMPT_WIDTH } from './touch/rotate-prompt';
 export {
   canvasSurface,
   type Bitmap,
@@ -23,3 +24,14 @@ export {
   type TextStyle,
   type TextTarget,
 } from './text';
+export {
+  TOUCH_LAYOUT,
+  TOUCH_MODES,
+  touchButtonAt,
+  type MenuButton,
+  type PlayButton,
+  type StickView,
+  type TouchButton,
+  type TouchControlsMode,
+  type TouchOverlayView,
+} from './touch/layout';

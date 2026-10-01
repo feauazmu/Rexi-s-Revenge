@@ -13,17 +13,17 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
 
 ## Modules
 
-| Path                | Role                                                                                             | May import         |
-| ------------------- | ------------------------------------------------------------------------------------------------ | ------------------ |
-| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.      | `src/core` only    |
-| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                     |                    |
-| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects). |                    |
-| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                     |                    |
-| `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                     | `src/core` (index) |
-| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, storage, bitmaps, audio.       | core, render       |
-| `src/main.ts`       | Entry point: starts the shell.                                                                   |                    |
-| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.          |                    |
-| `e2e/`              | Playwright smoke tests against the production build.                                             |                    |
+| Path                | Role                                                                                              | May import         |
+| ------------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
+| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.       | `src/core` only    |
+| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                      |                    |
+| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).  |                    |
+| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                      |                    |
+| `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                      | `src/core` (index) |
+| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
+| `src/main.ts`       | Entry point: starts the shell.                                                                    |                    |
+| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.           |                    |
+| `e2e/`              | Playwright smoke tests against the production build.                                              |                    |
 
 These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clocks and `Math.random` in
 `src/core` and `src/render`, bans cross-layer imports and deep imports into the core, and
@@ -77,7 +77,8 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
 - `view.screenAge` counts ticks on the current screen (entry animations); `view.tick` keeps running while
   paused so menus can animate.
 - A new screen: add it to `ScreenKind`, handle it in `stepScreen`, and add its drawer to the renderer's
-  `screens` record (the typecheck fails until you do).
+  `screens` record and its touch controls mode to `TOUCH_MODES` (`src/render/touch/layout.ts`; `menu` for
+  any screen that reads `menu` edges). The typecheck fails until you do.
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
 effects → Power-up timers → spawning → Rexi → Crates → Weapons → Enemies → projectiles, then the Run tick and the ramp
@@ -271,11 +272,51 @@ DIALOGUE_MAX_LINES` (2), both exported from `src/render`. Quips are game content
 `src/platform/shell.ts` creates the canvas, applies `computeViewport` (largest integer device-pixel scale,
 letterboxed, snapped to device pixels), and runs a `requestAnimationFrame` loop. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
-Each tick samples the keyboard/mouse adapter once (edges are consumed by the first sample).
+Each tick samples the device's input adapter once (edges are consumed by the first sample).
 On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
-`#app[data-screen]`, which the smoke tests poll.
+`#app[data-screen]`, which the smoke tests poll (also `data-device`, `data-orientation` and
+`data-touch-controls`).
 `ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there (`src/main.ts`).
 `Shell.view` exposes the Game's view so adapters can read their starting state (the persisted mute).
+
+### Touch controls
+
+The device kind is chosen once at startup (`src/platform/device.ts`): `touch` when the primary pointer is
+coarse (`(pointer: coarse)`), else `desktop`; `?device=touch|desktop` overrides it. A touch device uses only
+the touch adapter (no keyboard/mouse adapter, so a finger is never also a mouse click).
+
+- **Layout** (`src/render/touch/layout.ts`): every control's position in game coordinates, plus
+  `touchButtonAt`. The renderer draws from it and the adapter hit-tests against it, so they cannot drift.
+  `TOUCH_MODES` gives each screen a mode: `tap` (Title, Cómo jugar: any touch is `start`), `play` (Run) or
+  `menu` (pause menu, Veredicto initials entry, and any screen that navigates with `menu` edges). On
+  touch devices the Veredicto shows a one-line hint (cruceta/deslizar, gold button) instead of keycaps.
+- **Controller** (`src/platform/touch/controller.ts`): pure, no DOM. Fingers (pointer id + game point) in;
+  `sample(view)` gives one `InputFrame` per tick and `overlay(view)` the `TouchOverlayView` to draw. A finger
+  gets its role when it lands (button, stick, swipe) and keeps it until it lifts. `touch.ts` is the DOM side:
+  pointer events with capture (multi-touch), converted with `screenToGameUnclamped`.
+- **Stick math** (`src/platform/touch/stick.ts`): pure. Sticks float (the base appears under the thumb and
+  is dragged along past the rim); radial dead zone of 20% rescaled from its edge; movement saturates at 60%
+  deflection.
+- **Play mode**: left half = move stick, right half = aim stick (aims from Rexi's shoulder, fires while
+  pushed past the dead zone, keeps its last direction when released; while it is idle Rexi faces where he
+  walks). Jump button (bottom right of center), pause button (top right, under the score), and the HUD Weapon
+  icon is a button: a tap is `weaponNext`.
+- **Drop through platforms**: pull the move stick down past 60% deflection, within 45° of straight down
+  (the keyboard's S/↓). The 45° cone means running with a downward slant never drops by accident, and it needs
+  no extra button on a crowded screen.
+- **Menu mode**: a d-pad (bottom left), confirm ✓ and back ✕ (bottom right), and swipes anywhere else
+  (≥ 24 game px, dominant axis, on release) produce `menu` edges. This covers the pause menu and initials
+  entry without the adapter knowing any menu's layout.
+- **Overlay** (`src/render/touch/overlay.ts`): drawn last by `render(surface, view, overlay)`. Idle controls
+  are dithered outlines so the Arena shows through (no alpha: determinism rule); held controls turn solid.
+- **Portrait**: the shell hides the game canvas, freezes the game (pausing a Run) and draws the "Gira tu
+  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 144×256 canvas, scaled like the game.
+
+**Manual check on a real phone** (emulation covers the rest in `e2e/touch.spec.ts`): open the site in
+landscape → "Toca para empezar" → tap → Cómo jugar (touch) → tap → Run: move with the left stick, pull it
+down on a ledge to drop, aim/fire with the right stick while jumping, tap the Weapon icon, pause and resume
+with the pause and ✕ buttons; let Rexi die → Veredicto → enter initials with the d-pad/swipes and ✓ → Title.
+Turn the phone upright mid-Run: the rotate prompt shows and the Run is paused.
 
 ## Audio
 
@@ -418,7 +459,10 @@ await expectGolden('my-scene', renderView(game.view));
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
 - Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping, audio
-  synth/sound map/voice limiter); the audio engine runs against a fake `AudioContext`.
+  synth/sound map/voice limiter, touch `stick` math and the touch `controller`, which is driven with real
+  views from `drive()`); the audio engine runs against a fake `AudioContext`.
+- Touch goldens (`tests/golden/touch.golden.test.ts`) feed the controller's frames into the core and render
+  the view with its overlay, as the shell does.
 
 ## Commands
 
