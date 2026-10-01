@@ -1,4 +1,11 @@
-import type { Craft, CrateContents, EnemyKind, SpecialWeaponId, WeaponId } from './ids';
+import type {
+  Craft,
+  CrateContents,
+  EnemyKind,
+  ProjectileKind,
+  SpecialWeaponId,
+  WeaponId,
+} from './ids';
 import type { QuipTheme } from './quips/catalog';
 import type { ScreenKind } from './view';
 
@@ -19,6 +26,7 @@ export type GameEvent =
   | EnemyHitEvent
   | EnemyDestroyedEvent
   | EnemyFiredEvent
+  | ProjectileExplodedEvent
   | RexiHitEvent
   | RunEndedEvent
   | MuteToggledEvent
@@ -127,6 +135,18 @@ export interface EnemyFiredEvent {
   readonly type: 'enemy-fired';
   readonly enemyId: number;
   readonly kind: EnemyKind;
+}
+
+/**
+ * An explosive projectile (e.g. an Archivador Artillado's drawer) blew up on Rexi, the ground
+ * or a platform. Any damage it did comes as its own `rexi-hit`.
+ */
+export interface ProjectileExplodedEvent {
+  readonly type: 'projectile-exploded';
+  readonly kind: ProjectileKind;
+  /** Center of the blast, game coordinates. */
+  readonly x: number;
+  readonly y: number;
 }
 
 /** An Enemy projectile hurt Rexi. Not emitted while he is invulnerable. */

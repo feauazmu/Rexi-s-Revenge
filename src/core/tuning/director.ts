@@ -87,8 +87,8 @@ export const directorTuning = {
     fireRateMax: 2,
   },
   // Weights are relative to the kinds allowed at the time. Planned entries for the later
-  // Enemies: Archivador Artillado and Caminadora a Reacción from 60 s (weight 20 each), Banca
-  // Artillada from 120 s (weight 15, maxOnScreen 1).
+  // Enemies: Caminadora a Reacción from 60 s (weight 20), Banca Artillada from 120 s
+  // (weight 15, maxOnScreen 1).
   roster: {
     'maletin-coptero': {
       from: 0,
@@ -97,6 +97,15 @@ export const directorTuning = {
       edges: ['left', 'right'],
       minY: 30,
       maxY: 140,
+    },
+    // Patrols high, so it enters within its patrol band (tuning.enemies, 24..60).
+    'archivador-artillado': {
+      from: 60,
+      weight: 20,
+      maxOnScreen: 2,
+      edges: ['left', 'right'],
+      minY: 24,
+      maxY: 56,
     },
   },
 } as const satisfies DirectorTuning;

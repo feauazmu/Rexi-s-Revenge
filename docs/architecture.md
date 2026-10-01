@@ -119,7 +119,11 @@ Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's pro
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
 A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and the invulnerability window
 (`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
-hit, at the ground, off-screen or when their lifetime runs out. When Rexi's health reaches zero the Run emits
+hit, at the ground, off-screen or when their lifetime runs out. An explosive Enemy projectile (spawned with
+`blast: { radius, explosion }`, e.g. the Archivador Artillado's drawer) instead blows up on Rexi, the ground or
+a platform top: it plays the explosion preset, emits `projectile-exploded` and hurts Rexi if the blast center is
+within `radius` of his hitbox. Behaviors that telegraph an attack set `EnemyState.attackWindup` (0..1, shown as
+`EnemyView.attackWindup`) so the renderer can animate the telegraph. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops
 advancing (it can no longer be paused). Until the Veredicto screen exists, the Game returns to the Title 2 s later.
 

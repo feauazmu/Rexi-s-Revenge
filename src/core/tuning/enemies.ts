@@ -52,9 +52,46 @@ export interface MaletinCopteroTuning extends EnemyTuningBase {
   readonly paperLifetime: number;
 }
 
+export interface ArchivadorArtilladoTuning extends EnemyTuningBase {
+  /** Horizontal patrol speed, px/s. It turns back at the patrol margins. */
+  readonly patrolSpeed: number;
+  /** Patrol turning points: this far from the side edges, px. */
+  readonly patrolMarginX: number;
+  /** Altitude band of the hitbox top, px: it cruises at its entry height, clamped to this band. */
+  readonly patrolMinY: number;
+  readonly patrolMaxY: number;
+  /** Vertical speed while climbing or sinking back into its band, px/s. */
+  readonly climbSpeed: number;
+  /** Vertical hover amplitude, px. */
+  readonly hoverAmplitude: number;
+  /** Duration of one hover cycle, seconds. */
+  readonly hoverPeriod: number;
+  /** It starts a drop when Rexi's center is less than this far to either side of its own, px. */
+  readonly dropRange: number;
+  /** Telegraph before each drop: it stops and lowers the drawer from its bomb bay, seconds. */
+  readonly dropWindup: number;
+  /** Time from one drop until it may start the next windup, seconds (sped up by the ramp). */
+  readonly dropCooldown: number;
+  /** Time after spawning before its first windup, seconds (sped up by the ramp). */
+  readonly firstDropDelay: number;
+  /** Downward acceleration of a falling drawer, px/s². */
+  readonly drawerGravity: number;
+  /** Damage a drawer does to Rexi, by a direct hit or its blast. */
+  readonly drawerDamage: number;
+  /** Drawer hitbox size, px. */
+  readonly drawerSize: number;
+  /** A drawer blows up on the ground or a platform, hurting Rexi within this radius, px. */
+  readonly drawerBlastRadius: number;
+  /** Explosion preset of a drawer blowing up (see `tuning.effects.explosions`). */
+  readonly drawerExplosion: ExplosionSize;
+  /** Drawer lifetime, seconds (long enough to reach the ground from the top of the screen). */
+  readonly drawerLifetime: number;
+}
+
 /** One entry per Enemy (keyed by EnemyKind). */
 export interface EnemiesTuning {
   readonly 'maletin-coptero': MaletinCopteroTuning;
+  readonly 'archivador-artillado': ArchivadorArtilladoTuning;
 }
 
 export const enemiesTuning = {
@@ -82,5 +119,33 @@ export const enemiesTuning = {
     paperDamage: 5,
     paperSize: 6,
     paperLifetime: 6,
+  },
+  'archivador-artillado': {
+    width: 20,
+    height: 26,
+    // Three times a Maletín-cóptero: a Bomber-heli analogue (HA3 450 HP vs. the Heli's 300).
+    health: 36,
+    points: 300,
+    explosion: 'small',
+    debrisPieces: 5,
+    alwaysQuip: false,
+    patrolSpeed: 45,
+    patrolMarginX: 8,
+    patrolMinY: 24,
+    patrolMaxY: 60,
+    climbSpeed: 40,
+    hoverAmplitude: 1.5,
+    hoverPeriod: 1.4,
+    dropRange: 24,
+    dropWindup: 0.35,
+    dropCooldown: 2,
+    firstDropDelay: 1,
+    drawerGravity: 500,
+    // A bomber bomb is two bullets' worth in HA3 (2 vs. 1); a paper does 5 here.
+    drawerDamage: 10,
+    drawerSize: 10,
+    drawerBlastRadius: 16,
+    drawerExplosion: 'small',
+    drawerLifetime: 4,
   },
 } as const satisfies EnemiesTuning & Record<EnemyKind, EnemyTuningBase>;

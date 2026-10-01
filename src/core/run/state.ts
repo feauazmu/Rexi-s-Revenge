@@ -1,5 +1,6 @@
 import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponId } from '../ids';
 import type { Box, Vec2 } from '../math';
+import type { ExplosionSize } from '../tuning';
 import type { ScriptedSpawn } from '../options';
 import type { DirectorState } from './director';
 import type { EffectsState } from './effects';
@@ -78,6 +79,8 @@ export interface EnemyState extends Box {
   age: number;
   /** Run tick of the latest hit-flash start, or null if never hit. */
   hitFlashTick: number | null;
+  /** Progress of an attack telegraph, 0..1 (0 when not winding up). Set by its behavior. */
+  attackWindup: number;
   /** Per-kind behavior memory, created by the Enemy's `init` and only read by its `update`. */
   memory: unknown;
 }
@@ -90,11 +93,21 @@ export interface ProjectileState extends Box {
   vy: number;
   /** Downward acceleration, px/s² (0 for straight shots). */
   readonly gravity: number;
+  /** Explosive projectiles blow up on impact (see `ProjectileSpawn.blast`); null otherwise. */
+  readonly blast: ProjectileBlast | null;
   readonly damage: number;
   /** Ticks left before the projectile disappears. */
   ttl: number;
   /** Ticks since fired. */
   age: number;
+}
+
+/** How an explosive Enemy projectile blows up. */
+export interface ProjectileBlast {
+  /** Rexi is hurt when the blast center is within this distance of his hitbox, px. */
+  readonly radius: number;
+  /** Explosion preset played (see `tuning.effects.explosions`). */
+  readonly explosion: ExplosionSize;
 }
 
 export interface RunStats {
