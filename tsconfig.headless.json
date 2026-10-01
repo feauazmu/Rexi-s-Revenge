@@ -1,0 +1,10 @@
+{
+  // The Game core and the renderer must run headless (Node tests, golden images):
+  // no DOM lib and no ambient Node/Vite types are available here.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src/core", "src/render"]
+}
