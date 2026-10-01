@@ -1,51 +1,74 @@
 import type { RunView } from '../../core';
-import type { DrawContext } from '../draw-context';
-import type { Color } from '../surface';
+import { drawSpriteCentered, type DrawContext } from '../draw-context';
+import { armSprite, FIST_REACH, stepDirection } from '../rexi/arm';
+import {
+  ARM_PIVOT,
+  BODY_ANCHOR_X,
+  BODY_HEIGHT,
+  BODY_WIDTH,
+  bodySprite,
+  capSprite,
+  tattooSprite,
+} from '../rexi/body';
+import { heldWeapons } from '../rexi/held-weapons';
+import { rexiPalette } from '../rexi/palette';
+import { rexiPose } from '../rexi/pose';
+import { defineSprite } from '../sprite';
 
-const HAIR: Color = '#b5835a';
-const SKIN: Color = '#e8b48a';
-const ROBE: Color = '#23202e';
-const TANK_TOP: Color = '#f2f2f2';
-const LEGS: Color = '#3a3448';
-const ARM: Color = '#e8b48a';
-const MAZO: Color = '#8a5a34';
-
-/** While invulnerable, Rexi blinks: hidden for this many ticks, then shown for as many. */
-const BLINK_TICKS = 4;
+// prettier-ignore
+const MUZZLE_FLASH = [
+  defineSprite(rexiPalette, ['.y.', 'yty', '.y.']),
+  defineSprite(rexiPalette, ['..y..', '.yty.', 'yttty', '.yty.', '..y..']),
+] as const;
 
 /**
- * Placeholder Rexi: blocky body plus an "arm" of pixels toward the aim point. Replaced by the
- * code-drawn sprite and animations in the Rexi sprite ticket.
+ * Rexi: the composed body for his pose, then the aiming arm with his Weapon in one of 16
+ * directions, the deltoid cap over the arm's root and the tattoo on his left arm.
  */
 export function drawRexi(dc: DrawContext, run: RunView): void {
-  const { surface } = dc;
-  const { x, y, w, h, facing, muzzle, aimDirection, invulnerableTicks } = run.rexi;
-  // Placeholder hurt feedback (blink); the hurt animation arrives with the Rexi sprite ticket.
-  if (invulnerableTicks > 0 && Math.floor(invulnerableTicks / BLINK_TICKS) % 2 === 1) return;
+  const { surface, sprites } = dc;
+  const { rexi } = run;
+  const { facing } = rexi;
+  const pose = rexiPose(rexi, run.tick);
 
-  surface.fillRect(x + 3, y, w - 6, 4, HAIR);
-  surface.fillRect(x + 3, y + 4, w - 6, 5, SKIN);
-  surface.fillRect(x, y + 9, w, 12, ROBE);
-  surface.fillRect(x + 4, y + 9, w - 8, 8, TANK_TOP);
-  surface.fillRect(x + 2, y + 21, w - 4, h - 21, LEGS);
-  // Eye on the facing side.
-  surface.fillRect(facing === 1 ? x + w - 6 : x + 5, y + 5, 1, 1, ROBE);
+  // The body canvas stands on the hitbox's bottom edge, centered on it.
+  const left = Math.round(rexi.x + rexi.w / 2) - BODY_ANCHOR_X;
+  const top = Math.round(rexi.y + rexi.h) - BODY_HEIGHT;
+  surface.drawBitmap(sprites.get(bodySprite(pose.body, facing, pose.flash)), left, top);
 
-  // Arm: a short chain of pixels from the shoulder to the muzzle, then the Weapon.
-  for (let step = 6; step >= 1; step -= 1) {
-    surface.fillRect(
-      muzzle.x - aimDirection.x * step - 1,
-      muzzle.y - aimDirection.y * step - 1,
-      2,
-      2,
-      ARM,
+  // Upper-body offsets are authored facing right; mirror them with the body.
+  const ux = pose.body.upperX * facing;
+  const uy = pose.body.upperY;
+  const pivotX = left + ux + (facing === 1 ? ARM_PIVOT.x : BODY_WIDTH - 1 - ARM_PIVOT.x);
+  const pivotY = top + uy + ARM_PIVOT.y;
+
+  const weapon = heldWeapons[rexi.weapon.id];
+  const arm = armSprite(weapon, pose.armStep, facing, pose.flash);
+  const step = stepDirection(pose.armStep);
+  const dir = { x: step.x * facing, y: step.y };
+  const kickX = Math.round(-dir.x * pose.recoil);
+  const kickY = Math.round(-dir.y * pose.recoil);
+  surface.drawBitmap(
+    sprites.get(arm.sprite),
+    pivotX - arm.pivotX + kickX,
+    pivotY - arm.pivotY + kickY,
+  );
+
+  const cap = capSprite(facing, pose.flash);
+  surface.drawBitmap(sprites.get(cap.sprite), left + ux + cap.x, top + uy + cap.y);
+  if (!pose.flash) {
+    const tattoo = tattooSprite(facing);
+    surface.drawBitmap(sprites.get(tattoo.sprite), left + ux + tattoo.x, top + uy + tattoo.y);
+  }
+
+  const flash = pose.muzzleFlash > 0 ? MUZZLE_FLASH[pose.muzzleFlash - 1] : undefined;
+  if (flash) {
+    const reach = FIST_REACH + weapon.length + 2;
+    drawSpriteCentered(
+      dc,
+      flash,
+      pivotX + 0.5 + kickX + dir.x * reach,
+      pivotY + 0.5 + kickY + dir.y * reach,
     );
   }
-  surface.fillRect(
-    muzzle.x + aimDirection.x * 2 - 1.5,
-    muzzle.y + aimDirection.y * 2 - 1.5,
-    3,
-    3,
-    MAZO,
-  );
 }

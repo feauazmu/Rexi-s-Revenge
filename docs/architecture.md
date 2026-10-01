@@ -96,6 +96,11 @@ Positions are game coordinates (480×270); boxes use their top-left corner.
 - Hit flash is generic: `drawEnemies` wraps a hit Enemy's drawer in `silhouetteContext`, which turns
   rectangles and sprites into a white silhouette, so Enemy drawers need no flash code.
 - Animation phase comes from `view.tick`, `enemy.age`, `projectile.age` — never from a clock.
+- **Rexi** (`src/render/rexi/`): body parts drawn facing right (`body.ts`) are composed per pose and
+  mirrored for facing left; `pose.ts` picks the pose from `RexiView` (grounded/vx/vy, `hurtTicks`
+  for the hurt pose, `invulnerableTicks` for the red blink, `shotAge`) and the Run tick. The aiming
+  arm (`arm.ts`) is rasterized from shapes in 16 directions around `RexiView.shoulder`, holding the current Weapon's look from `held-weapons.ts` (a
+  `Record<WeaponId, …>`, so a new Weapon must add its held look there).
 
 ## Text: bitmap fonts, metrics and the strings catalog
 

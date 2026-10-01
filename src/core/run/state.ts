@@ -34,6 +34,8 @@ export interface RexiState extends Body {
   aim: Vec2;
   /** Ticks until the current Weapon may fire again. */
   fireCooldown: number;
+  /** Ticks since the last shot (capped), for recoil animation. */
+  shotAge: number;
   weapon: WeaponId;
   /** Ticks left during which hits are ignored (0 = can be hurt). */
   invulnerableTicks: number;

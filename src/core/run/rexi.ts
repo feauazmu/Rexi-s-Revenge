@@ -6,6 +6,9 @@ import type { RunContext } from './context';
 import { stepBody, type World } from './physics';
 import type { RexiState } from './state';
 
+/** `shotAge` stops counting here; animation only cares about the first few ticks. */
+const SHOT_AGE_CAP = 600;
+
 export function createRexi(tuning: Tuning): RexiState {
   const { rexi, arena } = tuning;
   return {
@@ -22,6 +25,7 @@ export function createRexi(tuning: Tuning): RexiState {
     facing: 1,
     aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
     fireCooldown: 0,
+    shotAge: SHOT_AGE_CAP,
     weapon: 'mazo-automatico',
     invulnerableTicks: 0,
     hurtTicks: 0,
@@ -44,6 +48,7 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
   const { tuning } = ctx;
 
   if (rexi.invulnerableTicks > 0) rexi.invulnerableTicks -= 1;
+  if (rexi.shotAge < SHOT_AGE_CAP) rexi.shotAge += 1;
   if (rexi.hurtTicks > 0) rexi.hurtTicks -= 1;
 
   rexi.vx = clamp(input.move, -1, 1) * tuning.rexi.runSpeed;
@@ -78,13 +83,22 @@ export function damageRexi(ctx: RunContext, damage: number): void {
   ctx.emit({ type: 'rexi-hit', damage, health: rexi.health });
 }
 
-/** Where shots leave Rexi's arm, mirrored with his facing. */
-export function muzzleOf(rexi: Readonly<RexiState>, tuning: Tuning): Vec2 {
-  const offsetX =
-    rexi.facing === 1 ? tuning.rexi.muzzleOffsetX : rexi.w - tuning.rexi.muzzleOffsetX;
-  return { x: rexi.x + offsetX, y: rexi.y + tuning.rexi.muzzleOffsetY };
+/** Pivot of the aiming arm, mirrored with Rexi's facing. */
+export function shoulderOf(rexi: Readonly<RexiState>, tuning: Tuning): Vec2 {
+  const { shoulderOffsetX, shoulderOffsetY } = tuning.rexi;
+  const offsetX = rexi.facing === 1 ? shoulderOffsetX : rexi.w - shoulderOffsetX;
+  return { x: rexi.x + offsetX, y: rexi.y + shoulderOffsetY };
 }
 
+/** Unit vector from the shoulder toward the aim target. */
 export function aimDirectionOf(rexi: Readonly<RexiState>, tuning: Tuning): Vec2 {
-  return directionTo(muzzleOf(rexi, tuning), rexi.aim, { x: rexi.facing, y: 0 });
+  return directionTo(shoulderOf(rexi, tuning), rexi.aim, { x: rexi.facing, y: 0 });
+}
+
+/** Where shots leave: the tip of the held Weapon, at arm's reach from the shoulder. */
+export function muzzleOf(rexi: Readonly<RexiState>, tuning: Tuning): Vec2 {
+  const shoulder = shoulderOf(rexi, tuning);
+  const direction = aimDirectionOf(rexi, tuning);
+  const reach = tuning.rexi.muzzleReach;
+  return { x: shoulder.x + direction.x * reach, y: shoulder.y + direction.y * reach };
 }

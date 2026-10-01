@@ -10,7 +10,7 @@ import { createEffects, isHitFlashing, stepEffects, viewEffects } from './effect
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
-import { aimDirectionOf, createRexi, muzzleOf, stepRexi } from './rexi';
+import { aimDirectionOf, createRexi, muzzleOf, shoulderOf, stepRexi } from './rexi';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
 import { stepWeapons } from './weapons/system';
@@ -108,8 +108,10 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       maxHealth: rexi.maxHealth,
       facing: rexi.facing,
       aim: rexi.aim,
+      shoulder: shoulderOf(rexi, tuning),
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
+      shotAge: rexi.shotAge,
       weapon: { id: rexi.weapon, ammo: null },
       hurtTicks: rexi.hurtTicks,
       invulnerableTicks: rexi.invulnerableTicks,

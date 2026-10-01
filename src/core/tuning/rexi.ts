@@ -15,9 +15,14 @@ export interface RexiTuning {
    * higher). 1 disables variable jump height.
    */
   readonly jumpCutFactor: number;
-  /** Muzzle offset from the top-left of the hitbox (for facing right; mirrored when left). */
-  readonly muzzleOffsetX: number;
-  readonly muzzleOffsetY: number;
+  /**
+   * Pivot of the aiming arm (the shoulder), from the top-left of the hitbox, for facing right
+   * (mirrored when facing left). Aim directions are measured from here.
+   */
+  readonly shoulderOffsetX: number;
+  readonly shoulderOffsetY: number;
+  /** Distance from the shoulder to the muzzle (arm plus held Weapon), px. */
+  readonly muzzleReach: number;
   /** After a hit, Rexi ignores further hits for this long, seconds. */
   readonly invulnerability: number;
   /** How long the hurt reaction (pose, flash) lasts after a hit, seconds. */
@@ -26,14 +31,15 @@ export interface RexiTuning {
 
 export const rexiTuning: RexiTuning = {
   width: 14,
-  height: 28,
+  height: 30,
   maxHealth: 100,
   spawnX: 120,
   runSpeed: 120,
   jumpSpeed: 340,
   jumpCutFactor: 0.45,
-  muzzleOffsetX: 10,
-  muzzleOffsetY: 9,
+  shoulderOffsetX: 15.5,
+  shoulderOffsetY: 6.5,
+  muzzleReach: 19,
   invulnerability: 1,
   hurtDuration: 0.3,
 };
