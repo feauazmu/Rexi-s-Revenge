@@ -31,7 +31,8 @@ interface ArchivadorMemory {
  * Archivador Artillado: a flying filing cabinet on jet thrusters. It patrols edge to edge high
  * above the Arena and, whenever it passes over Rexi with its drop ready, stops, lowers a drawer
  * from its bomb bay (the telegraph) and lets it fall. The drawer blows up on Rexi, the ground
- * or a platform. One spawned off-screen heads for the Arena center, so it flies in on its own.
+ * or a platform. One spawned off-screen heads for the Arena center (from above, it descends to
+ * its patrol band first), so it flies in on its own.
  */
 export const archivadorArtillado = defineEnemy<ArchivadorMemory>({
   kind: 'archivador-artillado',
@@ -116,7 +117,7 @@ function patrol(
 
 /** Whether it is fully inside the Arena with Rexi within drop range below. */
 function isOverRexi(enemy: EnemyState, ctx: RunContext, t: ArchivadorArtilladoTuning): boolean {
-  if (enemy.x < 0 || enemy.x + enemy.w > SCREEN_WIDTH) return false;
+  if (enemy.x < 0 || enemy.x + enemy.w > SCREEN_WIDTH || enemy.y < 0) return false;
   return Math.abs(center(enemy).x - center(ctx.state.rexi).x) < t.dropRange;
 }
 

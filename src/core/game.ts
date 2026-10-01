@@ -9,6 +9,7 @@ import {
   insertHighScore,
   loadHighScores,
   saveHighScores,
+  type HighScoreEntry,
 } from './high-scores';
 import { moveSelection, PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
 import { loadPreferences, savePreference } from './preferences';
@@ -16,14 +17,13 @@ import { createRng, deriveSeed } from './rng';
 import { createRun, type Run } from './run/run';
 import { memoryStorage, resilientStorage } from './storage';
 import { resolveTuning, type Tuning } from './tuning';
-import { createVerdict, type Verdict } from './verdict';
+import { createVerdict, stepVerdict, type Verdict } from './verdict';
 import type { GameView, ScreenKind } from './view';
 
 /** Stream id of the effects' random generator (any constant distinct from other streams). */
 const EFFECTS_STREAM = 0xeff3c7;
-
-/** The defeat beat: how long the ended Run stays on screen before the Veredicto, seconds. */
-const DEFEAT_BEAT = 1.5;
+/** Stream id of the Quips' random generator (independent of gameplay randomness). */
+const QUIP_STREAM = 0x51e7c0de;
 
 /**
  * The headless Game core. Advance it only with `tick`, once per fixed 1/60 s step, and draw
@@ -42,27 +42,16 @@ export interface Game {
   readonly view: GameView;
 }
 
-/**
- * Title and Cómo jugar ignore start inputs for this long after they appear, so the press that
- * opened a screen (or a hurried double press) does not skip the next one.
- */
-const START_GUARD_TICKS = secondsToTicks(0.5);
-/**
- * The Veredicto ignores input while its stats are read out, so a trigger still held or mashed
- * from the Run does not skip it or type initials.
- */
-const VERDICT_GUARD_TICKS = secondsToTicks(1);
-
-/** Mixed into the seed for the Quip random stream (independent of gameplay randomness). */
-const QUIP_STREAM = 0x51e7c0de;
-
 export function createGame(options: GameOptions): Game {
   const tuning: Tuning = resolveTuning(options.overrides?.tuning);
   const rng = createRng(options.seed);
   /** Cosmetic effects draw from their own stream so they can never shift gameplay. */
   const effectsSeed = deriveSeed(options.seed, EFFECTS_STREAM);
   /** Quips draw from their own stream so they can never shift gameplay. */
-  const quipRng = createRng(options.seed ^ QUIP_STREAM);
+  const quipRng = createRng(deriveSeed(options.seed, QUIP_STREAM));
+  const startGuardTicks = secondsToTicks(tuning.screens.startGuard);
+  const verdictGuardTicks = secondsToTicks(tuning.screens.verdictGuard);
+  const defeatBeatTicks = secondsToTicks(tuning.screens.defeatBeat);
   const device: DeviceKind = options.device ?? 'desktop';
   const storage = resilientStorage(options.storage ?? memoryStorage());
   let { howToPlaySeen, musicMuted } = loadPreferences(storage);
@@ -77,7 +66,7 @@ export function createGame(options: GameOptions): Game {
   let screen: ScreenKind | null = null;
   let screenEnteredAt = 0;
   let run: Run | null = null;
-  /** Ticks the current Run has been over (the defeat beat, see DEFEAT_BEAT). */
+  /** Ticks the current Run has been over (the defeat beat, `tuning.screens.defeatBeat`). */
   let endedTicks = 0;
   let verdict: Verdict | null = null;
   /** Tick count when the initials were signed (start is guarded after it), or null. */
@@ -133,37 +122,20 @@ export function createGame(options: GameOptions): Game {
     changeScreen('title');
   };
 
-  const verdictReady = (): boolean => screen === 'verdict' && screenAge() >= VERDICT_GUARD_TICKS;
+  const verdictReady = (): boolean => screen === 'verdict' && screenAge() >= verdictGuardTicks;
 
   const startReady = (): boolean => {
-    if (screen === 'title' || screen === 'how-to-play') return screenAge() >= START_GUARD_TICKS;
+    if (screen === 'title' || screen === 'how-to-play') return screenAge() >= startGuardTicks;
     if (!verdictReady() || verdict?.signing !== false) return false;
-    return signedAt === null || tickCount - signedAt >= START_GUARD_TICKS;
+    return signedAt === null || tickCount - signedAt >= startGuardTicks;
   };
 
-  const stepVerdict = (input: InputFrame): void => {
-    if (!verdict || !verdictReady()) return;
-    if (!verdict.signing) {
-      if (input.start && startReady()) leaveVerdict();
-      return;
-    }
-    const before = verdict.view().initials;
-    const entry = verdict.input(input.menu);
-    // Only a Run with a rank signs, so `rank` is set whenever an entry comes back.
-    const { rank, initials } = verdict.view();
-    if (
-      !entry &&
-      initials &&
-      (initials.letters !== before?.letters || initials.cursor !== before.cursor)
-    ) {
-      emit({ type: 'menu-moved', selected: initials.cursor });
-    }
-    if (!entry || rank === null) return;
+  /** Saves a signed Veredicto entry into the top 10 (`stepVerdict` calls it on signing). */
+  const recordHighScore = (entry: HighScoreEntry): void => {
     highScores = insertHighScore(highScores, entry);
     saveHighScores(storage, highScores);
     lastInitials = entry.initials;
     signedAt = tickCount;
-    emit({ type: 'high-score-recorded', initials: entry.initials, score: entry.score, rank });
   };
 
   const choose = (item: PauseMenuItem): void => {
@@ -177,6 +149,8 @@ export function createGame(options: GameOptions): Game {
         emit({ type: 'mute-toggled', muted: musicMuted });
         return;
       case 'quit':
+        // Pausing can interrupt a Hit-stop; abandoning the Run ends it.
+        if (run?.view().hitStop) emit({ type: 'hit-stop-ended' });
         run = null;
         changeScreen('title');
         return;
@@ -202,7 +176,7 @@ export function createGame(options: GameOptions): Game {
         return;
       case 'run':
         if (run?.ended) {
-          if (++endedTicks >= secondsToTicks(DEFEAT_BEAT)) openVerdict();
+          if (++endedTicks >= defeatBeatTicks) openVerdict();
         } else if (input.pause) openPauseMenu();
         else if (run) for (const event of run.step(input)) emit(event);
         return;
@@ -220,7 +194,12 @@ export function createGame(options: GameOptions): Game {
         if (input.menu.confirm) choose(PAUSE_MENU_ITEMS[menuSelected] ?? 'resume');
         return;
       case 'verdict':
-        stepVerdict(input);
+        if (!verdict || !verdictReady()) return;
+        if (
+          stepVerdict(verdict, input, { startReady: startReady(), emit, record: recordHighScore })
+        ) {
+          leaveVerdict();
+        }
         return;
     }
   };

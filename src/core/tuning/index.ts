@@ -6,10 +6,12 @@ import { enemiesTuning, type EnemiesTuning } from './enemies';
 import { quipsTuning, type QuipsTuning } from './quips';
 import { powerUpsTuning, type PowerUpsTuning } from './power-ups';
 import { rexiTuning, type RexiTuning } from './rexi';
+import { screensTuning, type ScreensTuning } from './screens';
 import { weaponsTuning, type WeaponsTuning } from './weapons';
 
 export type * from './arena';
 export type * from './director';
+export { rampAt } from './director';
 export type * from './effects';
 export { EXPLOSION_SIZES } from './effects';
 export type * from './crates';
@@ -17,6 +19,7 @@ export type * from './enemies';
 export type * from './quips';
 export type * from './power-ups';
 export type * from './rexi';
+export type * from './screens';
 export type * from './weapons';
 
 /**
@@ -34,6 +37,8 @@ export interface Tuning {
   readonly crates: CratesTuning;
   readonly quips: QuipsTuning;
   readonly powerUps: PowerUpsTuning;
+  /** Screen flow: the defeat beat and the input guards on menus. */
+  readonly screens: ScreensTuning;
 }
 
 export const defaultTuning: Tuning = {
@@ -46,6 +51,7 @@ export const defaultTuning: Tuning = {
   crates: cratesTuning,
   quips: quipsTuning,
   powerUps: powerUpsTuning,
+  screens: screensTuning,
 };
 
 /** Recursively optional version of T, used for tuning overrides. Arrays are replaced whole. */

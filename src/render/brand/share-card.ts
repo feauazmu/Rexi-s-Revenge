@@ -4,6 +4,7 @@
  * twinkle, and the Spanish tagline under it on a dark plate. `scripts/share-preview/` scales it
  * by 2 with nearest-neighbor sampling to the 1200×630 `public/og-image.png`.
  */
+import { drawPlate } from '../frame';
 import { masterPalette } from '../palette';
 import type { SpriteBank } from '../sprite';
 import { strings } from '../strings';
@@ -32,8 +33,6 @@ const LOGO_Y = 14;
 
 const ink = {
   outline: masterPalette.outline,
-  plate: masterPalette.night,
-  plateEdge: masterPalette.robeSheen,
   tagline: masterPalette.gold,
   blurb: masterPalette.marble,
 } as const satisfies Record<string, Color>;
@@ -58,7 +57,7 @@ export function drawShareCard(
   const plateTop = top - PLATE_PAD;
   drawPlate(
     surface,
-    COLUMN_CENTER_X - (width + PLATE_PAD * 4) / 2,
+    Math.round(COLUMN_CENTER_X - (width + PLATE_PAD * 4) / 2),
     plateTop,
     width + PLATE_PAD * 4,
     blurbTop + REGULAR_CAP + PLATE_PAD + 1 - plateTop,
@@ -82,13 +81,4 @@ function outlined(target: TextTarget, font: BitmapFont, text: string, y: number,
     align: 'center',
     outline: ink.outline,
   });
-}
-
-/** A dark plate with a black outline, cut corners and a lighter top edge. */
-function drawPlate(surface: Surface, x: number, y: number, w: number, h: number): void {
-  const left = Math.round(x);
-  surface.fillRect(left + 1, y, w - 2, h, ink.outline);
-  surface.fillRect(left, y + 1, w, h - 2, ink.outline);
-  surface.fillRect(left + 1, y + 1, w - 2, h - 2, ink.plate);
-  surface.fillRect(left + 2, y + 1, w - 4, 1, ink.plateEdge);
 }

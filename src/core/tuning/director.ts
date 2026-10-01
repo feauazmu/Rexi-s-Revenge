@@ -1,11 +1,11 @@
 import type { EnemyKind } from '../ids';
 
 /**
- * One row of the ramp table: the difficulty from `from` seconds of ramp clock until the next
- * stage starts. The ramp clock counts Run time excluding pause and Hit-stop.
+ * One ramp step, a row of the ramp table: the difficulty from `from` seconds of ramp clock until
+ * the next ramp step starts. The ramp clock counts Run time excluding pause and Hit-stop.
  */
-export interface RampStage {
-  /** Ramp clock time at which this stage starts, seconds. The first stage starts at 0. */
+export interface RampStep {
+  /** Ramp clock time at which this ramp step starts, seconds. The first one starts at 0. */
   readonly from: number;
   /** Most Enemies allowed on screen at once. */
   readonly onScreenCap: number;
@@ -16,21 +16,21 @@ export interface RampStage {
 }
 
 /**
- * How the ramp keeps creeping up after the last stage: every `every` seconds past its start,
- * each value moves by its step, clamped to its limit.
+ * Endless escalation after the last ramp step. With `t` the seconds since it started and
+ * `p = ln(1 + t / timeScale)`, the fire rate becomes `fireRate + growth.fireRate × p`, the spawn
+ * interval `spawnInterval / (1 + growth.spawnPace × p)` and the on-screen cap
+ * `floor(onScreenCap + growth.onScreenCap × p)`. `p` grows forever but ever more slowly: no
+ * plateau, no cliff, and the cap is a soft one that keeps creeping up.
  */
 export interface RampGrowth {
-  /** Seconds between growth steps. */
-  readonly every: number;
-  /** Added to the on-screen cap per step, up to `onScreenCapMax`. */
-  readonly onScreenCap: number;
-  readonly onScreenCapMax: number;
-  /** Added to the spawn interval per step (negative = faster), down to `spawnIntervalMin`. */
-  readonly spawnInterval: number;
-  readonly spawnIntervalMin: number;
-  /** Added to the fire-rate multiplier per step, up to `fireRateMax`. */
+  /** Seconds after the last ramp step over which `p` reaches ln 2 (sets how fast it bends). */
+  readonly timeScale: number;
+  /** Added to the fire-rate multiplier per unit of `p`. */
   readonly fireRate: number;
-  readonly fireRateMax: number;
+  /** How much the spawn interval shrinks per unit of `p` (it is divided by 1 + spawnPace × p). */
+  readonly spawnPace: number;
+  /** Added to the on-screen cap per unit of `p` (rounded down). */
+  readonly onScreenCap: number;
 }
 
 /** Where an Enemy enters the Arena: just outside the left or right edge, or above the top. */
@@ -60,8 +60,8 @@ export type DirectorRoster = Readonly<Record<EnemyKind, RosterEntry>>;
 export interface DirectorTuning {
   /** Ramp clock time of the first spawn, seconds. */
   readonly firstSpawnDelay: number;
-  /** The ramp table, ordered by `from`. */
-  readonly stages: readonly RampStage[];
+  /** The ramp table: its ramp steps, ordered by `from`. */
+  readonly steps: readonly RampStep[];
   readonly growth: RampGrowth;
   readonly roster: DirectorRoster;
 }
@@ -70,23 +70,22 @@ export const directorTuning = {
   firstSpawnDelay: 1,
   // Maletín-cóptero only for the first minute (max 3 on screen), then the cap, pace and fire
   // rate climb; later Enemy kinds join through the roster below. Balance pass (#30): the
-  // middle stages climb more gently (fire rate 1.05 → 1.3 rather than 1.1 → 1.45), so the
-  // two- to four-minute stretch is a climb and not a cliff; `growth` still ends every Run.
-  stages: [
+  // middle ramp steps climb more gently (fire rate 1.05 → 1.3 rather than 1.1 → 1.45), so the
+  // two- to four-minute stretch is a climb and not a cliff; `growth` then escalates without end.
+  steps: [
     { from: 0, onScreenCap: 3, spawnInterval: 3, fireRate: 1 },
     { from: 60, onScreenCap: 4, spawnInterval: 2.6, fireRate: 1.05 },
     { from: 120, onScreenCap: 5, spawnInterval: 2.4, fireRate: 1.1 },
     { from: 180, onScreenCap: 6, spawnInterval: 2.2, fireRate: 1.2 },
     { from: 240, onScreenCap: 7, spawnInterval: 2, fireRate: 1.3 },
   ],
+  // From 4:00: about +0.1 fire rate, -0.1 s interval and +1 cap in the first minute (as the
+  // ramp steps did), then ever more slowly: at 10 min fire rate ~1.65, interval ~1.65 s, cap 11.
   growth: {
-    every: 60,
-    onScreenCap: 1,
-    onScreenCapMax: 10,
-    spawnInterval: -0.1,
-    spawnIntervalMin: 1.2,
-    fireRate: 0.1,
-    fireRateMax: 2,
+    timeScale: 120,
+    fireRate: 0.25,
+    spawnPace: 0.15,
+    onScreenCap: 3,
   },
   // Weights are relative to the kinds allowed at the time.
   roster: {
@@ -98,12 +97,13 @@ export const directorTuning = {
       minY: 40,
       maxY: 187,
     },
-    // Patrols high, so it enters within its patrol band (tuning.enemies, 32..80).
+    // Patrols high, so it enters within its patrol band (tuning.enemies, 32..80), or drops in
+    // from above and descends to it.
     'archivador-artillado': {
       from: 60,
       weight: 20,
       maxOnScreen: 2,
-      edges: ['left', 'right'],
+      edges: ['left', 'right', 'top'],
       minY: 32,
       maxY: 75,
     },
@@ -126,3 +126,25 @@ export const directorTuning = {
     },
   },
 } as const satisfies DirectorTuning;
+
+/** The ramp's values at one moment of the ramp clock. */
+export type RampValues = Omit<RampStep, 'from'>;
+
+/**
+ * Looks up the ramp table at `seconds` of ramp clock: the ramp step whose `from` last passed,
+ * and past the last one, its values escalated by `growth` (logarithmic, so it never plateaus).
+ */
+export function rampAt(director: DirectorTuning, seconds: number): RampValues {
+  const { steps, growth } = director;
+  let step = steps[0];
+  if (!step) throw new Error('The ramp table needs at least one ramp step');
+  for (const candidate of steps) if (candidate.from <= seconds) step = candidate;
+
+  if (step !== steps[steps.length - 1] || growth.timeScale <= 0) return step;
+  const p = Math.log1p(Math.max(0, seconds - step.from) / growth.timeScale);
+  return {
+    onScreenCap: Math.floor(step.onScreenCap + growth.onScreenCap * p),
+    spawnInterval: step.spawnInterval / (1 + growth.spawnPace * p),
+    fireRate: step.fireRate + growth.fireRate * p,
+  };
+}

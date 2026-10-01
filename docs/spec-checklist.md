@@ -1,7 +1,7 @@
 # Spec checklist
 
 Every user story in the v1 spec ([#1](https://github.com/feauazmu/Rexi-s-Revenge/issues/1)),
-checked against the code and tests at the end of the art pass (#30). **Done** means the story
+checked against the code and tests at the end of the art pass (#30) and the final code review. **Done** means the story
 is implemented and a test covers it. **Done, amended** means it is implemented as a later owner
 decision changed it (listed under "Amendments"). **Deferred** means it is knowingly left out
 of v1.
@@ -56,7 +56,7 @@ production build.
 | 18  | Switch Weapons with Q/E, the wheel or 1–6 | Done   | `platform/keyboard-mouse.ts`, `core/run/weapons/inventory.ts` | `platform/keyboard-mouse`, `core/inventory`           |
 | 19  | Left virtual stick moves                  | Done   | `platform/touch/controller.ts`, `stick.ts`                    | `platform/touch-controller`, `platform/stick`         |
 | 20  | Dedicated jump button                     | Done   | same, `render/touch/layout.ts`                                | `platform/touch-controller`, `golden/touch`           |
-| 21  | Right stick aims and fires while held     | Done   | same                                                          | `platform/touch-controller`, `e2e/touch` (whole Run)  |
+| 21  | Right stick aims and fires while held     | Done   | same; fires for as long as it is held, dead zone included     | `platform/touch-controller`, `e2e/touch` (whole Run)  |
 | 22  | Tap the Weapon icon to cycle              | Done   | same                                                          | `platform/touch-controller`                           |
 | 23  | "Gira tu teléfono" in portrait            | Done   | `render/touch/rotate-prompt.ts`, `platform/shell.ts`          | `golden/touch` (`rotate-prompt*`), `e2e/touch`        |
 | 24  | Arm and Weapon point where I aim          | Done   | `render/rexi/arm.ts` (16 directions, RotSprite)               | `render/rexi-arm`, `golden/rexi`                      |
@@ -65,20 +65,20 @@ production build.
 
 ## Weapons and Crates
 
-| #   | Story                                            | Status | Where                                          | Verified by                                                     |
-| --- | ------------------------------------------------ | ------ | ---------------------------------------------- | --------------------------------------------------------------- |
-| 27  | Mazo Automático, default and unlimited           | Done   | `core/run/weapons/`, `DEFAULT_WEAPON`          | `core/inventory`, `golden/run` (`run-firing`)                   |
-| 28  | Lluvia de Sellos, short-range spread             | Done   | `core/run/weapons/lluvia-de-sellos.ts`         | `core/lluvia-de-sellos`                                         |
-| 29  | Mancuernas, lobbed, bounce and explode           | Done   | `core/run/weapons/mancuernas.ts`               | `core/mancuernas`, `golden/explosive-weapons`                   |
-| 30  | Código Penal, rocket with splash                 | Done   | `core/run/weapons/codigo-penal.ts`             | `core/codigo-penal`, `golden/explosive-weapons`                 |
-| 31  | Citaciones Teledirigidas, homing                 | Done   | `core/run/weapons/citaciones-teledirigidas.ts` | `core/citaciones-teledirigidas`, `golden/precision-weapons`     |
-| 32  | Sentencia Firme, piercing instant beam           | Done   | `core/run/weapons/sentencia-firme.ts`          | `core/sentencia-firme`, `golden/precision-weapons`              |
-| 33  | Crates fall periodically                         | Done   | `core/run/crates/system.ts`                    | `core/crates`, `golden/run` (`crate-falling`)                   |
-| 34  | Pick up a Crate by touching it                   | Done   | same                                           | `core/crates`                                                   |
-| 35  | Crates blink before disappearing                 | Done   | same, `render/layers/crates.ts`                | `core/crates`, `golden/run` (`crate-blinking`)                  |
-| 36  | Weapon added to the inventory, or ammo topped up | Done   | `core/run/weapons/inventory.ts`                | `core/inventory`                                                |
-| 37  | Back to the Mazo when ammo runs out              | Done   | same                                           | `core/inventory`                                                |
-| 38  | HUD shows the Weapon icon and ammo               | Done   | `render/hud/`                                  | `golden/run` (`run-hud`, `run-hud-sellos`), `render/ui-palette` |
+| #   | Story                                            | Status | Where                                          | Verified by                                                        |
+| --- | ------------------------------------------------ | ------ | ---------------------------------------------- | ------------------------------------------------------------------ |
+| 27  | Mazo Automático, default and unlimited           | Done   | `core/run/weapons/`, `DEFAULT_WEAPON`          | `core/inventory`, `golden/run` (`run-firing`)                      |
+| 28  | Lluvia de Sellos, short-range spread             | Done   | `core/run/weapons/lluvia-de-sellos.ts`         | `core/lluvia-de-sellos`, `golden/precision-weapons` (`sellos-fan`) |
+| 29  | Mancuernas, lobbed, bounce and explode           | Done   | `core/run/weapons/mancuernas.ts`               | `core/mancuernas`, `golden/explosive-weapons`                      |
+| 30  | Código Penal, rocket with splash                 | Done   | `core/run/weapons/codigo-penal.ts`             | `core/codigo-penal`, `golden/explosive-weapons`                    |
+| 31  | Citaciones Teledirigidas, homing                 | Done   | `core/run/weapons/citaciones-teledirigidas.ts` | `core/citaciones-teledirigidas`, `golden/precision-weapons`        |
+| 32  | Sentencia Firme, piercing instant beam           | Done   | `core/run/weapons/sentencia-firme.ts`          | `core/sentencia-firme`, `golden/precision-weapons`                 |
+| 33  | Crates fall periodically                         | Done   | `core/run/crates/system.ts`                    | `core/crates`, `golden/run` (`crate-falling`)                      |
+| 34  | Pick up a Crate by touching it                   | Done   | same                                           | `core/crates`                                                      |
+| 35  | Crates blink before disappearing                 | Done   | same, `render/layers/crates.ts`                | `core/crates`, `golden/run` (`crate-blinking`)                     |
+| 36  | Weapon added to the inventory, or ammo topped up | Done   | `core/run/weapons/inventory.ts`                | `core/inventory`                                                   |
+| 37  | Back to the Mazo when ammo runs out              | Done   | same                                           | `core/inventory`                                                   |
+| 38  | HUD shows the Weapon icon and ammo               | Done   | `render/hud/`                                  | `golden/run` (`run-hud`, `run-hud-sellos`), `render/ui-palette`    |
 
 ## Power-ups
 
@@ -93,35 +93,35 @@ production build.
 
 ## Enemies and difficulty
 
-| #   | Story                                                   | Status | Where                                           | Verified by                                                                                                                                                                    |
-| --- | ------------------------------------------------------- | ------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 45  | Maletín-cóptero, the common light Enemy shooting papers | Done   | `core/run/enemies/maletin-coptero.ts`           | `core/maletin-coptero`, `golden/run` (`enemy-maletin-coptero`)                                                                                                                 |
-| 46  | Archivador Artillado drops drawer bombs                 | Done   | `archivador-artillado.ts`                       | `core/archivador-artillado`, `golden/run`                                                                                                                                      |
-| 47  | Caminadora a Reacción strafes with bursts               | Done   | `caminadora-a-reaccion.ts`                      | `core/caminadora-a-reaccion`, `golden/run`                                                                                                                                     |
-| 48  | Banca Artillada, tanky, rocket volleys                  | Done   | `banca-artillada.ts`                            | `core/banca-artillada`, `golden/run` (`banca-windup`, `banca-volley`)                                                                                                          |
-| 49  | Distinct silhouette, colors and movement per Enemy      | Done   | pipeline sprites (`render/enemies/`), behaviors | `render/enemy-art`, `golden/run` (one per kind)                                                                                                                                |
-| 50  | Enemies break apart with debris                         | Done   | `core/run/effects/`, `render/effects/`          | `core/effects`, `golden/effects`                                                                                                                                               |
-| 51  | Enemies flash when hit                                  | Done   | `silhouetteContext` in `render/enemies/`        | `core/effects`, `golden/effects` (`effects-hit-flash`)                                                                                                                         |
-| 52  | Only Maletín-cópteros in the first minute               | Done   | `tuning.director` roster                        | `core/director`                                                                                                                                                                |
-| 53  | New kinds over time, rising cap and fire rate           | Done   | `tuning.director` stages and growth             | `core/director`, `scripts/balance` (`npm run balance`)                                                                                                                         |
-| 54  | Enemy shots clearly visible and dodgeable               | Done   | `render/projectiles/`; balance pass (#30)       | `core/enemy-fire`, `golden/run`; readability reviewed over the whole Arena ("Consistency pass" in `docs/architecture.md`); dodgeability measured by simulated play ("Balance") |
-| 55  | Brief invulnerability and a hurt animation              | Done   | `core/run/rexi.ts`, `render/rexi/pose.ts`       | `core/rexi`, `golden/rexi` (`rexi-hurt`), `golden/run` (`run-hurt`)                                                                                                            |
+| #   | Story                                                   | Status | Where                                                         | Verified by                                                                                                                                                                    |
+| --- | ------------------------------------------------------- | ------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 45  | Maletín-cóptero, the common light Enemy shooting papers | Done   | `core/run/enemies/maletin-coptero.ts`                         | `core/maletin-coptero`, `golden/run` (`enemy-maletin-coptero`)                                                                                                                 |
+| 46  | Archivador Artillado drops drawer bombs                 | Done   | `archivador-artillado.ts`; enters from the sides or the top   | `core/archivador-artillado`, `golden/run`                                                                                                                                      |
+| 47  | Caminadora a Reacción strafes with bursts               | Done   | `caminadora-a-reaccion.ts`                                    | `core/caminadora-a-reaccion`, `golden/run`                                                                                                                                     |
+| 48  | Banca Artillada, tanky, rocket volleys                  | Done   | `banca-artillada.ts`                                          | `core/banca-artillada`, `golden/run` (`banca-windup`, `banca-volley`)                                                                                                          |
+| 49  | Distinct silhouette, colors and movement per Enemy      | Done   | pipeline sprites (`render/enemies/`), behaviors               | `render/enemy-art`, `golden/run` (one per kind)                                                                                                                                |
+| 50  | Enemies break apart with debris                         | Done   | `core/run/effects/`, `render/effects/`                        | `core/effects`, `golden/effects`                                                                                                                                               |
+| 51  | Enemies flash when hit                                  | Done   | `silhouetteContext` in `render/enemies/`                      | `core/effects`, `golden/effects` (`effects-hit-flash`)                                                                                                                         |
+| 52  | Only Maletín-cópteros in the first minute               | Done   | `tuning.director` roster                                      | `core/director`                                                                                                                                                                |
+| 53  | New kinds over time, rising cap and fire rate           | Done   | `tuning.director` ramp steps, then endless logarithmic growth | `core/director` ("Endless escalation"), `scripts/balance` (`npm run balance`)                                                                                                  |
+| 54  | Enemy shots clearly visible and dodgeable               | Done   | `render/projectiles/`; balance pass (#30)                     | `core/enemy-fire`, `golden/run`; readability reviewed over the whole Arena ("Consistency pass" in `docs/architecture.md`); dodgeability measured by simulated play ("Balance") |
+| 55  | Brief invulnerability and a hurt animation              | Done   | `core/run/rexi.ts`, `render/rexi/pose.ts`                     | `core/rexi`, `golden/rexi` (`rexi-hurt`), `golden/run` (`run-hurt`)                                                                                                            |
 
 ## Quips and the Dialogue Box
 
-| #   | Story                                                 | Status | Where                                  | Verified by                                      |
-| --- | ----------------------------------------------------- | ------ | -------------------------------------- | ------------------------------------------------ |
-| 56  | Rexi sometimes says a Quip on a kill                  | Done   | `core/quips/director.ts`               | `core/quip-director`, `core/quips`               |
-| 57  | Pokémon-style box with portrait and name              | Done   | `render/dialogue/`                     | `golden/dialogue`, `render/dialogue`             |
-| 58  | Typewriter text with a blip                           | Done   | director reveal, `dialogue-blip` sound | `core/quip-director`, `platform/audio/sound-map` |
-| 59  | Short Hit-stop when a Quip triggers                   | Done   | `tuning.quips.hitStop`                 | `core/quips`                                     |
-| 60  | Play continues; the box closes on its own             | Done   | director linger and close              | `core/quips`, `core/quip-director`               |
-| 61  | Not on every kill, never overlapping                  | Done   | chance and cooldown                    | `core/quip-director`                             |
-| 62  | A Banca Artillada always gets a Quip                  | Done   | `alwaysQuip: true`                     | `core/quip-director`, `core/quips`               |
-| 63  | Legal Quips for Lawyer Craft, gym Quips for Gym Craft | Done   | `THEME_OF_CRAFT`                       | `core/quip-director`                             |
-| 64  | No repeats until a theme's pool is used up            | Done   | `ShuffleBag`                           | `core/quip-director`                             |
-| 65  | The four inside jokes, with setups                    | Done   | `core/quips/catalog.ts`                | `content/quips`                                  |
-| 66  | Every Quip fits in two lines                          | Done   | font metrics                           | `content/quips`                                  |
+| #   | Story                                                 | Status | Where                                                                 | Verified by                                      |
+| --- | ----------------------------------------------------- | ------ | --------------------------------------------------------------------- | ------------------------------------------------ |
+| 56  | Rexi sometimes says a Quip on a kill                  | Done   | `core/quips/director.ts`                                              | `core/quip-director`, `core/quips`               |
+| 57  | Pokémon-style box with portrait and name              | Done   | `render/dialogue/`                                                    | `golden/dialogue`, `render/dialogue`             |
+| 58  | Typewriter text with a blip                           | Done   | director reveal (about 40 chars/s with pauses), `dialogue-blip` sound | `core/quip-director`, `platform/audio/sound-map` |
+| 59  | Short Hit-stop when a Quip triggers                   | Done   | `tuning.quips.hitStop`; `hit-stop-started`/`hit-stop-ended` events    | `core/quips`                                     |
+| 60  | Play continues; the box closes on its own             | Done   | director linger and close                                             | `core/quips`, `core/quip-director`               |
+| 61  | Not on every kill, never overlapping                  | Done   | chance and cooldown                                                   | `core/quip-director`                             |
+| 62  | A Banca Artillada always gets a Quip                  | Done   | `alwaysQuip: true`                                                    | `core/quip-director`, `core/quips`               |
+| 63  | Legal Quips for Lawyer Craft, gym Quips for Gym Craft | Done   | `THEME_OF_CRAFT`                                                      | `core/quip-director`                             |
+| 64  | No repeats until a theme's pool is used up            | Done   | `ShuffleBag`                                                          | `core/quip-director`                             |
+| 65  | The four inside jokes, with setups                    | Done   | `core/quips/catalog.ts`                                               | `content/quips`                                  |
+| 66  | Every Quip fits in two lines                          | Done   | font metrics                                                          | `content/quips`                                  |
 
 ## Score and high scores
 
@@ -153,8 +153,8 @@ production build.
 | 80  | Headless, deterministic core at a fixed timestep with a seed     | Done                           | `src/core/`, ESLint boundaries, `tsconfig.headless.json` | `core/game` (determinism)                           |
 | 81  | Typed core events                                                | Done                           | `core/events.ts`                                         | `core/*`, `platform/audio/sound-map`                |
 | 82  | Renderer as a pure view → pixels function                        | Done, amended (640×360)        | `src/render/`                                            | `golden/*`                                          |
-| 83  | Golden-image tests of key screens and moments                    | Done                           | `tests/golden/`                                          | 61 goldens, all palette-checked (`render/palette`)  |
-| 84  | One tuning catalog for every balance number                      | Done                           | `src/core/tuning/`                                       | `core/*`; `scripts/balance` measures it             |
+| 83  | Golden-image tests of key screens and moments                    | Done                           | `tests/golden/`                                          | 62 goldens, all palette-checked (`render/palette`)  |
+| 84  | One tuning catalog for every balance number                      | Done                           | `src/core/tuning/` (screen timings in `tuning.screens`)  | `core/*`; `scripts/balance` measures it             |
 | 85  | Automated Quip catalog checks                                    | Done                           | —                                                        | `content/quips`, `core/quips`                       |
 | 86  | Tuning overrides and scripted spawns for tests and a dev sandbox | Done; dev sandbox **deferred** | `GameOverrides` (`core/options.ts`)                      | used across `core/*`, `golden/*`, `scripts/balance` |
 | 87  | CI typechecks, lints, tests, builds; main deploys to Pages       | Done                           | `.github/workflows/ci.yml`                               | CI                                                  |
@@ -167,6 +167,23 @@ and the tests, goldens and the balance harness all use them. What v1 does not sh
 URL switch that loads those overrides in the browser: only `?seed=N` and `?device=` exist. It
 can be added later without touching the core (for example, parse `?tuning=` in
 `platform/shell.ts` behind `import.meta.env.DEV`).
+
+## Beyond the spec
+
+Behaviours the spec did not ask for, kept because they are reasonable polish:
+
+- **Input buffer during Hit-stop**: a jump or Weapon switch pressed while frozen applies on the first
+  live tick, so a Hit-stop never swallows a tap (`core/quips`).
+- **No Quip on the fatal kill**: an Enemy destroyed in the tick Rexi dies draws no Quip or Hit-stop, so
+  the defeat beat is not interrupted by a joke (`core/quips`).
+- **A score of 0 never qualifies** for the top 10: a Run that scored nothing is not worth signing
+  (`core/high-scores`).
+- **Menu swipes on touch**: swipes anywhere drive the pause menu and initials entry besides the d-pad,
+  which is quicker for a thumb (`platform/touch-controller`).
+- **`?seed=N` and `?device=touch|desktop`**: fix a Run's seed and force a device kind, for smoke tests,
+  bug reports and checking touch on a desktop (`platform/device`, `e2e/*`).
+- **Web app manifest** (`public/manifest.webmanifest`, from `npm run share-preview`): gives the game a
+  proper icon and name when added to a home screen; it is not an offline PWA, which stays out of scope.
 
 ## Out of scope (from the spec)
 

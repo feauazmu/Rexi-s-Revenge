@@ -5,11 +5,13 @@ import type {
   EnemyKind,
   ParticleKind,
   ProjectileKind,
+  ProjectileOwner,
   WeaponId,
 } from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
 import type { PauseMenuItem } from './pause-menu';
+import type { RunStats } from './stats';
 import type { QuipTheme } from './quips/catalog';
 import type { TimedPowerUpId } from './tuning';
 
@@ -60,7 +62,7 @@ export type ScreenKind = 'title' | 'how-to-play' | 'run' | 'paused' | 'verdict';
 
 /** The Veredicto: how the Run went and, if it made the top 10, the initials entry. */
 export interface VerdictView {
-  readonly stats: RunStatsView;
+  readonly stats: RunStats;
   /** The 1-based place this Run takes in the top 10, or null if it did not make it. */
   readonly rank: number | null;
   /** The initials entry, present exactly when `rank` is not null (also once signed). */
@@ -103,7 +105,7 @@ export interface RunView {
   readonly projectiles: readonly ProjectileView[];
   readonly effects: EffectsView;
   readonly crates: readonly CrateView[];
-  readonly stats: RunStatsView;
+  readonly stats: RunStats;
   /** True once Rexi has been defeated: the Run is over and no longer advances. */
   readonly ended: boolean;
   /** Ticks of Hit-stop left: while above 0 the Run is frozen (the Dialogue Box is not). */
@@ -239,19 +241,11 @@ export interface EnemyView extends BoxView {
 export interface ProjectileView extends BoxView {
   readonly id: number;
   readonly kind: ProjectileKind;
-  readonly owner: 'rexi' | 'enemy';
+  readonly owner: ProjectileOwner;
   readonly vx: number;
   readonly vy: number;
   /** Ticks since this projectile was fired (animation phase). */
   readonly age: number;
-}
-
-export interface RunStatsView {
-  readonly score: number;
-  /** Enemies destroyed ("demandas desestimadas" in the UI). */
-  readonly enemiesDestroyed: number;
-  /** Run ticks survived. */
-  readonly ticksSurvived: number;
 }
 
 /** Combat feedback simulated by the core: particles and the screen-shake offset. */

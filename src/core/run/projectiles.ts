@@ -1,5 +1,5 @@
 import { DT, OFFSCREEN_MARGIN, SCREEN_HEIGHT, SCREEN_WIDTH, secondsToTicks } from '../constants';
-import type { ProjectileKind } from '../ids';
+import type { ProjectileKind, ProjectileOwner } from '../ids';
 import { center, clamp, overlaps, rotate, type Box, type Vec2 } from '../math';
 import type { RunContext } from './context';
 import { puffSmoke } from './effects';
@@ -11,7 +11,7 @@ import type { Blast, ProjectileHoming, ProjectileState, ProjectileThrust } from 
 
 export interface ProjectileSpawn {
   readonly kind: ProjectileKind;
-  readonly owner: 'rexi' | 'enemy';
+  readonly owner: ProjectileOwner;
   /** Center of the projectile at spawn. */
   readonly center: Vec2;
   readonly size: number;

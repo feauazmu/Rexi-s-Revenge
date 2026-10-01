@@ -297,7 +297,12 @@ describe('Banca Artillada rocket volleys', () => {
         80,
         withBanca(
           { firstVolleyDelay: 2, volleyInterval: 2 },
-          { director: { stages: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }] } },
+          {
+            director: {
+              growth: { timeScale: 0 },
+              steps: [{ from: 0, onScreenCap: 3, spawnInterval: 3, fireRate }],
+            },
+          },
         ),
       );
       // The windup before each volley runs in Enemy time, unaffected by the fire rate.
@@ -409,7 +414,8 @@ describe('Banca Artillada in the Director', () => {
     ...invincible,
     director: {
       firstSpawnDelay: 0,
-      stages: [{ from: 0, onScreenCap: 20, spawnInterval: 0.5, fireRate: 1 }],
+      growth: { timeScale: 0 },
+      steps: [{ from: 0, onScreenCap: 20, spawnInterval: 0.5, fireRate: 1 }],
       roster: {
         'maletin-coptero': { weight: 0 },
         'archivador-artillado': { weight: 0 },

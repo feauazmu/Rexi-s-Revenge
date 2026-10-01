@@ -36,6 +36,7 @@ const offset = (p: Vec2, dx: number, dy: number): Vec2 => ({ x: p.x + dx, y: p.y
 describe('touch controller: playing a Run', () => {
   const view = runView();
   const shoulder = view.run?.rexi.shoulder ?? { x: 0, y: 0 };
+  const rexiFacing = view.run?.rexi.facing ?? 1;
 
   it('samples a neutral frame (aiming ahead of Rexi) with no fingers down', () => {
     const frame = controllerOn(view).sample(view);
@@ -68,11 +69,14 @@ describe('touch controller: playing a Run', () => {
     expect(frame.jump).toBe(false);
   });
 
-  it('aims along the right stick and fires while it is pushed', () => {
+  it('aims along the right stick and fires while it is held', () => {
     const touch = controllerOn(view);
     const start = { x: 533, y: 200 };
     touch.down(2, start);
-    expect(touch.sample(view).fire).toBe(false); // resting inside the dead zone
+    // Resting inside the dead zone it already fires, the way Rexi faces (no aim yet).
+    const resting = touch.sample(view);
+    expect(resting.fire).toBe(true);
+    expect(resting.aim).toEqual({ x: shoulder.x + rexiFacing * AIM_DISTANCE, y: shoulder.y });
     touch.move(2, offset(start, 0, -R));
     const frame = touch.sample(view);
     expect(frame.fire).toBe(true);
@@ -83,6 +87,47 @@ describe('touch controller: playing a Run', () => {
     const released = touch.sample(view);
     expect(released.fire).toBe(false);
     expect(released.aim.y).toBeCloseTo(shoulder.y - AIM_DISTANCE); // keeps the last aim
+  });
+
+  it('keeps firing along the last aim when the held stick drifts back into the dead zone', () => {
+    const touch = controllerOn(view);
+    const start = { x: 533, y: 200 };
+    touch.down(2, start);
+    touch.move(2, offset(start, -R, 0));
+    expect(touch.sample(view).fire).toBe(true);
+    touch.move(2, offset(start, 1, 1));
+    const frame = touch.sample(view);
+    expect(frame.fire).toBe(true);
+    expect(frame.aim.x).toBeCloseTo(shoulder.x - AIM_DISTANCE);
+    expect(frame.aim.y).toBeCloseTo(shoulder.y);
+  });
+
+  it('fires the way Rexi faces when the stick is held before any aim, facing left too', () => {
+    const game = drive({ device: 'touch' });
+    game.ticks(1, { aim: { x: 0, y: 200 } });
+    const left = game.view;
+    const leftShoulder = left.run?.rexi.shoulder ?? expect.unreachable();
+    expect(left.run?.rexi.facing).toBe(-1);
+    const touch = controllerOn(left);
+    touch.down(2, { x: 533, y: 200 });
+    const frame = touch.sample(left);
+    expect(frame.fire).toBe(true);
+    expect(frame.aim).toEqual({ x: leftShoulder.x - AIM_DISTANCE, y: leftShoulder.y });
+  });
+
+  it("starts each Run aiming the way Rexi faces, not along the last Run's aim", () => {
+    const touch = controllerOn(view);
+    touch.down(2, { x: 533, y: 200 });
+    touch.move(2, { x: 533, y: 200 - R });
+    touch.sample(view);
+    touch.up(2, { x: 533, y: 200 - R });
+    touch.sample(titleView());
+    touch.down(2, { x: 533, y: 200 });
+    touch.sample(view); // a Run again: the mode is play from this sample on
+    expect(touch.sample(view).aim).toEqual({
+      x: shoulder.x + rexiFacing * AIM_DISTANCE,
+      y: shoulder.y,
+    });
   });
 
   it('faces where Rexi walks while the aim stick is idle', () => {

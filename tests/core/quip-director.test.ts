@@ -13,6 +13,7 @@ import {
   type Quip,
   type QuipDirector,
   type QuipsTuning,
+  TICKS_PER_SECOND,
 } from '../../src/core';
 import { eventsOf } from '../support/driver';
 
@@ -113,9 +114,25 @@ describe('Quip director: triggering', () => {
   it('starts the Hit-stop on every trigger and reports it frozen tick by tick', () => {
     const h = harness({ chance: 1, hitStop: 0.1 });
     h.kill();
-    expect(started(h.events)[0]?.hitStopTicks).toBe(6);
+    expect(eventsOf(h.events, 'hit-stop-started')[0]?.ticks).toBe(6);
     const frozen = Array.from({ length: 8 }, () => h.director.advance());
     expect(frozen).toEqual([true, true, true, true, true, true, false, false]);
+  });
+
+  it('pairs every Hit-stop start with an end when Quips replace each other mid-freeze', () => {
+    const h = harness({ chance: 1, hitStop: 0.1 });
+    // Two always-Quip kills in the same tick: the second replaces the first box.
+    h.kill('gym', true);
+    h.kill('gym', true);
+    for (let i = 0; i < 10; i++) h.director.advance();
+    const hitStops = h.events.filter((e) => e.type.startsWith('hit-stop')).map((e) => e.type);
+    expect(hitStops).toEqual([
+      'hit-stop-started',
+      'hit-stop-ended',
+      'hit-stop-started',
+      'hit-stop-ended',
+    ]);
+    expect(h.director.hitStop).toBe(0);
   });
 });
 
@@ -194,6 +211,23 @@ describe('Quip director: typewriter', () => {
     );
     // "Ab," then 2 ticks of pause; " cd." then 3 ticks of pause; " Ef".
     expect(revealed).toEqual([1, 2, 3, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 9, 10]);
+  });
+
+  it('reveals the catalog at about 40 chars/s on average, punctuation pauses included', () => {
+    // Default pacing, with the box already open so only the typewriter is timed.
+    const typingTicks = (quip: Quip): number => {
+      const h = harness({ ...defaultTuning.quips, chance: 1, boxTransition: 0 }, [quip]);
+      h.kill(quip.theme === 'legal' ? 'lawyer' : 'gym');
+      for (let tick = 1; tick <= 10_000; tick++) {
+        h.director.advance();
+        if (h.director.view()?.complete) return tick;
+      }
+      throw new Error(`${quip.id} never finished typing`);
+    };
+    const rates = QUIPS.map((quip) => quip.text.length / (typingTicks(quip) / TICKS_PER_SECOND));
+    const average = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+    expect(average).toBeGreaterThan(39);
+    expect(average).toBeLessThan(41);
   });
 
   it('reports the box complete once every character is shown', () => {

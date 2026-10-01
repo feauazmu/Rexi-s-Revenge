@@ -9,7 +9,10 @@ export interface QuipsTuning {
   readonly cooldown: number;
   /** How long the Run freezes when a Quip triggers, seconds. The Dialogue Box keeps going. */
   readonly hitStop: number;
-  /** Typewriter speed, characters per second. */
+  /**
+   * Typewriter speed between punctuation pauses, characters per second. With the pauses, the
+   * Quip catalog reveals at about 40 chars/s on average (the spec's rate; a test checks it).
+   */
   readonly revealRate: number;
   /** Extra beat after `,`, `:` or `;` followed by a space, seconds. */
   readonly clausePause: number;
@@ -25,7 +28,7 @@ export const quipsTuning: QuipsTuning = {
   chance: 0.25,
   cooldown: 4,
   hitStop: 0.5,
-  revealRate: 40,
+  revealRate: 51,
   clausePause: 0.1,
   sentencePause: 0.2,
   linger: 2.5,

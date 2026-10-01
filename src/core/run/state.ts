@@ -1,4 +1,11 @@
-import type { CrateContents, EnemyKind, ProjectileKind, SpecialWeaponId, WeaponId } from '../ids';
+import type {
+  CrateContents,
+  EnemyKind,
+  ProjectileKind,
+  ProjectileOwner,
+  SpecialWeaponId,
+  WeaponId,
+} from '../ids';
 import type { Box, Vec2 } from '../math';
 import type { ScriptedSpawn } from '../options';
 import type { DirectorState } from './director';
@@ -99,7 +106,7 @@ export interface EnemyState extends Box {
 export interface ProjectileState extends Box {
   readonly id: number;
   readonly kind: ProjectileKind;
-  readonly owner: 'rexi' | 'enemy';
+  readonly owner: ProjectileOwner;
   vx: number;
   vy: number;
   /** Downward acceleration, px/s² (0 for straight shots). */

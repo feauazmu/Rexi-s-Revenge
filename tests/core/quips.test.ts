@@ -150,8 +150,8 @@ describe('Hit-stop', () => {
 
   it('freezes the Run for the tuned time while the Dialogue Box keeps animating', () => {
     const game = quipGame({ quips: { chance: 1 } });
-    const [started] = eventsOf(killOne(game), 'quip-started');
-    expect(started?.hitStopTicks).toBe(hitStopTicks);
+    const [started] = eventsOf(killOne(game), 'hit-stop-started');
+    expect(started?.ticks).toBe(hitStopTicks);
 
     const before = runOf(game.view);
     const gameTick = game.view.tick;
@@ -173,6 +173,46 @@ describe('Hit-stop', () => {
     const after = runOf(game.view);
     expect(after.tick).toBe(before.tick + 1);
     expect(after.rexi.x).toBeGreaterThan(before.rexi.x);
+  });
+
+  it('announces its start and its end with events', () => {
+    const game = quipGame({ quips: { chance: 1 } });
+    const killed = killOne(game);
+    const types = killed.map((e) => e.type);
+    expect(types.indexOf('hit-stop-started')).toBe(types.indexOf('quip-started') + 1);
+    expect(eventsOf(killed, 'hit-stop-started')).toEqual([
+      { type: 'hit-stop-started', ticks: hitStopTicks },
+    ]);
+    expect(eventsOf(killed, 'hit-stop-ended')).toHaveLength(0);
+
+    // Ended on its last frozen tick: the Run steps again on the next one.
+    expect(eventsOf(game.ticks(hitStopTicks - 1), 'hit-stop-ended')).toHaveLength(0);
+    const runTick = runOf(game.view).tick;
+    expect(eventsOf(game.ticks(1), 'hit-stop-ended')).toHaveLength(1);
+    expect(runOf(game.view).tick).toBe(runTick);
+    expect(runOf(game.view).hitStop).toBe(0);
+    game.ticks(1);
+    expect(runOf(game.view).tick).toBe(runTick + 1);
+  });
+
+  it('ends when the Run is abandoned from the pause menu during it', () => {
+    const game = quipGame({ quips: { chance: 1 } });
+    killOne(game);
+    game.ticks(1, { pause: true });
+    expect(game.view.screen).toBe('paused');
+    game.ticks(1, { menu: { down: true } });
+    game.ticks(1, { menu: { down: true } });
+    const events = game.ticks(1, { menu: { confirm: true } });
+    expect(game.view.screen).toBe('title');
+    expect(eventsOf(events, 'hit-stop-ended')).toHaveLength(1);
+  });
+
+  it('sends no Hit-stop events when its length is 0', () => {
+    const game = quipGame({ quips: { chance: 1, hitStop: 0 } });
+    const events = [...killOne(game), ...game.ticks(30)];
+    expect(eventsOf(events, 'quip-started')).toHaveLength(1);
+    expect(eventsOf(events, 'hit-stop-started')).toHaveLength(0);
+    expect(eventsOf(events, 'hit-stop-ended')).toHaveLength(0);
   });
 
   it('counts down in the view while it lasts', () => {

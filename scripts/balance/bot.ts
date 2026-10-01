@@ -23,6 +23,7 @@
 import {
   createGame,
   createRng,
+  deriveSeed,
   inputFrame,
   resolveTuning,
   TICKS_PER_SECOND,
@@ -151,10 +152,8 @@ export function playRun({ seed, profile, tuning, maxSeconds = 900 }: PlayOptions
         damageBy[source] = (damageBy[source] ?? 0) + event.damage;
       } else if (event.type === 'crate-picked') cratesPicked++;
       else if (event.type === 'crate-expired') cratesExpired++;
-      else if (event.type === 'quip-started') {
-        quips++;
-        hitStopTicks += event.hitStopTicks;
-      }
+      else if (event.type === 'quip-started') quips++;
+      else if (event.type === 'hit-stop-started') hitStopTicks += event.ticks;
     }
   }
   const run = game.view.run;
@@ -206,6 +205,8 @@ const JUMP_HOLD_TICKS = 14;
 const DODGE_MARGIN = 6;
 /** Prediction step, ticks. */
 const STEP_TICKS = 2;
+/** Stream id of the bot's own random generator, apart from the Game's streams. */
+const BOT_STREAM = 0xb07;
 
 interface Bot {
   decide(view: GameView): InputFramePatch;
@@ -216,7 +217,7 @@ interface Bot {
  * (run speed, jump, gravity, shot speeds) the way a practiced player does.
  */
 export function createBot(profile: BotProfile, seed: number, tuning: Tuning): Bot {
-  const rng: Rng = createRng((seed * 2654435761) ^ 0x5eed);
+  const rng: Rng = createRng(deriveSeed(seed, BOT_STREAM));
   const history: RunView[] = [];
   const noticed = new Map<number, boolean>();
   let plan: Plan = { move: 0, jump: false };

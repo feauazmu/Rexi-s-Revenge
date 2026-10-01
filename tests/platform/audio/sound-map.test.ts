@@ -140,12 +140,7 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     ],
   ],
   'crate-expired': [[{ type: 'crate-expired', crateId: 1 }, null]],
-  'quip-started': [
-    [
-      { type: 'quip-started', quipId: 'legal-x', theme: 'legal', enemyId: 1, hitStopTicks: 6 },
-      null,
-    ],
-  ],
+  'quip-started': [[{ type: 'quip-started', quipId: 'legal-x', theme: 'legal', enemyId: 1 }, null]],
   'quip-character': [
     [{ type: 'quip-character', quipId: 'legal-x', char: 'O', index: 0 }, 'dialogue-blip'],
     [{ type: 'quip-character', quipId: 'legal-x', char: 'b', index: 1 }, null],
@@ -175,6 +170,8 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
   ],
   'rexi-healed': [[{ type: 'rexi-healed', amount: 30, health: 80 }, 'power-up-start']],
   'dialogue-closed': [[{ type: 'dialogue-closed', quipId: 'legal-x' }, null]],
+  'hit-stop-started': [[{ type: 'hit-stop-started', ticks: 30 }, null]],
+  'hit-stop-ended': [[{ type: 'hit-stop-ended' }, null]],
 };
 
 describe('soundForEvent', () => {

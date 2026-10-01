@@ -69,8 +69,11 @@ export function createTouchController(): TouchController {
   let weaponNext = false;
   let menu: Record<keyof MenuInput, boolean> = noMenu();
 
-  /** The last aim direction: kept after the aim stick is released. */
-  let aimDirection: Vec2 = { x: 1, y: 0 };
+  /**
+   * The last aim direction, kept after the aim stick is released (or while it rests inside its
+   * dead zone); null until the first aim or step, when Rexi's facing stands in.
+   */
+  let aimDirection: Vec2 | null = null;
 
   const stickHeld = (stick: 'move' | 'aim') =>
     [...fingers.values()].some((r) => r.kind === 'stick' && r.stick === stick);
@@ -104,6 +107,8 @@ export function createTouchController(): TouchController {
 
   const observe = (view: GameView) => {
     screen = view.screen;
+    // Each Run starts aiming the way Rexi faces, not along the previous Run's last aim.
+    if (view.run === null) aimDirection = null;
   };
 
   return {
@@ -147,9 +152,12 @@ export function createTouchController(): TouchController {
       const aimStick = playing ? stickVector('aim') : null;
       const move = stickToMove(moveStick);
 
-      const firing = aimStick !== null && (aimStick.x !== 0 || aimStick.y !== 0);
-      if (firing) aimDirection = aimStick;
-      else if (playing && move !== 0) aimDirection = { x: Math.sign(move), y: 0 };
+      // The aim stick fires for as long as it is held, even resting inside its dead zone;
+      // only a push past the dead zone changes the aim.
+      const firing = aimStick !== null;
+      if (aimStick && !isCentered(aimStick)) aimDirection = aimStick;
+      else if (!firing && playing && move !== 0) aimDirection = { x: Math.sign(move), y: 0 };
+      const direction = aimDirection ?? { x: view.run?.rexi.facing ?? 1, y: 0 };
 
       const shoulder = view.run?.rexi.shoulder;
       const frame: InputFrame = {
@@ -158,7 +166,7 @@ export function createTouchController(): TouchController {
         jump:
           playing && [...fingers.values()].some((r) => r.kind === 'button' && r.button === 'jump'),
         drop: wantsDrop(moveStick),
-        aim: shoulder ? aimTarget(shoulder, aimDirection, AIM_DISTANCE) : NEUTRAL_INPUT.aim,
+        aim: shoulder ? aimTarget(shoulder, direction, AIM_DISTANCE) : NEUTRAL_INPUT.aim,
         fire: firing,
         weaponNext,
         pause,
@@ -209,4 +217,9 @@ function swipeDirection(from: Vec2, to: Vec2): MenuButton | null {
   if (Math.hypot(dx, dy) < SWIPE_DISTANCE) return null;
   if (Math.abs(dx) > Math.abs(dy)) return dx < 0 ? 'left' : 'right';
   return dy < 0 ? 'up' : 'down';
+}
+
+/** True for a stick vector inside its dead zone (`readStick` returns exactly zero there). */
+function isCentered(stick: Vec2): boolean {
+  return stick.x === 0 && stick.y === 0;
 }
