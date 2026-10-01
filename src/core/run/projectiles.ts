@@ -6,7 +6,7 @@ import { puffSmoke } from './effects';
 import { damageEnemy } from './enemies/system';
 import { detonate } from './explosives';
 import { canHurtRexi, damageRexi } from './rexi';
-import type { Blast, ProjectileState, ProjectileThrust } from './state';
+import type { Blast, ProjectileHoming, ProjectileState, ProjectileThrust } from './state';
 
 /** How far outside the screen a projectile may travel before it is discarded, px. */
 const OFFSCREEN_MARGIN = 32;
@@ -25,10 +25,11 @@ export interface ProjectileSpawn {
   /** Downward acceleration, px/s². Default 0. */
   readonly gravity?: number;
   /**
-   * Homing: fastest turn toward the nearest target (Enemies for Rexi's projectiles, Rexi for
-   * Enemy ones), degrees per second. Default 0: flies straight.
+   * Homing: turns toward its target by at most `turnRate` degrees per second, keeping its speed,
+   * for the first `duration` seconds (default: its whole flight), then flies straight. Rexi's
+   * projectiles home on the nearest live Enemy, Enemy ones on Rexi. Default: flies straight.
    */
-  readonly turnRate?: number;
+  readonly homing?: { readonly turnRate: number; readonly duration?: number };
   /**
    * Bounces off the ground and one-way platforms (landing from above) this many times,
    * keeping `restitution` of its vertical speed. Default: no bouncing.
@@ -58,7 +59,13 @@ export function spawnProjectile(ctx: RunContext, spawn: ProjectileSpawn): Projec
     vx: spawn.velocity.x,
     vy: spawn.velocity.y,
     gravity: spawn.gravity ?? 0,
-    turnRate: ((spawn.turnRate ?? 0) * Math.PI) / 180,
+    homing: spawn.homing
+      ? {
+          turnRate: (spawn.homing.turnRate * Math.PI) / 180,
+          ticksLeft:
+            spawn.homing.duration === undefined ? null : secondsToTicks(spawn.homing.duration),
+        }
+      : null,
     damage: spawn.damage,
     ttl: secondsToTicks(spawn.lifetime),
     age: 0,
@@ -84,7 +91,7 @@ export function stepProjectiles(ctx: RunContext): void {
 function stepProjectile(ctx: RunContext, p: ProjectileState): boolean {
   const { state } = ctx;
   const bottomBefore = p.y + p.h;
-  if (p.turnRate > 0) steer(ctx, p);
+  if (p.homing) steer(ctx, p, p.homing);
   p.vy += p.gravity * DT;
   if (p.thrust) accelerate(p, p.thrust);
   p.x += p.vx * DT;
@@ -107,9 +114,9 @@ function stepProjectile(ctx: RunContext, p: ProjectileState): boolean {
     return false;
   }
 
-  // Bouncing and explosive projectiles land on one-way platforms too; others fly through them.
-  const surface =
-    p.bounce || p.blast ? landingSurface(ctx, p, bottomBefore) : groundCrossed(ctx, p);
+  // Bouncing projectiles and falling bombs land on one-way platforms; shots fly past them.
+  const landsOnPlatforms = p.bounce !== null || (p.blast !== null && p.gravity > 0);
+  const surface = landsOnPlatforms ? landingSurface(ctx, p, bottomBefore) : groundCrossed(ctx, p);
   if (surface !== null) {
     p.y = surface - p.h;
     if (p.bounce && p.bounce.left > 0) {
@@ -174,7 +181,11 @@ function landingSurface(
 }
 
 /** Turns a homing projectile toward its nearest target by at most its turn rate, keeping its speed. */
-function steer(ctx: RunContext, p: ProjectileState): void {
+function steer(ctx: RunContext, p: ProjectileState, homing: ProjectileHoming): void {
+  if (homing.ticksLeft !== null) {
+    if (homing.ticksLeft <= 0) return;
+    homing.ticksLeft -= 1;
+  }
   const target = homingTarget(ctx, p);
   if (!target) return;
   const from = center(p);
@@ -183,7 +194,7 @@ function steer(ctx: RunContext, p: ProjectileState): void {
   const wanted = Math.atan2(to.y - from.y, to.x - from.x);
   // Shortest signed angle from the heading to the target, in (-π, π].
   const error = Math.atan2(Math.sin(wanted - heading), Math.cos(wanted - heading));
-  const maxTurn = p.turnRate * DT;
+  const maxTurn = homing.turnRate * DT;
   const turned = rotate({ x: p.vx, y: p.vy }, clamp(error, -maxTurn, maxTurn));
   p.vx = turned.x;
   p.vy = turned.y;

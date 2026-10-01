@@ -100,8 +100,8 @@ export interface ProjectileState extends Box {
   vy: number;
   /** Downward acceleration, px/s² (0 for straight shots). */
   readonly gravity: number;
-  /** Homing turn rate toward the nearest target, radians per second (0 = flies straight). */
-  readonly turnRate: number;
+  /** Steers toward its target (see `ProjectileSpawn.homing`); null when it flies straight. */
+  homing: ProjectileHoming | null;
   readonly damage: number;
   /** Ticks left before the projectile disappears. */
   ttl: number;
@@ -122,6 +122,13 @@ export interface ProjectileBounce {
   left: number;
   /** Fraction of the vertical speed kept by a bounce. */
   readonly restitution: number;
+}
+
+export interface ProjectileHoming {
+  /** Fastest turn toward the target, radians per second. */
+  readonly turnRate: number;
+  /** Ticks of steering left; null steers for its whole flight. */
+  ticksLeft: number | null;
 }
 
 export interface ProjectileThrust {

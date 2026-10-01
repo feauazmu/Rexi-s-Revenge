@@ -96,10 +96,12 @@ selected. Slots follow `WEAPON_IDS`: number key N selects entry N − 1 if carri
 carried Weapons in that order, wrapping. Cooldowns are per Weapon, so switching never skips one.
 
 Projectile behaviors are options of `spawnProjectile` (`src/core/run/projectiles.ts`), so a Weapon
-composes them instead of writing motion code: `gravity` (arcs), `bounce` (off the ground and one-way
+composes them instead of writing motion code: `gravity` (arcs), `homing` (steer toward the target, optionally
+for a limited time), `bounce` (off the ground and one-way
 platforms, landing from above), `thrust` (accelerate along the heading to a top speed), `trailInterval`
 (cosmetic smoke puffs) and `blast`. A projectile with a `blast` is explosive: it detonates when it hits its
-target (after its impact `damage`), lands on the ground or a one-way platform top with no bounces left, or its
+target (after its impact `damage`), lands with no bounces left (on the ground; bouncing projectiles and falling
+bombs — `blast` with `gravity` — also land on one-way platform tops), or its
 lifetime runs out — never when it leaves the screen. `detonate` (`src/core/run/explosives.ts`) emits
 `explosion` (owner, projectile kind, preset size, center, radius), plays the blast's explosion preset and deals
 splash damage (`Blast`: `damage` at the center, linear falloff to `edge` × `damage` at `radius`, measured to the
@@ -167,12 +169,13 @@ Combat rules (`src/core/run/projectiles.ts`, `src/core/run/rexi.ts`): Rexi's pro
 Enemy projectiles (`owner: 'enemy'`, spawned from an Enemy's `update` with `spawnProjectile`) hurt Rexi.
 A hit emits `rexi-hit` and starts the hurt reaction (`RexiView.hurtTicks`) and the invulnerability window
 (`RexiView.invulnerableTicks`); while it lasts, Enemy projectiles fly through him. Projectiles are removed on a
-hit, at the ground (unless they bounce), off-screen or when their lifetime runs out. A projectile spawned with a `turnRate`
-homes: each tick it turns toward the nearest live Enemy (Rexi, for Enemy projectiles) by at most that rate,
-keeping its speed (Citaciones Teledirigidas). Instant Weapons resolve their hits inside `fire` instead of
+hit, at the ground (unless they bounce), off-screen or when their lifetime runs out. A projectile spawned with `homing`
+steers: each tick it turns toward the nearest live Enemy (Rexi, for Enemy projectiles) by at most `turnRate`,
+keeping its speed, for its whole flight (Citaciones Teledirigidas) or only its first `duration` seconds (the Banca
+Artillada's rockets, which add `thrust` and a harmless `blast` burst). Instant Weapons resolve their hits inside `fire` instead of
 spawning projectiles: Sentencia Firme casts a ray to the screen edge or the ground, calls `damageEnemy` on
 every Enemy along it (nearest first) and leaves a fading trace with `traceBeam`. An Enemy projectile with a `blast`
-(e.g. the Archivador Artillado's drawer) explodes like Rexi's (see "Weapons and the inventory"), but its splash hurts
+(the Archivador Artillado's drawer, the Banca Artillada's rockets) explodes like Rexi's (see "Weapons and the inventory"), but its splash hurts
 only Rexi. Behaviors that telegraph an attack report it through their optional `pose(memory, tuning)`, which
 becomes `EnemyView.pose` (`attack: 'windup'` with `windup` rising 0..1), so the renderer can animate the telegraph. When Rexi's health reaches zero the Run emits
 `run-ended` (score, Enemies destroyed, ticks survived) in that same tick, sets `RunView.ended` and stops

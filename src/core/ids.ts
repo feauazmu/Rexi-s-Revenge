@@ -44,6 +44,7 @@ export const ENEMY_KINDS = [
   'maletin-coptero', // Maletín-cóptero (Lawyer Craft)
   'archivador-artillado', // Archivador Artillado (Lawyer Craft)
   'caminadora-a-reaccion', // Caminadora a Reacción (Gym Craft)
+  'banca-artillada', // Banca Artillada (Gym Craft)
 ] as const;
 export type EnemyKind = (typeof ENEMY_KINDS)[number];
 
@@ -57,6 +58,7 @@ export const PROJECTILE_KINDS = [
   'law-book', // Código Penal
   'drawer', // Archivador Artillado's drawer bomb
   'bullet', // Caminadora a Reacción
+  'rocket', // Banca Artillada
 ] as const;
 export type ProjectileKind = (typeof PROJECTILE_KINDS)[number];
 

@@ -6,6 +6,7 @@ import { drawBullet } from './bullet';
 import { drawGavel } from './gavel';
 import { drawLawBook } from './law-book';
 import { drawPaper } from './paper';
+import { drawRocket } from './rocket';
 import { drawStamp } from './stamp';
 import { drawSubpoena } from './subpoena';
 
@@ -21,6 +22,7 @@ const projectileDrawers: Readonly<Record<ProjectileKind, ProjectileDrawer>> = {
   'law-book': drawLawBook,
   drawer: drawDrawer,
   bullet: drawBullet,
+  rocket: drawRocket,
 };
 
 export function drawProjectiles(dc: DrawContext, run: RunView): void {

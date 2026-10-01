@@ -159,6 +159,55 @@ describe('Run goldens', () => {
     expect(poses[1]?.windup).toBeGreaterThan(0);
     await expectGolden('enemy-caminadora-a-reaccion', renderView(game.view));
   });
+
+  it('enemy-banca-artillada: the gunship facing Rexi from both sides, rotors turning', async () => {
+    const game = drive({
+      seed: 2,
+      overrides: {
+        spawns: [
+          { kind: 'banca-artillada', x: 24, y: 40 },
+          { kind: 'banca-artillada', x: 300, y: 64, atTick: 1 },
+        ],
+        tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 99 } } }),
+      },
+    });
+    game.seconds(0.5, { aim: { x: 328, y: 79 } });
+    await expectGolden('enemy-banca-artillada', renderView(game.view));
+  });
+
+  it('banca-windup: the pods glowing white-hot just before a volley', async () => {
+    const banca = defaultTuning.enemies['banca-artillada'];
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [{ kind: 'banca-artillada', x: 300, y: 50 }],
+        tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 0.5 } } }),
+      },
+    });
+    const aim = { x: 328, y: 65 };
+    game.seconds(0.5 + banca.volleyWindup * 0.9, { aim });
+    const pose = runOf(game.view).enemies[0]?.pose;
+    expect(pose?.attack).toBe('windup');
+    expect(pose?.windup).toBeGreaterThan(0.8);
+    await expectGolden('banca-windup', renderView(game.view));
+  });
+
+  it('banca-volley: a rocket volley fanning out of the pods, flames and smoke trails', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [{ kind: 'banca-artillada', x: 300, y: 50 }],
+        tuning: holdStill({ enemies: { 'banca-artillada': { firstVolleyDelay: 0.5 } } }),
+      },
+    });
+    const aim = { x: 328, y: 65 };
+    // Past the windup (the pods glowing), most of the way through the volley.
+    game.seconds(0.5 + defaultTuning.enemies['banca-artillada'].volleyWindup, { aim });
+    game.ticks(32, { aim });
+    const rockets = runOf(game.view).projectiles.filter((p) => p.kind === 'rocket');
+    expect(rockets).toHaveLength(defaultTuning.enemies['banca-artillada'].volleySize);
+    await expectGolden('banca-volley', renderView(game.view));
+  });
 });
 
 describe('Crate goldens', () => {
@@ -246,5 +295,50 @@ describe('Power-up goldens', () => {
     });
     game.seconds(2, { aim: { x: 300, y: 200 } });
     await expectGolden('crate-power-ups', renderView(game.view));
+  });
+});
+
+describe('Crate goldens', () => {
+  const groundY = defaultTuning.arena.groundY;
+  const crateSize = defaultTuning.crates.size;
+
+  it('crate-falling: a Lluvia de Sellos Crate under its parachute', async () => {
+    const game = drive({ seed: 1, overrides: { spawns: [weaponCrate('lluvia-de-sellos', 300)] } });
+    game.seconds(2, { aim: { x: 309, y: 110 } });
+    await expectGolden('crate-falling', renderView(game.view));
+  });
+
+  it('crate-blinking: two landed Crates near expiry, one in a flash frame', async () => {
+    const onGround = { y: groundY - crateSize };
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [
+          weaponCrate('lluvia-de-sellos', 260, onGround),
+          weaponCrate('lluvia-de-sellos', 320, { ...onGround, atTick: 6 }),
+        ],
+      },
+    });
+    game.ticks(451, { aim: { x: 300, y: 200 } });
+    const [flashing, steady] = runOf(game.view).crates;
+    expect(flashing).toMatchObject({ blinking: true, ticksLeft: 150 });
+    expect(steady).toMatchObject({ blinking: true, ticksLeft: 156 });
+    await expectGolden('crate-blinking', renderView(game.view));
+  });
+
+  it('run-hud-sellos: HUD with the Lluvia de Sellos selected, stamps in flight', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [weaponCrate('lluvia-de-sellos', ON_REXI.x, { y: ON_REXI.y }), maletin],
+        tuning: holdStill(),
+      },
+    });
+    const aim = { x: 190, y: 150 };
+    game.ticks(1, { aim });
+    game.holdFireToward(aim, 1.6);
+    game.ticks(6, { aim });
+    expect(runOf(game.view).rexi.weapon).toEqual({ id: 'lluvia-de-sellos', ammo: 17 });
+    await expectGolden('run-hud-sellos', renderView(game.view));
   });
 });

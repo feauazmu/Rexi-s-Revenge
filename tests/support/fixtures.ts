@@ -16,6 +16,7 @@ export function holdStill(tuning: TuningOverrides = {}): TuningOverrides {
         strafeSpeed: 0,
         ...tuning.enemies?.['caminadora-a-reaccion'],
       },
+      'banca-artillada': { driftSpeed: 0, ...tuning.enemies?.['banca-artillada'] },
     },
   };
 }

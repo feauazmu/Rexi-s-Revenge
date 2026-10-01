@@ -18,7 +18,7 @@ export const citacionesTeledirigidas: WeaponDef = {
       velocity: { x: direction.x * t.projectileSpeed, y: direction.y * t.projectileSpeed },
       damage: t.damage,
       lifetime: t.projectileLifetime,
-      turnRate: t.turnRate,
+      homing: { turnRate: t.turnRate },
     });
   },
 };

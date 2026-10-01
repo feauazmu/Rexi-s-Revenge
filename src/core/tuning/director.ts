@@ -86,8 +86,7 @@ export const directorTuning = {
     fireRate: 0.1,
     fireRateMax: 2,
   },
-  // Weights are relative to the kinds allowed at the time. Planned entries for the later
-  // Enemy: Banca Artillada from 120 s (weight 15, maxOnScreen 1).
+  // Weights are relative to the kinds allowed at the time.
   roster: {
     'maletin-coptero': {
       from: 0,
@@ -113,6 +112,15 @@ export const directorTuning = {
       edges: ['left', 'right'],
       minY: 70,
       maxY: 130,
+    },
+    // The heavy set piece: from two minutes in, and never two at once.
+    'banca-artillada': {
+      from: 120,
+      weight: 15,
+      maxOnScreen: 1,
+      edges: ['left', 'right'],
+      minY: 36,
+      maxY: 80,
     },
   },
 } as const satisfies DirectorTuning;
