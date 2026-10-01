@@ -19,7 +19,13 @@
     "golden:update": "UPDATE_GOLDENS=1 vitest run tests/golden",
     "smoke": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run smoke",
-    "share-preview": "node scripts/share-preview/make-share-preview.ts"
+    "share-preview": "node scripts/share-preview/make-share-preview.ts",
+    "art": "uv run -q --with pillow --with numpy python scripts/art/art.py",
+    "art:budget": "npm run art -- budget",
+    "art:build": "npm run art -- build",
+    "art:audit": "npm run art -- audit",
+    "art:preview": "npm run art -- preview",
+    "art:test": "uv run -q --with pillow --with numpy --with pytest python -m pytest -q scripts/art/tests"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

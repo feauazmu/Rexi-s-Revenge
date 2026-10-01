@@ -1,6 +1,6 @@
 # Credits and asset provenance
 
-Generated media for Rexi's Revenge. Per [ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), the images in `reference/` are concept references for the sprites drawn in code. They are kept out of the production bundle. The only generated image that ships is `public/title.png` (also inside the link preview `public/og-image.png`, composed in code). The logo and the site icons are drawn in code.
+Generated media for Rexi's Revenge. The images in `reference/` were made as concept references for the sprites drawn in code ([ADR 0001](docs/adr/0001-gameplay-art-drawn-in-code.md), now superseded by [ADR 0002](docs/adr/0002-pixel-art-rules-and-pipeline.md): game art is generated through `scripts/art/`, see "Art pipeline" below). They are kept out of the production bundle. The only generated image that ships is `public/title.png` (also inside the link preview `public/og-image.png`, composed in code). The logo and the site icons are drawn in code.
 
 All images were generated through OpenRouter with the creation-tool, using the default model `google/gemini-3.1-flash-image` (1376×768, 16:9, pixel-art style prompts). Each file in `reference/` has a JSON sidecar next to it with the full prompt, model, parameters and cost.
 
@@ -25,6 +25,8 @@ All images were generated through OpenRouter with the creation-tool, using the d
 
 The first eight images met their brief on the first attempt. The sleeve correction (left-arm tattoo as a shoulder-to-elbow sleeve) regenerated the character sheet and the title source; the earlier versions are kept as `*-v1.png`.
 
+**Sleeve side corrected later (owner, #31):** Rexi's sleeve is on his **right** arm, one continuous piece (a lion head whose mane flows into a columned courthouse; CONTEXT.md). The rows above describe what was asked at the time, so they still say left arm, and the character sheet and title images show it on the left. They stay as concept references; the pipeline's prompts and Rexi's rig use the right arm.
+
 ## Music
 
 Generated through OpenRouter with the creation-tool and the default music model `google/lyria-3-clip-preview` (30.8 s clips, MP3 44.1 kHz stereo). Both raw clips and their JSON sidecars (full prompt, model, cost) are in `reference/audio/`, outside the bundle. The prompts asked for an instrumental, comedic 80s workout synth-rock track with a chiptune square-wave lead at a steady 140 BPM, so the loop could be cut on bars.
@@ -35,14 +37,45 @@ Generated through OpenRouter with the creation-tool and the default music model 
 | `reference/audio/music-candidate-2.mp3` | google/lyria-3-clip-preview | Candidate 2: 140.0 BPM, RMS -14.3 dBFS, steady level, no intro or ending; best 16-bar seam score 0.88. **Used**                                                                               | 0.04       |
 | `public/music/theme.mp3`                | (derived)                   | 16 bars (27.43 s) of candidate 2 from 0.366 s, 30 ms equal-power seam crossfade, 0.5 s wrap-around padding, peak -1 dBFS, LAME VBR q4 (~140 kbps) via `scripts/music-loop/make-music-loop.ts` | 0.0000     |
 
+## Rexi version C prototype (manus-garden pipeline)
+
+Sprite sources for the version C comparison (Refs #9), made with the pipeline in `scripts/art/` (see its README). Every call used `google/gemini-3.1-flash-image` at 2K (2752×1536, 16:9) and edited a template on the model's 240-cell grid. Raw renders, their JSON sidecars (full prompt, references, cost) and the prompts are in `reference/manu-pipeline/`. The sidecars keep each prompt exactly as sent; the prompt files were later corrected for the right-arm sleeve (#31), so a re-run asks for the right design. These are concept sources outside the bundle; nothing here ships. Version C cap: **$1.50**.
+
+| #   | File (`reference/manu-pipeline/raw/`) | What it asked for                                                                                | Result                                                                                   | Cost (USD) | C total |
+| --- | ------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | ---------- | ------- |
+| 1   | `master_side_v1.png`                  | Redraw the 64 px draft (the sheet's side view, downscaled) in place                              | Drawn on a 480-cell grid: 128 px tall. Discarded (kept as the source of the 64 px draft) | 0.1027     | 0.1027  |
+| 2   | `master_side_v2.png`                  | Same, with Manu (manus-garden) as a pixel-density anchor                                         | Right grid, but 98 px tall. Discarded                                                    | 0.1027     | 0.2053  |
+| 3   | `master_side_v3.png`                  | Same on a coarser 160-cell grid, character sheet as reference 2                                  | Redrew the whole character sheet instead. Discarded                                      | 0.1027     | 0.3080  |
+| 4   | `master_side_v4.png`                  | Lineup: Manu + 3 copies of the draft with head-top and ground lines, side-view crop as reference | 64–65 px, ¾ body. Copy b is the master's body                                            | 0.1027     | 0.4107  |
+| 5   | `keys_v1.png`                         | 4 master copies + pose guide: run contact, run passing, jump, hurt                               | All four used                                                                            | 0.1021     | 0.5128  |
+| 6   | `arm_v1.png`                          | 2 master copies with the arm straight out                                                        | Raised the far arm (no tattoo): used as the aiming arm, tattoo added in code             | 0.1015     | 0.6143  |
+| 7   | `keys_run_b.png`                      | Rest of the run: down, contact (other side), down (other side), passing (other side)             | First three used; the passing came back with straight legs                               | 0.1028     | 0.7171  |
+| 8   | `keys_air.png`                        | Jump rise, fall, landing squat, hard hurt                                                        | All four used; rise and fall legs drawn too long, shortened in code                      | 0.1027     | 0.8198  |
+| 9   | `master_34_v5.png`                    | Owner feedback: turn head and chest toward the camera (Metal Slug ¾), both eyes, toothy grin     | Copy b's head is the master's head                                                       | 0.1021     | 0.9219  |
+
+Version C total: **0.9219 of 1.50**. All later steps (grid cleanup, palette snap, hand pass, rig, RotSprite, exports) are code and cost nothing.
+
+## Art pipeline
+
+Generations made with `scripts/art` (see its README), folded in from `art/ledger.tsv` by `npm run art -- credit`. Raw renders and their JSON sidecars are in each art root's `raw/`.
+
+<!-- art-ledger:start -->
+
+| #   | Time | Root | Name       | Model | Cost (USD) | Note |
+| --- | ---- | ---- | ---------- | ----- | ---------- | ---- |
+|     |      |      | (none yet) |       | 0.0000     |      |
+
+<!-- art-ledger:end -->
+
 ## Budget
 
 Shared cap for all generated media (images + music): **$10.00** (raised from $5.00 by the owner)
 
-| Item                    | Cost (USD)                             |
-| ----------------------- | -------------------------------------- |
-| Images (12 generations) | 0.8115                                 |
-| Music (2 generations)   | 0.0800                                 |
-| **Running total**       | **0.8915 of 10.00** (9.1085 remaining) |
+| Item                                  | Cost (USD)                             |
+| ------------------------------------- | -------------------------------------- |
+| Images (12 generations)               | 0.8115                                 |
+| Music (2 generations)                 | 0.0800                                 |
+| Rexi version C images (9 generations) | 0.9219                                 |
+| **Running total**                     | **1.8134 of 10.00** (8.1866 remaining) |
 
 The image subtotal is summed from the unrounded costs in the JSON sidecars (and the post-processing note for the discarded sheet attempt), so it can differ by $0.0001 from the sum of the rounded table rows.

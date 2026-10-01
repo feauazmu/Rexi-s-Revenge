@@ -32,7 +32,7 @@ export const rexiPalette = {
   c: '#a0603c',
   b: '#6e3c26',
   B: '#43231a',
-  // Sleeve tattoo (left upper arm, shoulder to elbow): dark sepia ink, ink shading over skin and
+  // Sleeve tattoo (right upper arm, shoulder to elbow): dark sepia ink, ink shading over skin and
   // the lion's golden mane.
   i: '#5c2c1a',
   j: '#8e4c30',

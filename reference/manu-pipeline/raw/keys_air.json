@@ -1,0 +1,26 @@
+{
+  "modality": "image",
+  "prompt": "Edit image 1. It shows 4 identical pixel-art copies of Rexi, a muscular judge in a sleeveless black robe, grey trousers and brown boots, facing right. Image 2 is a pose guide with a stick figure in the same 4 slots; in the guide the DARK grey leg is his near leg (closest to the viewer) and the LIGHT grey leg is his far leg. Image 3 shows other poses of the same character, already drawn: match their style, the way the robe's hem moves and the trousers and boots are drawn.\nChange ONLY his legs, boots and the robe's lower half in each copy (and the head and upper body only where stated); keep BOTH arms exactly as in the copy:\n1) jump, rising: the whole body lifted 8 pixels off the ground, both legs stretched long below him with the toes pointing down, the robe's hem streaming down and back;\n2) jump, falling: the whole body lifted 6 pixels off the ground, the near knee raised a little, the far leg reaching down for the ground, the robe's hem billowing UP and outwards above his knees;\n3) landing: a deep squat with both boots flat on the ground, the knees bent forward, the body 6 pixels lower than standing, the robe's hem spread on the ground behind him;\n4) hurt, knocked back hard: the head and upper body leaning back 4 pixels, eyes squeezed shut and teeth gritted, the knees buckling, both boots on the ground, the robe flapping forward.\nKeep everything else exactly identical to the copy: the same head, hair, face (except in 4), tank top, tattoo, arms, colours and pixel size. Chunky pixel art at exactly the same pixel size, 1-pixel dark outline, no anti-aliasing, flat pure white background, no guide lines, no text.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ae9852a94483147c4/reference/manu-pipeline/templates/edit_master_x4.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ae9852a94483147c4/reference/manu-pipeline/templates/poseguide_air.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ae9852a94483147c4/reference/manu-pipeline/raw/keys_v1.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.1026775,
+  "created_at": "2026-10-01T10:13:29.161Z",
+  "asset": {
+    "file": "keys_air.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  }
+}

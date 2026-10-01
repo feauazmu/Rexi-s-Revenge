@@ -63,8 +63,8 @@ export function drawRexi(dc: DrawContext, run: RunView): void {
 
 /**
  * Rexi's figure: the composed body for his pose, then the aiming arm with his Weapon in one of
- * 16 directions, the deltoid cap over the arm's root. The sleeve tattoo on his left upper arm is
- * part of the body, arm and cap sprites (whichever of them is his left arm for the facing).
+ * 16 directions, the deltoid cap over the arm's root. The sleeve tattoo on his right upper arm is
+ * part of the body, arm and cap sprites (whichever of them is his right arm for the facing).
  */
 function drawFigure(dc: DrawContext, run: RunView): void {
   const { surface, sprites } = dc;

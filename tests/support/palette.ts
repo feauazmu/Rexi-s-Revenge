@@ -8,8 +8,11 @@ import { decodePng, GOLDEN_DIR, type RgbaImage } from '../golden/golden';
 
 const COLUMNS = 8;
 const CELL_WIDTH = 80;
-const CELL_HEIGHT = 72;
-const SWATCH_HEIGHT = 46;
+const CELL_HEIGHT = 51;
+const SWATCH_HEIGHT = 30;
+
+/** Widest a color name may be to fit under its swatch. */
+export const SWATCH_LABEL_WIDTH = CELL_WIDTH - 4;
 
 /** Light text over dark swatches and dark text over light ones, both from the palette. */
 function inkOn(color: Color): Color {
@@ -19,7 +22,7 @@ function inkOn(color: Color): Color {
 }
 
 /**
- * Draws every master-palette color as a labeled swatch (name below, hex inside) in an 8×5
+ * Draws every master-palette color as a labeled swatch (hex inside, name below) in an 8×7
  * grid over `night`, filling a 640×360 frame. Uses only palette colors.
  */
 export function drawPaletteSheet(target: TextTarget): void {
@@ -30,8 +33,8 @@ export function drawPaletteSheet(target: TextTarget): void {
     const y = Math.floor(i / COLUMNS) * CELL_HEIGHT;
     target.surface.fillRect(x - 1, y + 1, CELL_WIDTH - 2, SWATCH_HEIGHT + 2, masterPalette.outline);
     target.surface.fillRect(x, y + 2, CELL_WIDTH - 4, SWATCH_HEIGHT, color);
-    drawText(target, fonts.regular, color, x + 3, y + 19, { color: inkOn(color) });
-    drawText(target, fonts.regular, name, x + 1, y + SWATCH_HEIGHT + 3, {
+    drawText(target, fonts.regular, color, x + 3, y + 11, { color: inkOn(color) });
+    drawText(target, fonts.regular, name, x + 1, y + SWATCH_HEIGHT + 4, {
       color: masterPalette.marble,
     });
   });

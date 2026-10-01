@@ -5,7 +5,7 @@ A comedic pixel-art arena shooter in the style of Heli Attack 3. Rexi, a very mu
 ## Language
 
 **Rexi**:
-The player character: a very muscular judge with light-brown hair, a judge's robe with the sleeves torn off, and a full sleeve tattoo on his left arm, from the shoulder to the elbow, combining a lion head and a classical columned courthouse into one piece.
+The player character: a very muscular judge with light-brown hair, a judge's robe with the sleeves torn off, and a full sleeve tattoo on his **right** arm, from the shoulder to the elbow. The sleeve is one continuous inked piece, not two motifs: a lion head whose mane flows into a classical columned courthouse. His left arm is bare.
 _Avoid_: Player, hero, protagonist
 
 **Arena**:

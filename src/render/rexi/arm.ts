@@ -55,7 +55,7 @@ export interface ArmSprite {
 }
 
 /**
- * Sleeve tattoo over the upper arm (Rexi's left arm): the lion's golden mane near the shoulder
+ * Sleeve tattoo over the upper arm (Rexi's right arm): the lion's golden mane near the shoulder
  * flowing into the courthouse's columns toward the elbow, shaded with the limb. `u` runs along
  * the arm from the shoulder, `v` across it.
  */
@@ -207,8 +207,8 @@ function flashArm(arm: ArmSprite): ArmSprite {
 
 /**
  * The arm sprite for `step` and facing, holding `weapon` (`flash`: hurt-blink colors). Built
- * once, then cached. Facing right the aiming arm is Rexi's left arm and wears the sleeve
- * tattoo; facing left it is his right arm (a plain arm, mirrored).
+ * once, then cached. Facing right the aiming arm is Rexi's left arm (a plain arm); facing left
+ * it is his right arm and wears the sleeve tattoo (mirrored).
  */
 export function armSprite(
   weapon: HeldWeapon,
@@ -225,8 +225,8 @@ export function armSprite(
   let arm = arms.get(key);
   if (!arm) {
     if (flash) arm = flashArm(armSprite(weapon, step, facing));
-    else if (facing === -1) arm = mirrorArm(buildArm(step, weapon, false));
-    else arm = buildArm(step, weapon, true);
+    else if (facing === -1) arm = mirrorArm(buildArm(step, weapon, true));
+    else arm = buildArm(step, weapon, false);
     arms.set(key, arm);
   }
   return arm;
