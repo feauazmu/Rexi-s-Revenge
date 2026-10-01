@@ -67,8 +67,10 @@ def lint(path, palette_spec, outlined=True):
 
 def targets(project):
     def outlined(sheet, kind, path):
-        name = os.path.splitext(os.path.basename(path))[0]
-        post = project.sheets[sheet].get("post", {}).get(name, {})
+        cfg = project.sheets[sheet]
+        # The sprite's name as `names` and `post` spell it: its path in the sheet's out folder.
+        name = os.path.splitext(os.path.relpath(path, project.out_dir(cfg)))[0].replace(os.sep, "/")
+        post = cfg.get("post", {}).get(name, {})
         return kind != "scene" and post.get("outline", True)
 
     out = [(path, spec, outlined(sheet, kind, path)) for sheet, kind, spec, path in project.outputs()]

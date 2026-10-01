@@ -2,8 +2,8 @@
 the TypeScript export round-trips."""
 import json
 import os
+import importlib.util
 import shutil
-import sys
 
 import numpy as np
 import pytest
@@ -48,8 +48,10 @@ def test_the_arena_rebuilds_from_its_committed_grids(tmp_path):
 
 
 def test_the_arena_layers_partition_the_scene_and_match_the_committed_ones(tmp_path):
-    sys.path.insert(0, os.path.join(ROOT, "scripts", "art", "scenes"))
-    import arena
+    path = os.path.join(ROOT, "scripts", "art", "scenes", "arena.py")
+    spec = importlib.util.spec_from_file_location("arena_scene", path)
+    arena = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(arena)
 
     split = arena.build(out=str(tmp_path))
     opaque = [layer[..., 3] > 0 for layer in split.values()]

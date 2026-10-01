@@ -55,28 +55,31 @@ CLEAR_TO_SKY = [
     (210, 150, 236, 162),
     (618, 150, 640, 176),
 ]
-#: [x0, y0, x1, y1, dx, mirror]: copy the rectangle dx columns away over it (mirrored left to
-#: right if `mirror`), in order:
-#: - the smudge a discarded lamp left on the plaza slabs, from the slabs to its right;
-#: - Boissons' roof: the left tile drew a brick parapet and the right one a grey cap, so the
-#:   parapet continues to the right and ends in a mirror of its left end.
+#: Copies, in order: each `box` [x0, y0, x1, y1) takes the pixels `dx` columns away, mirrored
+#: left to right if `mirror`.
 COPY = [
-    (176, 289, 233, 303, 90, False),
-    (426, 211, 466, 225, -40, False),
-    (466, 211, 472, 225, -100, True),
+    # The smudge a discarded lamp left on the plaza slabs: the slabs to its right.
+    {"box": (176, 289, 233, 303), "dx": 90, "mirror": False},
+    # Boissons' roof: the left tile drew a brick parapet and the right one a grey cap, so the
+    # parapet continues to the right and ends in a mirror of its left end.
+    {"box": (426, 211, 466, 225), "dx": -40, "mirror": False},
+    {"box": (466, 211, 472, 225), "dx": -100, "mirror": True},
 ]
-#: [x0, y0, x1, y1, {from: to}]: recolour inside a rectangle: the awning's stripes, and the bottom right tile drew the
-#: curb in sunlit orange and the pavement edge lighter; match the other tiles' stone.
+#: Recolours: inside each `box` [x0, y0, x1, y1), palette colour `from` -> `to` (by name).
 RECOLOR = [
     # Boissons' awning: the right tile's stripes are peach, the left tile's cream.
-    (400, 242, 472, 253, {"#eeac78": "#fcdcae", "#a28e92": "#c4aca8"}),
+    {"box": (400, 242, 472, 253), "map": {"skin4": "skin5", "stone2": "stoneLight"}},
     # The mirrored parapet end brought the sunset from the left; behind it is the skyline.
-    (466, 211, 473, 225, {"#f8a24a": "#34215e", "#f07e3a": "#34215e", "#f8c43c": "#34215e"}),
-    (401, 316, 640, 317, {"#c4aca8": "#a28e92"}),
-    (401, 318, 640, 319, {"#fcdcae": "#c4aca8"}),
-    (401, 319, 640, 323, {"#d07a52": "#a28e92", "#eeac78": "#c4aca8"}),
-    (401, 323, 640, 324, {"#2c2844": "#000000"}),
-    (401, 329, 640, 330, {"#a28e92": "#6c5a6a"}),
+    {"box": (466, 211, 473, 225),
+     "map": {"skyPeach": "skyIndigo", "skyOrange": "skyIndigo", "gold": "skyIndigo"}},
+    # The bottom right tile drew the curb in sunlit orange and the pavement edge lighter: match
+    # the other tiles' stone row by row (the curb's top edge and face, the black line under it
+    # that the other tiles draw as the curb's outline, and the pavement's edge).
+    {"box": (401, 316, 640, 317), "map": {"stoneLight": "stone2"}},
+    {"box": (401, 318, 640, 319), "map": {"skin5": "stoneLight"}},
+    {"box": (401, 319, 640, 323), "map": {"skin3": "stone2", "skin4": "stoneLight"}},
+    {"box": (401, 323, 640, 324), "map": {"robe": "outline"}},
+    {"box": (401, 329, 640, 330), "map": {"stone2": "stone1"}},
 ]
 
 
@@ -142,14 +145,15 @@ def rebuild_sky(img, sky):
 
 def hand_pass(img):
     img = img.copy()
-    for x0, y0, x1, y1, dx, mirror in COPY:
-        src = img[y0:y1, x0 + dx:x1 + dx]
-        img[y0:y1, x0:x1] = src[:, ::-1] if mirror else src
-    for x0, y0, x1, y1, mapping in RECOLOR:
+    for copy in COPY:
+        x0, y0, x1, y1 = copy["box"]
+        src = img[y0:y1, x0 + copy["dx"]:x1 + copy["dx"]]
+        img[y0:y1, x0:x1] = src[:, ::-1] if copy["mirror"] else src
+    for recolor in RECOLOR:
+        x0, y0, x1, y1 = recolor["box"]
         region = img[y0:y1, x0:x1]
-        for src, dst in mapping.items():
-            hit = (region[..., :3] == hex2rgb(src)).all(-1)
-            region[hit, :3] = hex2rgb(dst)
+        for src, dst in recolor["map"].items():
+            region[(region[..., :3] == rgb(src)).all(-1), :3] = rgb(dst)
     sky = open_sky(img)
     for x0, y0, x1, y1 in CLEAR_TO_SKY:
         sky[y0:y1, x0:x1] = True
@@ -177,18 +181,18 @@ def layers(img, sky, bands):
     sky_layer[ys, xs, :3] = np.where(glow[ys, xs, None], img[ys, xs, :3], bands[ys])
     sky_layer[ys, xs, 3] = 255
     sky_layer[PLAZA_TOP:] = 0
-    rest = ~keep_sky
-    far = rest & in_far
+    not_sky = ~keep_sky
+    far = not_sky & in_far
     far[PLAZA_TOP:] = False
     plaza = np.zeros((h, w), bool)
     plaza[PLAZA_TOP:] = True
-    buildings = rest & ~far & ~plaza
+    buildings = not_sky & ~far & ~plaza
 
-    def only(mask):
+    def masked(mask):
         out = img.copy()
         out[~mask] = 0
         return out
-    return {"sky": sky_layer, "far": only(far), "buildings": only(buildings), "plaza": only(plaza)}
+    return {"sky": sky_layer, "far": masked(far), "buildings": masked(buildings), "plaza": masked(plaza)}
 
 
 def build(scene=SCENE, out=OUT):

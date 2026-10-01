@@ -1,13 +1,15 @@
 /**
- * The Arena's lettering, drawn in code over the pipeline backdrop (ADR 0002: per-frame details
- * and small pixel patches are code). The image model cannot letter at 1:1, so the tile edits
- * left every sign face blank and the words are set here in two tiny bitmap fonts:
+ * The Arena's lettering, drawn in code over the pipeline backdrop (docs/architecture.md, "Art
+ * pipeline": the Arena). The image model cannot letter at 1:1, so the tile edits left every
+ * sign face blank and the words are set here. The signs are in-world art, not UI copy, so they
+ * use two tiny sign-painter fonts of their own (3×5 and 5×7, smaller and blockier than the UI
+ * fonts in `src/render/text/`) and their Spanish text lives here rather than in `strings.ts`:
  *
  * - the Bufete & Pesas S.A. gym billboard on the tower roof: "¡INSCRÍBETE!", the firm's name
  *   and its motto (CONTEXT.md: the billboard is the gym's; the 2×1 promo is not on it);
  * - the firm's name plate over the tower's facade;
- * - the Boissons neon sign (a cocktail glass and "BOISSONS"), in a lit and an unlit state so it
- *   can flicker;
+ * - the Boissons neon sign (a cocktail glass and "BOISSONS"), lit, dead, or with the name out,
+ *   so it can flicker;
  * - Boissons' chalkboard on the plaza: "JUEVES 2×1" with a chalk cocktail (the bar's promo).
  *
  * Positions are the blank faces of the backdrop (`art/sprites/arena/layers/buildings.png`).
@@ -62,7 +64,7 @@ const BIG_FONT: Font = {
 /** The neon cocktail glass: a martini glass with an olive. */
 const GLASS = ['#######', '.#...#.', '..#.#..', '...#...', '...#...', '...#...', '..###..'];
 
-export function textWidth(font: Font, text: string): number {
+function textWidth(font: Font, text: string): number {
   let w = 0;
   for (const ch of text) w += (font[ch]?.[0]?.length ?? 0) + 1;
   return w - 1;
@@ -140,6 +142,9 @@ export interface NeonSign {
   readonly unlit: PlacedSprite;
   readonly nameOut: PlacedSprite;
 }
+
+/** One of the neon sign's states. */
+export type NeonState = keyof NeonSign;
 
 function neonSign(): NeonSign {
   const { w, h } = NEON_BOARD;
