@@ -1,6 +1,7 @@
 /**
  * The Arena backdrop, painted procedurally in code (ADR 0001) after reference/arena.png: the
- * plaza between the courthouse and the Bufete & Pesas S.A. tower, at sunset.
+ * plaza between the courthouse and the Bufete & Pesas S.A. tower, at sunset, with the Boissons
+ * cocktail bar (and its "JUEVES 2×1" chalkboard) at street level behind the plaza.
  *
  * Everything here is static, so it is painted once into palette-indexed sprites that the
  * SpriteBank rasterizes on first use. Animated details (clouds, billboard bulbs) and the
@@ -255,6 +256,23 @@ const SCENERY_COLORS = {
   iron: '#8a8aa2',
   plateDark: '#2c2c3c',
   plateLight: '#5e5e76',
+  // Boissons, the cocktail bar
+  brick: '#7a3b45',
+  brickShade: '#62303d',
+  mortar: '#552a38',
+  awningRed: '#c8384a',
+  awningCream: '#f3e2c4',
+  neonBack: '#24142c',
+  neonGlow: '#6e2860',
+  neonPink: '#ff7ac8',
+  neonCyanGlow: '#1f4f66',
+  neonCyan: '#7cf2ff',
+  olive: '#a6e05a',
+  barWarm: '#f2a24e',
+  barGlow: '#ffd27e',
+  bottle: '#5a3a3e',
+  chalkboard: '#27352f',
+  chalk: '#e6eee2',
   // Plaza
   wallTop: '#d4bdb4',
   wallCap: '#b5a0a6',
@@ -526,8 +544,13 @@ export const BILLBOARD_LAMPS: readonly number[] = [374, 400, 428, 454];
 /** Y of the billboard bulbs (3×1 px each, under the lamp arms). */
 export const BILLBOARD_BULB_Y = 23;
 
-/** "BUFETE & PESAS S.A." and "JUEVES 2×1" glyphs. */
+/** Glyphs for "BUFETE & PESAS S.A." and the Boissons chalkboard's "JUEVES 2×1". */
 const SMALL_FONT: Readonly<Record<string, readonly string[]>> = {
+  J: ['..#', '..#', '..#', '#.#', '.#.'],
+  V: ['#.#', '#.#', '#.#', '#.#', '.#.'],
+  '2': ['##.', '..#', '.#.', '#..', '###'],
+  '×': ['...', '#.#', '.#.', '#.#', '...'],
+  '1': ['.#.', '##.', '.#.', '.#.', '###'],
   B: ['##.', '#.#', '##.', '#.#', '##.'],
   U: ['#.#', '#.#', '#.#', '#.#', '###'],
   F: ['###', '#..', '##.', '#..', '#..'],
@@ -541,15 +564,21 @@ const SMALL_FONT: Readonly<Record<string, readonly string[]>> = {
   ' ': ['.', '.', '.', '.', '.'],
 };
 
+/** Glyphs for the "¡INSCRÍBETE!" billboard and the "BOISSONS" neon sign. */
 const BIG_FONT: Readonly<Record<string, readonly string[]>> = {
-  J: ['..###', '...#.', '...#.', '...#.', '#..#.', '#..#.', '.##..'],
-  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
-  V: ['#...#', '#...#', '#...#', '#...#', '.#.#.', '.#.#.', '..#..'],
+  '¡': ['#', '.', '#', '#', '#', '#', '#'],
+  '!': ['#', '#', '#', '#', '#', '.', '#'],
+  I: ['###', '.#.', '.#.', '.#.', '.#.', '.#.', '###'],
+  // Í: an I whose accent is painted above the line (see paintText).
+  Í: ['###', '.#.', '.#.', '.#.', '.#.', '.#.', '###'],
+  N: ['#...#', '##..#', '#.#.#', '#.#.#', '#.#.#', '#..##', '#...#'],
   S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
-  '2': ['.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'],
-  '1': ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
-  '×': ['.....', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '.....'],
+  C: ['.####', '#....', '#....', '#....', '#....', '#....', '.####'],
+  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
+  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
+  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
 };
 
 function textWidth(font: Readonly<Record<string, readonly string[]>>, text: string, scale = 1) {
@@ -572,6 +601,10 @@ function paintText(
   for (const ch of text) {
     const glyph = font[ch];
     if (!glyph) throw new Error(`No glyph for "${ch}"`);
+    if (ch === 'Í') {
+      g.rect(cx + 2 * scale, y - 3 * scale, scale, scale, color);
+      g.rect(cx + scale, y - 2 * scale, scale, scale, color);
+    }
     glyph.forEach((row, gy) => {
       for (let gx = 0; gx < row.length; gx++) {
         if (row.charAt(gx) === '#') g.rect(cx + gx * scale, y + gy * scale, scale, scale, color);
@@ -637,41 +670,50 @@ function paintTower(g: Grid): void {
   g.rect(bx + 2, by + 2, bw - 4, 2, 'boardHi');
   g.rect(bx + 2, by + bh - 5, bw - 4, 3, 'boardShade');
   g.checker(bx + 2, by + bh - 6, bw - 4, 1, 'boardShade');
-  // Dumbbell.
+  // Gym ad: a dumbbell over a gavel, "¡INSCRÍBETE!" and the firm's name.
   const dx = bx + 7;
-  const dy = by + 9;
+  const dy = by + 3;
   g.rect(dx + 6, dy + 6, 18, 3, 'iron');
   g.rect(dx + 6, dy + 6, 18, 1, 'boardHi');
   for (const [px, h] of [
-    [dx, 15],
-    [dx + 4, 11],
-    [dx + 22, 11],
-    [dx + 26, 15],
+    [dx, 13],
+    [dx + 4, 9],
+    [dx + 22, 9],
+    [dx + 26, 13],
   ] as const) {
     const top = dy + 7 - Math.floor(h / 2);
     g.rect(px, top, 4, h, 'plateDark');
     g.rect(px + 1, top + 1, 1, h - 3, 'plateLight');
   }
-  // Copy.
+  // Gavel lying under the dumbbell: banded head on the left, handle to the right.
+  const gx = bx + 8;
+  const gy = by + 18;
+  g.rect(gx, gy, 9, 7, 'ink');
+  g.rect(gx + 1, gy + 1, 7, 5, 'woodDark');
+  g.rect(gx + 1, gy + 1, 7, 1, 'wood');
+  g.rect(gx + 2, gy + 1, 1, 5, 'boardShade');
+  g.rect(gx + 6, gy + 1, 1, 5, 'boardShade');
+  g.rect(gx + 9, gy + 2, 19, 3, 'ink');
+  g.rect(gx + 9, gy + 3, 18, 1, 'wood');
   const textX = bx + 44;
   const textW = bw - 48;
+  const cta = '¡INSCRÍBETE!';
   paintText(
     g,
     BIG_FONT,
-    'JUEVES',
-    textX + Math.floor((textW - textWidth(BIG_FONT, 'JUEVES')) / 2),
-    by + 5,
+    cta,
+    textX + Math.floor((textW - textWidth(BIG_FONT, cta)) / 2),
+    by + 7,
     'ink',
   );
-  const big = '2×1';
+  const firm = 'BUFETE & PESAS';
   paintText(
     g,
-    BIG_FONT,
-    big,
-    textX + Math.floor((textW - textWidth(BIG_FONT, big, 2)) / 2),
-    by + 14,
+    SMALL_FONT,
+    firm,
+    textX + Math.floor((textW - textWidth(SMALL_FONT, firm)) / 2),
+    by + 19,
     'ink',
-    2,
   );
 
   // Lamp arms over the billboard (the bulbs themselves blink, drawn per frame).
@@ -710,6 +752,153 @@ function paintTower(g: Grid): void {
   g.rect(door.x - 10, base + 4, door.w + 20, 2, 'wall');
 }
 
+// Boissons ----------------------------------------------------------------------------------------
+
+/** Boissons, the cocktail bar on the plaza (its Thursday 2×1 cocktails are a running joke). */
+const BAR = { left: 280, right: 350, top: 166 };
+
+/** Paints `text` as neon tubing: a dim halo around every lit pixel, then the bright tube. */
+function paintNeon(
+  g: Grid,
+  font: Readonly<Record<string, readonly string[]>>,
+  text: string,
+  x: number,
+  y: number,
+  glow: SceneryColor,
+  tube: SceneryColor,
+): void {
+  for (const [ox, oy] of [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ] as const) {
+    paintText(g, font, text, x + ox, y + oy, glow);
+  }
+  paintText(g, font, text, x, y, tube);
+}
+
+/** A warm bar window with a shelf of bottles, framed in dark wood. */
+function paintBarWindow(g: Grid, x: number, y: number, w: number, h: number): void {
+  g.rect(x - 1, y - 1, w + 2, h + 2, 'woodDark');
+  g.rect(x, y, w, h, 'barWarm');
+  g.rect(x + 2, y + 1, w - 4, h - 4, 'barGlow');
+  g.checker(x + 1, y + h - 3, w - 2, 2, 'barGlow');
+  // Shelf with bottles.
+  g.rect(x, y + 8, w, 1, 'doorHi');
+  for (let bx = x + 2; bx < x + w - 2; bx += 3) {
+    const tall = hash(bx, y) < 0.5;
+    g.rect(bx, y + (tall ? 3 : 5), 1, tall ? 5 : 3, 'bottle');
+    g.px(bx, y + (tall ? 2 : 4), 'bottle');
+    if (hash(y, bx) < 0.4) g.px(bx, y + 6, 'olive');
+  }
+  g.rect(x - 2, y + h + 1, w + 4, 1, 'wallTop');
+}
+
+function paintBar(g: Grid): void {
+  const { left, right, top } = BAR;
+  const w = right - left;
+
+  // Brick facade, warm sun rim on the left edge, shade on the right.
+  g.rect(left, top, w, PLAZA_Y - top, 'brick');
+  for (let y = top + 3; y < PLAZA_Y; y += 3) {
+    g.rect(left, y, w, 1, 'mortar');
+    for (let x = left + ((y / 3) % 2 === 0 ? 2 : 5); x < right; x += 6) g.px(x, y + 1, 'mortar');
+  }
+  g.rect(right - 3, top, 3, PLAZA_Y - top, 'brickShade');
+  g.rect(left, top, 1, PLAZA_Y - top, 'rim');
+  g.rect(left - 1, top, 1, PLAZA_Y - top, 'outline');
+  g.rect(right, top, 1, PLAZA_Y - top, 'outline');
+  // Cornice.
+  g.rect(left - 2, top - 3, w + 4, 1, 'outline');
+  g.rect(left - 2, top - 2, w + 4, 2, 'wallTop');
+  g.rect(left - 2, top, w + 4, 1, 'wallShadow');
+
+  // Neon sign: a cocktail glass and "BOISSONS" on a dark backing board.
+  const sx = left + 2;
+  const sy = top + 3;
+  const sw = w - 4;
+  g.rect(sx, sy, sw, 13, 'outline');
+  g.rect(sx + 1, sy + 1, sw - 2, 11, 'neonBack');
+  const name = 'BOISSONS';
+  const glassW = 7;
+  const contentW = glassW + 3 + textWidth(BIG_FONT, name);
+  const cx = sx + Math.floor((sw - contentW) / 2);
+  const glass = ['#######', '.#...#.', '..#.#..', '...#...', '...#...', '...#...', '..###..'];
+  const glassFont = { Y: glass };
+  paintNeon(g, glassFont, 'Y', cx, sy + 3, 'neonCyanGlow', 'neonCyan');
+  g.px(cx + 3, sy + 4, 'olive');
+  paintNeon(g, BIG_FONT, name, cx + glassW + 3, sy + 3, 'neonGlow', 'neonPink');
+  // A brighter core on the tube's top row gives the neon some sheen.
+  g.checker(cx + glassW + 3, sy + 3, textWidth(BIG_FONT, name), 1, 'lampCore');
+
+  // Striped awning with a scalloped edge and its shadow on the bricks.
+  const ay = top + 18;
+  g.rect(left - 3, ay - 1, w + 6, 1, 'outline');
+  for (let x = left - 3; x < right + 3; x++) {
+    const red = Math.floor((x - left + 3) / 4) % 2 === 0;
+    g.rect(x, ay, 1, 5, red ? 'awningRed' : 'awningCream');
+    g.px(x, ay + 4, red ? 'brick' : 'wallTop');
+    if ((x - left + 3) % 4 === 1 || (x - left + 3) % 4 === 2) {
+      g.px(x, ay + 5, red ? 'brick' : 'wallTop');
+    }
+  }
+  g.rect(left, ay + 6, w, 1, 'mortar');
+  g.checker(left, ay + 7, w, 1, 'mortar');
+
+  // Two warm windows and a door with a glowing pane.
+  const wy = ay + 9;
+  paintBarWindow(g, left + 4, wy, 20, 16);
+  paintBarWindow(g, right - 24, wy, 20, 16);
+  const doorX = left + w / 2 - 6;
+  g.rect(doorX - 1, wy - 2, 14, PLAZA_Y - wy + 2, 'woodDark');
+  g.rect(doorX, wy - 1, 12, PLAZA_Y - wy + 1, 'door');
+  g.rect(doorX + 2, wy + 1, 8, 9, 'barGlow');
+  g.rect(doorX + 2, wy + 1, 8, 1, 'barWarm');
+  g.rect(doorX + 9, wy + 13, 1, 2, 'boardHi');
+
+  // Warm light spilling onto the plaza tiles in front of the bar.
+  for (const [x0, x1] of [
+    [left + 2, left + 26],
+    [doorX, doorX + 12],
+    [right - 26, right - 2],
+  ] as const) {
+    g.checker(x0, PLAZA_Y, x1 - x0, 1, 'floorSheen');
+    for (let x = x0 + 1; x < x1 - 1; x += 2) {
+      if ((x + PLAZA_Y) % 4 === 1) g.px(x, PLAZA_Y + 1, 'floorSheen');
+    }
+  }
+
+  // Chalkboard A-frame on the plaza: "JUEVES 2×1" (cocktails, of course).
+  const bw = 27;
+  const bh = 17;
+  const bx = left + 3;
+  const by = PLAZA_Y - 13;
+  g.rect(bx + 2, by + bh, 1, 3, 'woodDark');
+  g.rect(bx + bw - 3, by + bh, 1, 3, 'woodDark');
+  g.rect(bx, by, bw, bh, 'woodDark');
+  g.rect(bx, by, bw, 1, 'wood');
+  g.rect(bx + 1, by + 1, bw - 2, bh - 2, 'chalkboard');
+  const day = 'JUEVES';
+  const deal = '2×1';
+  paintText(
+    g,
+    SMALL_FONT,
+    day,
+    bx + Math.floor((bw - textWidth(SMALL_FONT, day)) / 2),
+    by + 2,
+    'chalk',
+  );
+  paintText(g, SMALL_FONT, deal, bx + 3, by + 9, 'chalk');
+  // A tiny chalk cocktail next to the deal.
+  const tx = bx + 17;
+  const ty = by + 9;
+  g.rect(tx, ty, 5, 1, 'chalk');
+  g.rect(tx + 1, ty + 1, 3, 1, 'chalk');
+  g.rect(tx + 2, ty + 2, 1, 2, 'chalk');
+  g.rect(tx + 1, ty + 4, 3, 1, 'chalk');
+}
+
 // Plaza -------------------------------------------------------------------------------------------
 
 const WALL_TOP = 206;
@@ -730,7 +919,7 @@ function paintPlaza(g: Grid): void {
   }
 
   // Benches and street lamps, lit for the evening.
-  for (const bx of [206, 312, 440]) paintBench(g, bx, PLAZA_Y - 1);
+  for (const bx of [206, 246, 440]) paintBench(g, bx, PLAZA_Y - 1);
   for (const lx of [184, 356]) paintLamp(g, lx, PLAZA_Y);
 
   // Floor tiles receding toward a vanishing point behind the skyline.
@@ -803,6 +992,7 @@ function paintScenery(): SpriteDef {
   const g = createPixelGrid<SceneryColor>(ARENA_WIDTH, ARENA_HEIGHT, SCENERY_COLORS);
   paintSkyline(g);
   paintPlaza(g);
+  paintBar(g);
   paintCourthouse(g);
   paintTower(g);
   return g.toSprite();
@@ -815,7 +1005,7 @@ export interface ArenaBackdrop {
   readonly sky: SpriteDef;
   /** Clouds drifting across the sky, behind the buildings. */
   readonly clouds: readonly CloudDef[];
-  /** Skyline, courthouse, tower and plaza, drawn at (0, 0) over the sky and clouds. */
+  /** Skyline, courthouse, Boissons, tower and plaza, drawn at (0, 0) over the sky and clouds. */
   readonly scenery: SpriteDef;
 }
 
