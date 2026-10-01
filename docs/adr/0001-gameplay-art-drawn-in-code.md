@@ -1,0 +1,3 @@
+# Gameplay art is drawn in code
+
+Every gameplay sprite and animation (Rexi, Enemies, Weapons, Crates, effects, the Arena background and the Dialogue Box) is drawn and animated in TypeScript on canvas 2D, by hand, with no image files. AI-generated images, themselves in pixel-art style, are only used as concept references for drawing that code, plus one exception: the title-screen illustration. We chose this so the pixel-art style stays consistent (generated art mixed with hand-coded sprites clashes) and so that all animation stays under programmatic control. Don't import sprite sheets or generated images into gameplay.
