@@ -18,6 +18,10 @@ export interface RexiTuning {
   /** Muzzle offset from the top-left of the hitbox (for facing right; mirrored when left). */
   readonly muzzleOffsetX: number;
   readonly muzzleOffsetY: number;
+  /** After a hit, Rexi ignores further hits for this long, seconds. */
+  readonly invulnerability: number;
+  /** How long the hurt reaction (pose, flash) lasts after a hit, seconds. */
+  readonly hurtDuration: number;
 }
 
 export const rexiTuning: RexiTuning = {
@@ -30,4 +34,6 @@ export const rexiTuning: RexiTuning = {
   jumpCutFactor: 0.45,
   muzzleOffsetX: 10,
   muzzleOffsetY: 9,
+  invulnerability: 1,
+  hurtDuration: 0.3,
 };

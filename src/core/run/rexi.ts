@@ -1,4 +1,4 @@
-import { DT, SCREEN_WIDTH } from '../constants';
+import { DT, SCREEN_WIDTH, secondsToTicks } from '../constants';
 import type { InputFrame } from '../input';
 import { clamp, directionTo, type Vec2 } from '../math';
 import type { Tuning } from '../tuning';
@@ -23,6 +23,8 @@ export function createRexi(tuning: Tuning): RexiState {
     aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
     fireCooldown: 0,
     weapon: 'mazo-automatico',
+    invulnerableTicks: 0,
+    hurtTicks: 0,
   };
 }
 
@@ -41,6 +43,9 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
   const { rexi } = ctx.state;
   const { tuning } = ctx;
 
+  if (rexi.invulnerableTicks > 0) rexi.invulnerableTicks -= 1;
+  if (rexi.hurtTicks > 0) rexi.hurtTicks -= 1;
+
   rexi.vx = clamp(input.move, -1, 1) * tuning.rexi.runSpeed;
   if (input.jump && rexi.grounded) {
     rexi.vy = -tuning.rexi.jumpSpeed;
@@ -54,6 +59,23 @@ export function stepRexi(ctx: RunContext, input: InputFrame): void {
 
   rexi.aim = input.aim;
   rexi.facing = input.aim.x < rexi.x + rexi.w / 2 ? -1 : 1;
+}
+
+/** Whether an Enemy projectile touching Rexi now would hurt him. */
+export function canHurtRexi(rexi: Readonly<RexiState>): boolean {
+  return rexi.health > 0 && rexi.invulnerableTicks === 0;
+}
+
+/**
+ * Applies an Enemy hit: health, the hurt reaction and the invulnerability window. Callers check
+ * `canHurtRexi` first. The Run notices zero health and ends itself at the end of the tick.
+ */
+export function damageRexi(ctx: RunContext, damage: number): void {
+  const { rexi } = ctx.state;
+  rexi.health = Math.max(0, rexi.health - damage);
+  rexi.invulnerableTicks = secondsToTicks(ctx.tuning.rexi.invulnerability);
+  rexi.hurtTicks = secondsToTicks(ctx.tuning.rexi.hurtDuration);
+  ctx.emit({ type: 'rexi-hit', damage, health: rexi.health });
 }
 
 /** Where shots leave Rexi's arm, mirrored with his facing. */

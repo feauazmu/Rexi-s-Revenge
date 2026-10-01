@@ -36,6 +36,8 @@ export interface RunView {
   readonly projectiles: readonly ProjectileView[];
   readonly effects: EffectsView;
   readonly stats: RunStatsView;
+  /** True once Rexi has been defeated: the Run is over and no longer advances. */
+  readonly ended: boolean;
 }
 
 export interface ArenaView {
@@ -70,6 +72,10 @@ export interface RexiView extends BoxView {
   /** Unit vector from the muzzle toward the aim target. */
   readonly aimDirection: Vec2;
   readonly weapon: WeaponView;
+  /** Ticks left of the hurt reaction after a hit (0 = not hurt). Drives the hurt animation. */
+  readonly hurtTicks: number;
+  /** Ticks left during which hits are ignored (0 = vulnerable). Drives the flicker. */
+  readonly invulnerableTicks: number;
 }
 
 export interface WeaponView {

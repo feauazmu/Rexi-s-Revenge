@@ -30,6 +30,8 @@ export interface Run {
   /** Advances the simulation one tick and returns the events it produced. */
   step(input: InputFrame): GameEvent[];
   view(): RunView;
+  /** True once Rexi has been defeated; `step` then does nothing. */
+  readonly ended: boolean;
 }
 
 export function createRun(deps: RunDeps): Run {
@@ -40,6 +42,7 @@ export function createRun(deps: RunDeps): Run {
     projectiles: [],
     effects: createEffects(deps.effectsSeed),
     stats: { score: 0, enemiesDestroyed: 0 },
+    ended: false,
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
   };
   let events: GameEvent[] = [];
@@ -54,6 +57,7 @@ export function createRun(deps: RunDeps): Run {
   return {
     step(input) {
       events = [];
+      if (state.ended) return events;
       stepEffects(ctx);
       stepSpawning(ctx);
       stepRexi(ctx, input);
@@ -61,10 +65,25 @@ export function createRun(deps: RunDeps): Run {
       stepEnemies(ctx);
       stepProjectiles(ctx);
       state.tick += 1;
+      if (state.rexi.health <= 0) endRun(ctx);
       return events;
     },
     view: () => viewRun(state, deps.tuning),
+    get ended() {
+      return state.ended;
+    },
   };
+}
+
+function endRun(ctx: RunContext): void {
+  const { state } = ctx;
+  state.ended = true;
+  ctx.emit({
+    type: 'run-ended',
+    score: state.stats.score,
+    enemiesDestroyed: state.stats.enemiesDestroyed,
+    ticksSurvived: state.tick,
+  });
 }
 
 function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
@@ -92,6 +111,8 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
       weapon: { id: rexi.weapon, ammo: null },
+      hurtTicks: rexi.hurtTicks,
+      invulnerableTicks: rexi.invulnerableTicks,
     },
     enemies: state.enemies.map((e) => ({
       id: e.id,
@@ -124,5 +145,6 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       enemiesDestroyed: state.stats.enemiesDestroyed,
       ticksSurvived: state.tick,
     },
+    ended: state.ended,
   };
 }

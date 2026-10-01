@@ -1,3 +1,4 @@
+import { secondsToTicks } from './constants';
 import type { GameEvent } from './events';
 import type { InputFrame } from './input';
 import type { DeviceKind, GameOptions } from './options';
@@ -8,6 +9,12 @@ import type { GameView, ScreenKind } from './view';
 
 /** Stream id of the effects' random generator (any constant distinct from other streams). */
 const EFFECTS_STREAM = 0xeff3c7;
+
+/**
+ * Placeholder until the Veredicto screen: how long an ended Run stays on screen before a new
+ * Run starts, seconds.
+ */
+const RESTART_DELAY = 2;
 
 /**
  * The headless Game core. Advance it only with `tick`, once per fixed 1/60 s step, and draw
@@ -35,6 +42,8 @@ export function createGame(options: GameOptions): Game {
   let tickCount = 0;
   let screen: ScreenKind | null = null;
   let run: Run | null = null;
+  /** Ticks the current Run has been over (placeholder restart, see RESTART_DELAY). */
+  let endedTicks = 0;
   let cachedView: GameView | null = null;
   /** Events produced outside `tick` (e.g. at creation), delivered with the next tick. */
   let queued: GameEvent[] = [];
@@ -52,6 +61,7 @@ export function createGame(options: GameOptions): Game {
       nextId,
       spawns: options.overrides?.spawns ?? null,
     });
+    endedTicks = 0;
     changeScreen('run');
     queued.push({ type: 'run-started' });
   };
@@ -63,7 +73,14 @@ export function createGame(options: GameOptions): Game {
     tick(input) {
       const events = queued;
       queued = [];
-      if (screen === 'run' && run) events.push(...run.step(input));
+      if (screen === 'run' && run) {
+        if (run.ended && ++endedTicks >= secondsToTicks(RESTART_DELAY)) {
+          startRun();
+          events.push(...queued);
+          queued = [];
+        }
+        events.push(...run.step(input));
+      }
       tickCount += 1;
       cachedView = null;
       return events;

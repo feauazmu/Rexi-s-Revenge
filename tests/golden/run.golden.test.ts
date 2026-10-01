@@ -54,4 +54,19 @@ describe('Run goldens', () => {
     game.seconds(62.25, { aim: { x: 212, y: 59 } });
     await expectGolden('run-hud', renderView(game.view));
   });
+
+  it('run-hurt: papers flying at a hurt Rexi, health bar down by the hits taken', async () => {
+    const game = drive({
+      seed: 1,
+      overrides: {
+        spawns: [maletin],
+        tuning: { enemies: { 'maletin-coptero': { fireIntervalMin: 0.7, fireIntervalMax: 0.9 } } },
+      },
+    });
+    game.seconds(6.4, { aim: atMaletin });
+    const { rexi } = game.view.run ?? {};
+    expect(rexi?.health).toBeLessThan(rexi?.maxHealth ?? 0);
+    expect(rexi?.invulnerableTicks).toBeGreaterThan(0);
+    await expectGolden('run-hurt', renderView(game.view));
+  });
 });
