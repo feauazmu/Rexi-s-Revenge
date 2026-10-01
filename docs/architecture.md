@@ -275,6 +275,30 @@ stats counting up, a stamp with the outcome, the ruling and the signature line).
   arm for the facing: the deltoid cap and aiming arm facing right, the far arm facing left. So
   those parts are built per facing, not just mirrored.
 
+## Palette
+
+`masterPalette` (`src/render/palette.ts`) is the game's one curated palette: 40 named colors in the
+style of a 16-bit palette. `paletteRamps` lists them as ramps, dark to light: robe, grey (steel,
+trousers, smoke, marble, tank top), stone (plaza, ledges), skin, hair, leather, red (gym), brass,
+sky, glass, neonPink, fire and foliage. The swatch golden `palette-swatches` shows every color.
+
+- **Rules**: draw only with `masterPalette` colors, named (`masterPalette.skin3`), never hex
+  literals. No blending or alpha: the renderer must put exact palette colors on screen.
+  `masterPalette.outline` (pure black) is for outlines only.
+- **Ramps are hue-shifted**: shadows lean purple/blue, highlights lean warm yellow. To shade a
+  material, step along its ramp (base, one step down for shadow, one up for light). Never darken
+  or lighten a color by hand. Ramps share colors on purpose (`coral` is the gym-red highlight and
+  a sunset band; `leather3` is the brass shadow), which keeps the count down and the scene unified.
+- **Checking**: `src/render/palette-audit.ts` finds off-palette colors in rendered pixels
+  (`findOffPaletteColors`) or sprite definitions (`findOffPaletteSpriteColors`), each with its
+  nearest palette color. Tests use `expectOnPalette` and `loadGoldens` from `tests/support/palette.ts`.
+  The check over every golden (`tests/render/palette.test.ts`) is **skipped**: the art predates the
+  palette. The art pass remaps all sprites and drawers, then enables it.
+- **A new color**: first try the nearest ramp step (`nearestPaletteColor` suggests one). If no
+  step works, ask the owner, with a mock-up showing why. An accepted color gets a semantic name,
+  goes into a ramp in `paletteRamps` in luminance order, and the swatch golden is updated. The
+  palette stays at 40 colors or fewer (the palette test enforces it).
+
 ## Text: bitmap fonts, metrics and the strings catalog
 
 All text is drawn with code-defined bitmap fonts (`src/render/text/`), never canvas text.
