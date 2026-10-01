@@ -8,6 +8,11 @@ export interface EnemyTuningBase {
   readonly health: number;
   /** Score awarded when destroyed. Heavier Enemies are worth more. */
   readonly points: number;
+  /**
+   * When true, destroying this Enemy always triggers a Quip, ignoring chance and cooldown and
+   * replacing a Dialogue Box that is already showing. Absent means false.
+   */
+  readonly alwaysQuip?: boolean;
 }
 
 export interface MaletinCopteroTuning extends EnemyTuningBase {
@@ -28,6 +33,7 @@ export const enemiesTuning = {
     height: 18,
     health: 12,
     points: 100,
+    alwaysQuip: false,
     hoverAmplitude: 6,
     hoverPeriod: 2,
   },

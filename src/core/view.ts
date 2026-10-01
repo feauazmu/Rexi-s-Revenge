@@ -1,6 +1,7 @@
 import type { Craft, EnemyKind, ProjectileKind, WeaponId } from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
+import type { QuipTheme } from './quips/catalog';
 
 /**
  * Read-only snapshot of everything needed to draw one frame. The renderer is a pure function
@@ -35,6 +36,26 @@ export interface RunView {
   readonly enemies: readonly EnemyView[];
   readonly projectiles: readonly ProjectileView[];
   readonly stats: RunStatsView;
+  /** Ticks of Hit-stop left: while above 0 the Run is frozen (the Dialogue Box is not). */
+  readonly hitStop: number;
+  /** The Dialogue Box, or null when Rexi is not talking. */
+  readonly dialogue: DialogueView | null;
+}
+
+/** The Dialogue Box showing one Quip with typewriter text. It never blocks play. */
+export interface DialogueView {
+  readonly quipId: string;
+  readonly theme: QuipTheme;
+  /** The whole Quip; draw only its first `revealed` characters. */
+  readonly text: string;
+  /** Characters of `text` revealed so far by the typewriter. */
+  readonly revealed: number;
+  /** True once every character is revealed (the box lingers, then closes). */
+  readonly complete: boolean;
+  /** How far the box has slid in: 0 hidden below the screen, 1 fully open. */
+  readonly openness: number;
+  /** Ticks since the box opened (animation phase, e.g. the blinking cursor). */
+  readonly age: number;
 }
 
 export interface ArenaView {

@@ -2,6 +2,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../constants';
 import type { GameEvent } from '../events';
 import type { InputFrame } from '../input';
 import type { ScriptedSpawn } from '../options';
+import { createQuipDirector, type QuipDirector } from '../quips/director';
 import type { Rng } from '../rng';
 import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
@@ -17,6 +18,11 @@ import { stepWeapons } from './weapons/system';
 export interface RunDeps {
   readonly tuning: Tuning;
   readonly rng: Rng;
+  /**
+   * Separate stream for Quip rolls and shuffle-bags, so whether Rexi talks never changes the
+   * gameplay randomness (spawns, Enemy behavior) of a seeded Run.
+   */
+  readonly quipRng: Rng;
   readonly nextId: () => number;
   /** Scripted spawns, or null for automatic spawning. */
   readonly spawns: readonly ScriptedSpawn[] | null;
@@ -47,22 +53,79 @@ export function createRun(deps: RunDeps): Run {
     nextId: deps.nextId,
   };
 
+  const quips = createQuipDirector({
+    tuning: deps.tuning.quips,
+    rng: deps.quipRng,
+    emit: (event) => {
+      ctx.emit(event);
+    },
+  });
+  const frozenInput = createFrozenInputBuffer();
+
   return {
     step(input) {
       events = [];
+      // The Dialogue Box runs on every tick; the simulation sits out a Hit-stop.
+      if (quips.advance()) {
+        frozenInput.hold(input);
+        return events;
+      }
+      const live = frozenInput.release(input);
       stepSpawning(ctx);
-      stepRexi(ctx, input);
-      stepWeapons(ctx, input);
+      stepRexi(ctx, live);
+      stepWeapons(ctx, live);
       stepEnemies(ctx);
       stepProjectiles(ctx);
       state.tick += 1;
+      for (const event of [...events]) {
+        if (event.type !== 'enemy-destroyed') continue;
+        quips.enemyDestroyed({
+          enemyId: event.enemyId,
+          craft: event.craft,
+          alwaysQuip: deps.tuning.enemies[event.kind].alwaysQuip ?? false,
+        });
+      }
       return events;
     },
-    view: () => viewRun(state, deps.tuning),
+    view: () => viewRun(state, deps.tuning, quips),
   };
 }
 
-function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
+/**
+ * Presses made while the Run is frozen (jump, Weapon switches) are kept and applied on the
+ * first live tick, so a Hit-stop never swallows a tap.
+ */
+function createFrozenInputBuffer(): {
+  hold(input: InputFrame): void;
+  release(input: InputFrame): InputFrame;
+} {
+  let pending: Pick<InputFrame, 'jump' | 'weaponNext' | 'weaponPrevious' | 'weaponSlot'> | null =
+    null;
+  return {
+    hold(input) {
+      pending = {
+        jump: (pending?.jump ?? false) || input.jump,
+        weaponNext: (pending?.weaponNext ?? false) || input.weaponNext,
+        weaponPrevious: (pending?.weaponPrevious ?? false) || input.weaponPrevious,
+        weaponSlot: input.weaponSlot ?? pending?.weaponSlot ?? null,
+      };
+    },
+    release(input) {
+      if (!pending) return input;
+      const held = pending;
+      pending = null;
+      return {
+        ...input,
+        jump: input.jump || held.jump,
+        weaponNext: input.weaponNext || held.weaponNext,
+        weaponPrevious: input.weaponPrevious || held.weaponPrevious,
+        weaponSlot: input.weaponSlot ?? held.weaponSlot,
+      };
+    },
+  };
+}
+
+function viewRun(state: Readonly<RunState>, tuning: Tuning, quips: QuipDirector): RunView {
   const { rexi } = state;
   return {
     tick: state.tick,
@@ -112,5 +175,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       enemiesDestroyed: state.stats.enemiesDestroyed,
       ticksSurvived: state.tick,
     },
+    hitStop: quips.hitStop,
+    dialogue: quips.view(),
   };
 }

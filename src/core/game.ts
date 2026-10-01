@@ -17,9 +17,13 @@ export interface Game {
   readonly view: GameView;
 }
 
+/** Mixed into the seed for the Quip random stream (independent of gameplay randomness). */
+const QUIP_STREAM = 0x51e7c0de;
+
 export function createGame(options: GameOptions): Game {
   const tuning: Tuning = resolveTuning(options.overrides?.tuning);
   const rng = createRng(options.seed);
+  const quipRng = createRng(options.seed ^ QUIP_STREAM);
   const device: DeviceKind = options.device ?? 'desktop';
   // `options.storage` (default: memoryStorage()) is read once persistence (high scores,
   // "Cómo jugar" seen, mute) lands with the screen-flow and Veredicto tickets.
@@ -40,7 +44,7 @@ export function createGame(options: GameOptions): Game {
   };
 
   const startRun = (): void => {
-    run = createRun({ tuning, rng, nextId, spawns: options.overrides?.spawns ?? null });
+    run = createRun({ tuning, rng, quipRng, nextId, spawns: options.overrides?.spawns ?? null });
     changeScreen('run');
     queued.push({ type: 'run-started' });
   };

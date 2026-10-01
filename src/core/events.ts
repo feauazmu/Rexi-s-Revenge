@@ -1,4 +1,5 @@
 import type { Craft, EnemyKind, WeaponId } from './ids';
+import type { QuipTheme } from './quips/catalog';
 import type { ScreenKind } from './view';
 
 /**
@@ -13,7 +14,10 @@ export type GameEvent =
   | WeaponFiredEvent
   | EnemySpawnedEvent
   | EnemyHitEvent
-  | EnemyDestroyedEvent;
+  | EnemyDestroyedEvent
+  | QuipStartedEvent
+  | QuipCharacterEvent
+  | DialogueClosedEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -57,4 +61,30 @@ export interface EnemyDestroyedEvent {
   /** Center of the Enemy when it was destroyed, in game coordinates. */
   readonly x: number;
   readonly y: number;
+}
+
+/** A Quip triggered: the Hit-stop starts and the Dialogue Box opens with this Quip. */
+export interface QuipStartedEvent {
+  readonly type: 'quip-started';
+  readonly quipId: string;
+  readonly theme: QuipTheme;
+  /** The destroyed Enemy that drew the Quip. */
+  readonly enemyId: number;
+  /** Ticks of Hit-stop that follow this tick (the Run stays frozen for that many ticks). */
+  readonly hitStopTicks: number;
+}
+
+/** The typewriter revealed one visible character (never a space): the text blip. */
+export interface QuipCharacterEvent {
+  readonly type: 'quip-character';
+  readonly quipId: string;
+  readonly char: string;
+  /** Index of the character in the Quip's text. */
+  readonly index: number;
+}
+
+/** The Dialogue Box finished closing (it is no longer in the view). */
+export interface DialogueClosedEvent {
+  readonly type: 'dialogue-closed';
+  readonly quipId: string;
 }
