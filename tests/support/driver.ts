@@ -4,6 +4,7 @@
  */
 import {
   createGame,
+  defaultTuning,
   inputFrame,
   TICKS_PER_SECOND,
   type GameEvent,
@@ -12,6 +13,8 @@ import {
   type GameOptions,
   type GameView,
   type InputFramePatch,
+  type ScriptedCrateSpawn,
+  type SpecialWeaponId,
   type Vec2,
 } from '../../src/core';
 
@@ -64,6 +67,21 @@ export function eventsOf<T extends GameEventType>(
 ): GameEventOf<T>[] {
   return events.filter((e): e is GameEventOf<T> => e.type === type);
 }
+
+/** A scripted Crate carrying ammo for `weapon`, dropped at `x` (`y` default: above the top). */
+export function weaponCrate(
+  weapon: SpecialWeaponId,
+  x: number,
+  options: { readonly y?: number; readonly atTick?: number } = {},
+): ScriptedCrateSpawn {
+  return { kind: 'crate', contents: { kind: 'weapon', weapon }, x, ...options };
+}
+
+/** A Crate position overlapping Rexi at his spawn point: it is picked up on the first tick. */
+export const ON_REXI = {
+  x: defaultTuning.rexi.spawnX,
+  y: defaultTuning.arena.groundY - defaultTuning.rexi.height - 4,
+} as const;
 
 /** The Run view, asserting that a Run exists. */
 export function runOf(view: GameView): NonNullable<GameView['run']> {

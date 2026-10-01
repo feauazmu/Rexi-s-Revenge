@@ -5,6 +5,7 @@ import type { Tuning } from '../tuning';
 import type { RunContext } from './context';
 import { stepBody, type World } from './physics';
 import type { RexiState } from './state';
+import { createInventory } from './weapons/inventory';
 
 export function createRexi(tuning: Tuning): RexiState {
   const { rexi, arena } = tuning;
@@ -21,8 +22,7 @@ export function createRexi(tuning: Tuning): RexiState {
     maxHealth: rexi.maxHealth,
     facing: 1,
     aim: { x: rexi.spawnX + 100, y: arena.groundY - rexi.height },
-    fireCooldown: 0,
-    weapon: 'mazo-automatico',
+    inventory: createInventory(),
   };
 }
 

@@ -17,7 +17,7 @@ Vocabulary follows [`CONTEXT.md`](../CONTEXT.md); art rules follow [ADR 0001](ad
 | ------------------- | ------------------------------------------------------------------------------------------- | ------------------ |
 | `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`. | `src/core` only    |
 | `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                |                    |
-| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Enemies, projectiles, spawning).             |                    |
+| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning).     |                    |
 | `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                |                    |
 | `src/render/`       | Pure renderer: `GameView` → pixels on a 480×270 `Surface`. No DOM, no clock.                | `src/core` (index) |
 | `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, storage, bitmaps.         | core, render       |
@@ -44,13 +44,36 @@ draw(game.view);                       // read-only snapshot, rebuilt lazily aft
 - **Determinism**: same seed + same input frames ⇒ identical event log and view. All randomness goes through
   the seeded `Rng` in `RunContext`; entity ids come from a counter.
 - **Overrides**: `tuning` is deep-merged over `defaultTuning` (unknown keys throw). `spawns` replaces
-  automatic spawning entirely (empty list = empty Arena) — this is how tests stage scenarios.
+  automatic spawning of Enemies and Crates entirely (empty list = empty Arena) — this is how tests stage
+  scenarios. A spawn is an Enemy (`{ kind: 'maletin-coptero', x, y }`) or a Crate
+  (`{ kind: 'crate', contents, x, y? }`, `y` defaulting to just above the screen).
 - **Storage**: `StoragePort` (string get/set). The core owns keys and formats; `src/platform/storage.ts`
   wraps `localStorage` with an in-memory fallback.
 
 Inside a Run, one tick runs the subsystems in order (`src/core/run/run.ts`):
-spawning → Rexi → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
-(`tuning`, `rng`, `state`, `emit`, `nextId`).
+spawning → Rexi → Crates → Weapons → Enemies → projectiles. Subsystems share a `RunContext`
+(`tuning`, `rng`, `state`, `emit`, `nextId`). Crates run before Weapons, so a Weapon picked up this tick
+can fire this tick.
+
+### Weapons and the inventory
+
+`src/core/run/weapons/inventory.ts` holds the HA3 rules. The Mazo Automático (`DEFAULT_WEAPON`) is always
+carried with unlimited ammo. A collected special Weapon is added with `pickupAmmo` and selected, or, if
+already carried, topped up to at most `maxAmmo` without changing the selection. Each trigger pull spends
+one ammo (a whole Lluvia de Sellos fan is one); at zero the Weapon leaves the inventory and the Mazo is
+selected. Slots follow `WEAPON_IDS`: number key N selects entry N − 1 if carried; next/previous cycle the
+carried Weapons in that order, wrapping. Cooldowns are per Weapon, so switching never skips one.
+
+### Crates
+
+`src/core/run/crates/system.ts` drops Crates on a seeded timer (`tuning.crates`), lets them fall at the
+parachute speed through `stepBody` (so they land wherever bodies land), starts their lifetime on landing,
+marks the last `blinkTime` as `blinking` in the view, and removes them on expiry or when Rexi touches one.
+It never looks inside a Crate: `src/core/run/crates/contents.ts` derives the possible contents from
+`SPECIAL_WEAPON_IDS` and `POWER_UP_IDS`, rolls them with the weights in `tuning.crates.weights`, and on
+pickup hands Weapons to the inventory and Power-ups to their `PowerUpDef.collect`
+(`src/core/run/power-ups/`). The renderer (`src/render/layers/crates.ts`) shows the contents' icon on a
+family-colored Crate and picks the blink cadence.
 
 Units: tuning values are seconds, pixels and px/s; the core converts to ticks with `secondsToTicks`.
 Positions are game coordinates (480×270); boxes use their top-left corner.
@@ -122,14 +145,32 @@ Each tick samples the keyboard/mouse adapter once (edges are consumed by the fir
 ### A Weapon
 
 1. Add the id to `WEAPON_IDS` (and any new projectile kind to `PROJECTILE_KINDS`) in `src/core/ids.ts`.
-2. Add its tuning entry in `src/core/tuning/weapons.ts` (pick or add an archetype interface extending
-   `WeaponTuningBase`).
-3. Implement `src/core/run/weapons/<id>.ts` exporting a `WeaponDef` whose `fire(shot, ctx)` spawns
-   projectiles with `spawnProjectile` (the Weapon system already handles trigger, cooldown and `weapon-fired`).
-4. Register it in `src/core/run/weapons/index.ts`.
-5. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
+   Its position is its inventory slot (number key).
+2. Add its tuning entry in `src/core/tuning/weapons.ts`: an archetype interface extending
+   `WeaponTuningBase` (pick or add one) `& AmmoTuning` (`pickupAmmo`, `maxAmmo`).
+3. Give it a Crate weight in `tuning.crates.weights.weapons` (`src/core/tuning/crates.ts`). That alone makes
+   it Crate content; the Crate system and inventory need no changes.
+4. Implement `src/core/run/weapons/<id>.ts` exporting a `WeaponDef` whose `fire(shot, ctx)` spawns
+   projectiles with `spawnProjectile` (the Weapon system already handles switching, trigger, cooldown,
+   ammo and `weapon-fired`).
+5. Register it in `src/core/run/weapons/index.ts`.
+6. Draw new projectile kinds in `src/render/projectiles/<kind>.ts` and register them in
    `src/render/projectiles/index.ts`.
-6. Draw its HUD icon in `src/render/hud/weapon-icons.ts` and add its Spanish name to `strings.weapons`.
+7. Draw its icon (at most 12×12; it is also shown on Crates) in `src/render/hud/weapon-icons.ts` and add
+   its Spanish name to `strings.weapons`.
+8. Test it through a scripted Crate: `weaponCrate(id, ON_REXI.x, { y: ON_REXI.y })` from
+   `tests/support/driver.ts` hands it to Rexi on the first tick.
+
+### A Power-up
+
+1. Add the id to `POWER_UP_IDS` in `src/core/ids.ts`.
+2. Add its numbers to the tuning catalog and its Crate weight to `tuning.crates.weights.powerUps`.
+3. Implement `src/core/run/power-ups/<id>.ts` exporting a `PowerUpDef` whose `collect(ctx)` applies it, and
+   register it in `src/core/run/power-ups/index.ts`. Crates deliver it with no other change.
+4. Draw its icon (at most 12×12) in `src/render/hud/power-up-icons.ts`.
+
+`Record<…Id, …>` catalogs (tuning, Crate weights, behavior, icons, names) make the typecheck fail until
+every step is done.
 
 ### An event
 

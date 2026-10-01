@@ -1,9 +1,11 @@
 import { arenaTuning, type ArenaTuning } from './arena';
+import { cratesTuning, type CratesTuning } from './crates';
 import { enemiesTuning, type EnemiesTuning } from './enemies';
 import { rexiTuning, type RexiTuning } from './rexi';
 import { weaponsTuning, type WeaponsTuning } from './weapons';
 
 export type * from './arena';
+export type * from './crates';
 export type * from './enemies';
 export type * from './rexi';
 export type * from './weapons';
@@ -17,6 +19,7 @@ export interface Tuning {
   readonly rexi: RexiTuning;
   readonly weapons: WeaponsTuning;
   readonly enemies: EnemiesTuning;
+  readonly crates: CratesTuning;
 }
 
 export const defaultTuning: Tuning = {
@@ -24,6 +27,7 @@ export const defaultTuning: Tuning = {
   rexi: rexiTuning,
   weapons: weaponsTuning,
   enemies: enemiesTuning,
+  crates: cratesTuning,
 };
 
 /** Recursively optional version of T, used for tuning overrides. Arrays are replaced whole. */

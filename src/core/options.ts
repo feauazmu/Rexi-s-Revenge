@@ -1,12 +1,15 @@
-import type { EnemyKind } from './ids';
+import type { CrateContents, EnemyKind } from './ids';
 import type { StoragePort } from './storage';
 import type { TuningOverrides } from './tuning';
 
 /** Only affects UI prompts and "Cómo jugar" content, never gameplay. */
 export type DeviceKind = 'desktop' | 'touch';
 
-/** An Enemy placed at an exact Run tick and position, for tests and the dev sandbox. */
-export interface ScriptedSpawn {
+/** Something placed at an exact Run tick and position, for tests and the dev sandbox. */
+export type ScriptedSpawn = ScriptedEnemySpawn | ScriptedCrateSpawn;
+
+/** An Enemy placed at an exact Run tick and position. */
+export interface ScriptedEnemySpawn {
   readonly kind: EnemyKind;
   /** Run tick at which the Enemy appears (default 0: on the first tick of the Run). */
   readonly atTick?: number;
@@ -15,12 +18,24 @@ export interface ScriptedSpawn {
   readonly y: number;
 }
 
+/** A Crate dropped at an exact Run tick and position. */
+export interface ScriptedCrateSpawn {
+  readonly kind: 'crate';
+  readonly contents: CrateContents;
+  /** Run tick at which the Crate appears (default 0: on the first tick of the Run). */
+  readonly atTick?: number;
+  /** Left edge of the Crate. */
+  readonly x: number;
+  /** Top edge of the Crate. Default: just above the top of the screen, as automatic drops. */
+  readonly y?: number;
+}
+
 export interface GameOverrides {
   /** Deep-merged over the default tuning catalog. */
   readonly tuning?: TuningOverrides;
   /**
    * When present, these spawns replace automatic spawning entirely: the Run contains exactly
-   * these Enemies (an empty list means no Enemies at all).
+   * these Enemies and Crates (an empty list means none at all).
    */
   readonly spawns?: readonly ScriptedSpawn[];
 }

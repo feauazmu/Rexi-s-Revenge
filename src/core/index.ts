@@ -13,7 +13,14 @@ export {
 } from './input';
 export type * from './events';
 export type * from './view';
-export type { DeviceKind, GameOptions, GameOverrides, ScriptedSpawn } from './options';
+export type {
+  DeviceKind,
+  GameOptions,
+  GameOverrides,
+  ScriptedCrateSpawn,
+  ScriptedEnemySpawn,
+  ScriptedSpawn,
+} from './options';
 export { memoryStorage, type StoragePort } from './storage';
 export {
   defaultTuning,
@@ -23,12 +30,18 @@ export {
   type TuningOverrides,
 } from './tuning';
 export {
+  DEFAULT_WEAPON,
   ENEMY_KINDS,
+  POWER_UP_IDS,
   PROJECTILE_KINDS,
+  SPECIAL_WEAPON_IDS,
   WEAPON_IDS,
   type Craft,
+  type CrateContents,
   type EnemyKind,
+  type PowerUpId,
   type ProjectileKind,
+  type SpecialWeaponId,
   type WeaponId,
 } from './ids';
 export type { Box, Vec2 } from './math';

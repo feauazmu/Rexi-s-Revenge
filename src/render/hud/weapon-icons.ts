@@ -19,7 +19,30 @@ const MAZO_AUTOMATICO = defineSprite(
   ],
 );
 
-/** HUD icon of each Weapon. A new Weapon fails to typecheck until it gets an icon here. */
+/** Lluvia de Sellos: a red rubber stamp on a blue ink pad (11×12). */
+const LLUVIA_DE_SELLOS = defineSprite(
+  { k: palette.outline, R: '#ff7a64', r: '#d42a2a', d: '#8a1a1a', B: '#3a4ec0' },
+  [
+    '...kkkkk...',
+    '..kRRrrrk..',
+    '..kRrrrdk..',
+    '...krrdk...',
+    '....krk....',
+    '....krk....',
+    '.kkkkkkkkk.',
+    'kRRrrrrrrrk',
+    'krrrrrrrrdk',
+    'kkkkkkkkkkk',
+    'kBBBBBBBBBk',
+    '.kkkkkkkkk.',
+  ],
+);
+
+/**
+ * HUD icon of each Weapon, also shown on Crates (at most 12×12 to fit a Crate's label).
+ * A new Weapon fails to typecheck until it gets an icon here.
+ */
 export const weaponIcons: Readonly<Record<WeaponId, SpriteDef>> = {
   'mazo-automatico': MAZO_AUTOMATICO,
+  'lluvia-de-sellos': LLUVIA_DE_SELLOS,
 };

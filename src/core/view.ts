@@ -1,4 +1,4 @@
-import type { Craft, EnemyKind, ProjectileKind, WeaponId } from './ids';
+import type { Craft, CrateContents, EnemyKind, ProjectileKind, WeaponId } from './ids';
 import type { Vec2 } from './math';
 import type { DeviceKind } from './options';
 
@@ -34,6 +34,7 @@ export interface RunView {
   readonly rexi: RexiView;
   readonly enemies: readonly EnemyView[];
   readonly projectiles: readonly ProjectileView[];
+  readonly crates: readonly CrateView[];
   readonly stats: RunStatsView;
 }
 
@@ -59,13 +60,29 @@ export interface RexiView extends BoxView {
   readonly muzzle: Vec2;
   /** Unit vector from the muzzle toward the aim target. */
   readonly aimDirection: Vec2;
+  /** The selected Weapon. */
   readonly weapon: WeaponView;
+  /** Every Weapon Rexi carries, in slot order (the Mazo Automático is always first). */
+  readonly inventory: readonly WeaponView[];
 }
 
 export interface WeaponView {
   readonly id: WeaponId;
   /** Remaining ammo, or null for unlimited (Mazo Automático). */
   readonly ammo: number | null;
+}
+
+export interface CrateView extends BoxView {
+  readonly id: number;
+  readonly contents: CrateContents;
+  /** False while it falls under its parachute. */
+  readonly landed: boolean;
+  /** Ticks until it expires once landed; null while falling. */
+  readonly ticksLeft: number | null;
+  /** True during the last part of its lifetime (the renderer picks the blink cadence). */
+  readonly blinking: boolean;
+  /** Ticks since it was dropped (animation phase). */
+  readonly age: number;
 }
 
 export interface EnemyView extends BoxView {

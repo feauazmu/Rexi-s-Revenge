@@ -6,12 +6,14 @@ import type { Rng } from '../rng';
 import type { Tuning } from '../tuning';
 import type { RunView } from '../view';
 import type { RunContext } from './context';
+import { firstCrateDrop, stepCrates, viewCrate } from './crates/system';
 import { enemyCatalog } from './enemies/index';
 import { stepEnemies } from './enemies/system';
 import { stepProjectiles } from './projectiles';
 import { aimDirectionOf, createRexi, muzzleOf, stepRexi } from './rexi';
 import { sortSpawns, stepSpawning } from './spawning';
 import type { RunState } from './state';
+import { viewInventory } from './weapons/inventory';
 import { stepWeapons } from './weapons/system';
 
 export interface RunDeps {
@@ -35,8 +37,10 @@ export function createRun(deps: RunDeps): Run {
     rexi: createRexi(deps.tuning),
     enemies: [],
     projectiles: [],
+    crates: [],
     stats: { score: 0, enemiesDestroyed: 0 },
     scriptedSpawns: deps.spawns === null ? null : sortSpawns(deps.spawns),
+    nextCrateDrop: deps.spawns === null ? firstCrateDrop(deps.tuning) : null,
   };
   let events: GameEvent[] = [];
   const ctx: RunContext = {
@@ -52,6 +56,7 @@ export function createRun(deps: RunDeps): Run {
       events = [];
       stepSpawning(ctx);
       stepRexi(ctx, input);
+      stepCrates(ctx);
       stepWeapons(ctx, input);
       stepEnemies(ctx);
       stepProjectiles(ctx);
@@ -81,7 +86,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       aim: rexi.aim,
       muzzle: muzzleOf(rexi, tuning),
       aimDirection: aimDirectionOf(rexi, tuning),
-      weapon: { id: rexi.weapon, ammo: null },
+      ...viewInventory(rexi.inventory),
     },
     enemies: state.enemies.map((e) => ({
       id: e.id,
@@ -107,6 +112,7 @@ function viewRun(state: Readonly<RunState>, tuning: Tuning): RunView {
       vy: p.vy,
       age: p.age,
     })),
+    crates: state.crates.map((crate) => viewCrate(crate, tuning)),
     stats: {
       score: state.stats.score,
       enemiesDestroyed: state.stats.enemiesDestroyed,

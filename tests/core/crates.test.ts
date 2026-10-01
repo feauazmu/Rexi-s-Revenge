@@ -1,0 +1,206 @@
+/** Crates: timed drops with weighted seeded contents, falling, landing, blinking, expiry, pickup. */
+import { describe, expect, it } from 'vitest';
+import {
+  defaultTuning,
+  SCREEN_WIDTH,
+  secondsToTicks,
+  TICKS_PER_SECOND,
+  type CrateView,
+} from '../../src/core';
+import { drive, driveEmptyArena, eventsOf, ON_REXI, runOf, weaponCrate } from '../support/driver';
+
+const crates = defaultTuning.crates;
+const groundY = defaultTuning.arena.groundY;
+const sellosCrate = (x: number, options?: Parameters<typeof weaponCrate>[2]) =>
+  weaponCrate('lluvia-de-sellos', x, options);
+
+/** Far from Rexi's spawn point, so he never touches it unless he walks there. */
+const FAR_X = 360;
+
+function onlyCrate(game: { readonly view: Parameters<typeof runOf>[0] }): CrateView {
+  const list = runOf(game.view).crates;
+  expect(list).toHaveLength(1);
+  const [crate] = list;
+  if (!crate) throw new Error('unreachable');
+  return crate;
+}
+
+describe('Automatic Crate drops', () => {
+  it('drops the first Crate at the tuned time, above the top of the screen', () => {
+    const game = drive({ seed: 3 });
+    expect(eventsOf(game.ticks(secondsToTicks(crates.firstDrop)), 'crate-spawned')).toHaveLength(0);
+
+    const spawned = eventsOf(game.ticks(1), 'crate-spawned');
+    expect(spawned).toHaveLength(1);
+    const crate = onlyCrate(game);
+    expect(crate.id).toBe(spawned[0]?.crateId);
+    expect(crate.y + crate.h).toBeLessThanOrEqual(crates.fallSpeed / TICKS_PER_SECOND + 1e-9);
+    expect(crate.x).toBeGreaterThanOrEqual(crates.spawnMargin);
+    expect(crate.x + crate.w).toBeLessThanOrEqual(SCREEN_WIDTH - crates.spawnMargin);
+    expect(crate.landed).toBe(false);
+  });
+
+  it('keeps dropping Crates every interval ± jitter', () => {
+    const game = drive({ seed: 5 });
+    const ticks: number[] = [];
+    for (let t = 0; t < 120 * TICKS_PER_SECOND; t++) {
+      if (eventsOf(game.ticks(1), 'crate-spawned').length > 0) ticks.push(t);
+    }
+    const gaps = ticks.slice(1).map((t, i) => t - (ticks[i] ?? 0));
+    expect(gaps.length).toBeGreaterThanOrEqual(8);
+    for (const gap of gaps) {
+      expect(gap).toBeGreaterThanOrEqual(
+        secondsToTicks(crates.dropInterval - crates.dropIntervalJitter),
+      );
+      expect(gap).toBeLessThanOrEqual(
+        secondsToTicks(crates.dropInterval + crates.dropIntervalJitter),
+      );
+    }
+    expect(new Set(gaps).size).toBeGreaterThan(1);
+  });
+
+  it('is reproducible for a seed and varies between seeds', () => {
+    const dropsFor = (seed: number) => eventsOf(drive({ seed }).seconds(60), 'crate-spawned');
+
+    expect(dropsFor(7).length).toBeGreaterThan(2);
+    expect(dropsFor(7)).toEqual(dropsFor(7));
+    const variants = new Set([1, 2, 3, 4].map((seed) => JSON.stringify(dropsFor(seed))));
+    expect(variants.size).toBe(4);
+  });
+
+  it('fills Crates from the content weights (Weapons other than the Mazo)', () => {
+    const contents = eventsOf(drive({ seed: 9 }).seconds(90), 'crate-spawned').map(
+      (e) => e.contents,
+    );
+    expect(contents.length).toBeGreaterThan(0);
+    for (const c of contents) {
+      expect(c.kind).toBe('weapon');
+      if (c.kind === 'weapon') expect(crates.weights.weapons[c.weapon]).toBeGreaterThan(0);
+    }
+  });
+
+  it('refuses a catalog where no content has a positive weight', () => {
+    const game = drive({
+      overrides: {
+        tuning: { crates: { firstDrop: 0, weights: { weapons: { 'lluvia-de-sellos': 0 } } } },
+      },
+    });
+    expect(() => game.ticks(1)).toThrow(/positive weight/);
+  });
+
+  it('does not drop Crates on its own when spawns are scripted', () => {
+    const game = driveEmptyArena();
+    expect(eventsOf(game.seconds(40), 'crate-spawned')).toHaveLength(0);
+  });
+});
+
+describe('A falling Crate', () => {
+  it('falls at the parachute speed', () => {
+    const game = driveEmptyArena({ overrides: { spawns: [sellosCrate(FAR_X)] } });
+    game.ticks(2);
+    const before = onlyCrate(game);
+    game.ticks(30);
+    const after = onlyCrate(game);
+    expect(after.x).toBe(before.x);
+    expect(after.y - before.y).toBeCloseTo((crates.fallSpeed * 30) / TICKS_PER_SECOND, 6);
+    expect(after.landed).toBe(false);
+    expect(after.ticksLeft).toBeNull();
+    expect(after.contents).toEqual({ kind: 'weapon', weapon: 'lluvia-de-sellos' });
+  });
+
+  it('lands on the ground, once, and starts its lifetime', () => {
+    const game = driveEmptyArena({ overrides: { spawns: [sellosCrate(FAR_X)] } });
+    const events = game.seconds((groundY + crates.size) / crates.fallSpeed + 0.5);
+    expect(eventsOf(events, 'crate-landed')).toHaveLength(1);
+
+    const crate = onlyCrate(game);
+    expect(crate.landed).toBe(true);
+    expect(crate.y + crate.h).toBe(groundY);
+    expect(crate.ticksLeft).toBeGreaterThan(0);
+    expect(crate.ticksLeft).toBeLessThanOrEqual(secondsToTicks(crates.lifetime));
+
+    game.seconds(1);
+    expect(onlyCrate(game).y + crates.size).toBe(groundY);
+    expect(eventsOf(game.log, 'crate-landed')).toHaveLength(1);
+  });
+});
+
+describe('A landed Crate', () => {
+  /** A Crate placed on the ground at tick 0 lands on the first tick. */
+  const landedCrate = () =>
+    driveEmptyArena({
+      overrides: { spawns: [sellosCrate(FAR_X, { y: groundY - crates.size })] },
+    });
+
+  it('blinks during the last part of its lifetime', () => {
+    const game = landedCrate();
+    game.ticks(1);
+    expect(onlyCrate(game)).toMatchObject({ landed: true, blinking: false });
+
+    const steadyTicks = secondsToTicks(crates.lifetime) - secondsToTicks(crates.blinkTime);
+    game.ticks(steadyTicks - 1);
+    expect(onlyCrate(game).blinking).toBe(false);
+    game.ticks(1);
+    expect(onlyCrate(game)).toMatchObject({
+      blinking: true,
+      ticksLeft: secondsToTicks(crates.blinkTime),
+    });
+  });
+
+  it('expires at the end of its lifetime', () => {
+    const game = landedCrate();
+    const lifetime = secondsToTicks(crates.lifetime);
+    expect(eventsOf(game.ticks(lifetime), 'crate-expired')).toHaveLength(0);
+    expect(runOf(game.view).crates).toHaveLength(1);
+
+    const expired = eventsOf(game.ticks(1), 'crate-expired');
+    expect(expired).toHaveLength(1);
+    expect(runOf(game.view).crates).toHaveLength(0);
+    expect(eventsOf(game.log, 'crate-picked')).toHaveLength(0);
+  });
+
+  it('uses the tuned lifetime', () => {
+    const game = driveEmptyArena({
+      overrides: {
+        spawns: [sellosCrate(FAR_X, { y: groundY - crates.size })],
+        tuning: { crates: { lifetime: 2 } },
+      },
+    });
+    expect(eventsOf(game.seconds(2.1), 'crate-expired')).toHaveLength(1);
+  });
+});
+
+describe('Picking up a Crate', () => {
+  it('happens as soon as Rexi touches it, even mid-air', () => {
+    const game = driveEmptyArena({ overrides: { spawns: [sellosCrate(ON_REXI.x)] } });
+    const events = game.seconds(6);
+    const picked = eventsOf(events, 'crate-picked');
+    expect(picked).toHaveLength(1);
+    expect(picked[0]?.contents).toEqual({ kind: 'weapon', weapon: 'lluvia-de-sellos' });
+    expect(eventsOf(events, 'crate-landed')).toHaveLength(0);
+    expect(runOf(game.view).crates).toHaveLength(0);
+  });
+
+  it('needs Rexi to touch it: he walks over to a landed Crate', () => {
+    const game = driveEmptyArena({
+      overrides: { spawns: [sellosCrate(FAR_X, { y: groundY - crates.size })] },
+    });
+    expect(eventsOf(game.seconds(1), 'crate-picked')).toHaveLength(0);
+
+    const events = game.seconds(3, { move: 1 });
+    expect(eventsOf(events, 'crate-picked')).toHaveLength(1);
+    expect(eventsOf(events, 'crate-expired')).toHaveLength(0);
+    expect(runOf(game.view).crates).toHaveLength(0);
+  });
+
+  it('delivers the contents: a Weapon Crate gives that Weapon', () => {
+    const game = driveEmptyArena({
+      overrides: { spawns: [sellosCrate(ON_REXI.x, { y: ON_REXI.y })] },
+    });
+    const events = game.ticks(1);
+    expect(eventsOf(events, 'crate-picked')).toHaveLength(1);
+    expect(eventsOf(events, 'weapon-collected')).toEqual([
+      expect.objectContaining({ weapon: 'lluvia-de-sellos', added: true }),
+    ]);
+  });
+});
