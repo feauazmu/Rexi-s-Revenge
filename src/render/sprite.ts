@@ -44,6 +44,21 @@ export function mirrorSprite(sprite: SpriteDef): SpriteDef {
   );
 }
 
+const mirrors = new WeakMap<SpriteDef, SpriteDef>();
+
+/**
+ * {@link mirrorSprite}, memoized per sprite: use it for mirrors made while drawing, so the
+ * SpriteBank rasterizes each mirror only once.
+ */
+export function mirroredSprite(sprite: SpriteDef): SpriteDef {
+  let mirror = mirrors.get(sprite);
+  if (!mirror) {
+    mirror = mirrorSprite(sprite);
+    mirrors.set(sprite, mirror);
+  }
+  return mirror;
+}
+
 const silhouettes = new WeakMap<SpriteDef, Map<Color, SpriteDef>>();
 
 /**

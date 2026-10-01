@@ -28,6 +28,130 @@
       "type": "scene_tiles",
       "draft": "templates/arena_draft_1x.png",
       "step": [200, 113]
+    },
+    "maletin_draft": {
+      "type": "draft",
+      "image": "drafts/maletin_480.png",
+      "size": [43, 21],
+      "palette": "enemy"
+    },
+    "maletin_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-maletin-coptero.png",
+      "box": [340, 150, 960, 560],
+      "flip": true
+    },
+    "maletin_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [48, 30],
+      "ground": null,
+      "draft": "templates/maletin_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "archivador_draft": {
+      "type": "draft",
+      "image": "drafts/archivador_480.png",
+      "size": [59, 43],
+      "palette": "enemy"
+    },
+    "archivador_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-archivador-artillado.png",
+      "box": [900, 35, 1360, 340]
+    },
+    "archivador_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [62, 46],
+      "ground": null,
+      "draft": "templates/archivador_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "caminadora_draft": {
+      "type": "draft",
+      "image": "drafts/caminadora_480.png",
+      "size": [51, 27],
+      "palette": "enemy"
+    },
+    "caminadora_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-caminadora-a-reaccion.png",
+      "box": [20, 170, 945, 590]
+    },
+    "caminadora_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [56, 30],
+      "ground": null,
+      "draft": "templates/caminadora_draft_1x.png",
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67]
+      ],
+      "anchor_at": [16, 103]
+    },
+    "banca_draft": {
+      "type": "draft",
+      "image": "drafts/banca_480.png",
+      "size": [101, 47],
+      "palette": "enemy"
+    },
+    "banca_concept": {
+      "type": "crop",
+      "image": "../reference/enemy-banca-artillada.png",
+      "box": [20, 50, 1070, 690],
+      "flip": true
+    },
+    "banca_slots": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [104, 50],
+      "ground": null,
+      "draft": "templates/banca_draft_1x.png",
+      "slots": [
+        [150, 34],
+        [62, 101],
+        [178, 101]
+      ],
+      "anchor_at": [18, 68]
+    },
+    "projectile_cells": {
+      "type": "icongrid",
+      "n": 10,
+      "cell": 16,
+      "cols": 5
+    },
+    "banca_front": {
+      "type": "crop",
+      "image": "../reference/enemy-banca-artillada.png",
+      "box": [860, 290, 1355, 630]
+    },
+    "banca_slot1": {
+      "type": "slotsheet",
+      "anchor": "../reference/manu-pipeline/master_side.png",
+      "box": [104, 50],
+      "ground": null,
+      "draft": "templates/banca_draft_1x.png",
+      "slots": [[150, 67]],
+      "anchor_at": [40, 103]
+    },
+    "projectile_cells_x2": {
+      "type": "icongrid",
+      "n": 10,
+      "cell": 30,
+      "cols": 5
     }
   },
   "sheets": {
@@ -44,10 +168,185 @@
       "tile_step": [200, 113],
       "crop": [0, 0, 640, 360],
       "layers": {
-        "sky": { "ramps": ["sky"] }
+        "sky": {
+          "ramps": ["sky"]
+        }
+      }
+    },
+    "enemy_maletin": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_maletin.txt",
+      "style": true,
+      "refs": ["templates/maletin_slots.png", "templates/maletin_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": ["enemies/maletin_a", "enemies/maletin_b", "enemies/maletin_c", null]
+    },
+    "enemy_archivador": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_archivador.txt",
+      "style": true,
+      "refs": ["templates/archivador_slots.png", "templates/archivador_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": ["enemies/archivador_a", "enemies/archivador_b", "enemies/archivador_c", null]
+    },
+    "enemy_caminadora": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_caminadora.txt",
+      "style": true,
+      "refs": ["templates/caminadora_slots.png", "templates/caminadora_concept.png"],
+      "palette": "enemy",
+      "keep_white": false,
+      "names": ["enemies/caminadora_a", "enemies/caminadora_b", "enemies/caminadora_c", null]
+    },
+    "enemy_banca": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca.txt",
+      "style": true,
+      "refs": ["templates/banca_slots.png", "templates/banca_concept.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": [null, null, null, null, null],
+      "_note": "rejected: drawn off the 240-cell grid (2x pixels) and in 3/4 view; see enemy_banca_v2"
+    },
+    "projectiles": {
+      "kind": "sprite",
+      "prompt": "prompts/projectiles.txt",
+      "style": true,
+      "refs": ["templates/projectile_cells.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "min_px": 6,
+      "names": [null, null, null, null, null, null, null, null, null, null],
+      "_note": "rejected: drawn about 2.5x too large and off the grid; see projectiles_v2"
+    },
+    "enemy_banca_v2": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca_v2.txt",
+      "style": true,
+      "refs": ["templates/banca_slot1.png", "templates/banca_front.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "names": [null, null],
+      "_note": "rejected: drawn 152 px wide (the box enlarged 1.5x and filled grey); see enemy_banca_v3"
+    },
+    "enemy_banca_v3": {
+      "kind": "sprite",
+      "prompt": "prompts/enemy_banca_v3.txt",
+      "style": true,
+      "refs": ["templates/banca_slot1.png", "templates/banca_front.png"],
+      "palette": "enemy",
+      "keep_white": false,
+      "names": ["enemies/banca_v3", null]
+    },
+    "projectiles_v2": {
+      "kind": "sprite",
+      "prompt": "prompts/projectiles_v2.txt",
+      "style": true,
+      "refs": ["templates/projectile_cells_x2.png"],
+      "palette": "enemy",
+      "keep_white": true,
+      "min_px": 6,
+      "_doc": "drawn at twice the game size; scripts/art/enemies.py reduces them exactly 2:1 (reduce.py)",
+      "names": [
+        "projectiles/x2/gavel",
+        "projectiles/x2/stamp",
+        "projectiles/x2/dumbbell",
+        "projectiles/x2/law_book",
+        "projectiles/x2/subpoena",
+        "projectiles/x2/paper",
+        "projectiles/x2/bullet",
+        "projectiles/x2/rocket",
+        "projectiles/x2/drawer",
+        "projectiles/x2/paper_tilt"
+      ]
+    }
+  },
+  "parts": {
+    "gavel": {
+      "src": "projectiles/gavel.png",
+      "pivot": [6, 5],
+      "angles": {
+        "from": -135,
+        "to": 180,
+        "step": 45
+      },
+      "out": "projectiles/turn/gavel"
+    },
+    "stamp": {
+      "src": "projectiles/stamp.png",
+      "pivot": [4, 6],
+      "angles": {
+        "from": -135,
+        "to": 180,
+        "step": 45
+      },
+      "out": "projectiles/turn/stamp"
+    },
+    "dumbbell": {
+      "src": "projectiles/dumbbell.png",
+      "pivot": [6, 4],
+      "angles": {
+        "from": 0,
+        "to": 157.5,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/dumbbell"
+    },
+    "law_book": {
+      "src": "projectiles/law_book.png",
+      "pivot": [7, 5],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/law_book"
+    },
+    "rocket": {
+      "src": "projectiles/rocket.png",
+      "pivot": [7, 4],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/rocket"
+    },
+    "bullet": {
+      "src": "projectiles/bullet.png",
+      "pivot": [3, 2],
+      "angles": {
+        "from": -90,
+        "to": 90,
+        "step": 22.5
+      },
+      "out": "projectiles/turn/bullet"
+    }
+  },
+  "exports": {
+    "enemies": {
+      "sprites": ["enemies/**/*.png"],
+      "format": "rle",
+      "out": "src/render/art/generated"
+    },
+    "projectiles": {
+      "sprites": ["projectiles/**/*.png"],
+      "format": "rows",
+      "out": "src/render/art/generated",
+      "data": {
+        "gavelPivots": "projectiles/turn/gavel/pivots.json",
+        "stampPivots": "projectiles/turn/stamp/pivots.json",
+        "dumbbellPivots": "projectiles/turn/dumbbell/pivots.json",
+        "lawBookPivots": "projectiles/turn/law_book/pivots.json",
+        "rocketPivots": "projectiles/turn/rocket/pivots.json",
+        "bulletPivots": "projectiles/turn/bullet/pivots.json"
       }
     }
   },
-  "parts": {},
-  "exports": {}
+  "audit": {
+    "enemies/**/*.png": "enemy",
+    "projectiles/*.png": "enemy"
+  }
 }

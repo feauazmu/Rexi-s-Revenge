@@ -1,52 +1,25 @@
 import type { ProjectileView } from '../../core';
 import type { DrawContext } from '../draw-context';
-import { defineSprite } from '../sprite';
+import { masterPalette as P } from '../palette';
 import type { Color } from '../surface';
-
-/** Steel and brass shared with the Archivador Artillado, so the bomb reads as one of its drawers. */
-export const DRAWER_COLORS = {
-  k: '#1c2026', // outline
-  H: '#c9d2da', // steel, highlight
-  L: '#a3afba', // steel, lit
-  m: '#7f8c99', // steel
-  d: '#5b6774', // steel, shade
-  D: '#353d47', // drawer interior
-  g: '#e2b264', // brass label frame and handle
-  G: '#9c6c36', // brass, shade
-  c: '#f4e8c8', // index card
-  w: '#ffffff', // paper
-  l: '#9aa4bc', // paper, lines
-  f: '#5a3a22', // fuse
-} as const satisfies Record<string, Color>;
+import { projectileArt } from './art';
 
 /**
- * A drawer yanked out of a filing cabinet, stuffed with files, a lit fuse curling out of its
- * back corner. 12×11: the box with its files is the left 10 columns.
+ * A drawer yanked out of a filing cabinet, stuffed with files, a fuse curling out of its top
+ * right corner. The box is the left 14 columns; the fuse tip is its top right pixel.
  */
-const DRAWER = defineSprite(DRAWER_COLORS, [
-  '.kk.kkkk..f.',
-  'kwwkwwwwkf..',
-  'kwlwwlwwkf..',
-  'kDDDDDDDDk..',
-  'kHHHHHHHHk..',
-  'kLmggggmdk..',
-  'kLmgccgmdk..',
-  'kLmggggmdk..',
-  'kLmmmmmmdk..',
-  'kLmGggGmdk..',
-  '.kkkkkkkk...',
-]);
+const DRAWER = projectileArt.drawer;
 
 /** Fuse spark: a flickering ember with hot sparks around the fuse tip. */
-const SPARK_CORE: Color = '#fff6c0';
-const SPARK_HOT: Color = '#ffb020';
-const SPARK_EMBER: Color = '#ff5a1a';
+const SPARK_CORE: Color = P.light;
+const SPARK_HOT: Color = P.gold;
+const SPARK_EMBER: Color = P.skyOrange;
 
-/** Offset of the sprite's top-left from the drawer box center. */
-const BOX_CENTER_X = 5;
-const BOX_CENTER_Y = 6.5;
+/** Offset of the drawer box center from the sprite's top-left. */
+const BOX_CENTER_X = 7;
+const BOX_CENTER_Y = 9;
 /** Fuse tip, in sprite coordinates. */
-const FUSE_TIP = { x: 10, y: 0 } as const;
+const FUSE_TIP = { x: DRAWER.width - 1, y: 0 } as const;
 
 /**
  * Draws a drawer bomb with its box centered at (cx, cy). `age` (ticks) animates the fuse spark.

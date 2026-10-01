@@ -1,13 +1,14 @@
 import type { BeamView } from '../../core';
 import type { DrawContext } from '../draw-context';
+import { masterPalette as P } from '../palette';
 import type { Color, Surface } from '../surface';
 import { fillDisc } from './burst';
 
 /** Outer to inner bands of the Sentencia Firme beam: amber edge, golden glow, white-hot core. */
 const BANDS: readonly { readonly color: Color; readonly thickness: number }[] = [
-  { color: '#ffa030', thickness: 5 },
-  { color: '#ffe066', thickness: 3 },
-  { color: '#ffffff', thickness: 1 },
+  { color: P.skyPeach, thickness: 5 },
+  { color: P.sunYellow, thickness: 3 },
+  { color: P.white, thickness: 1 },
 ];
 
 /** Radius of the flare at the muzzle at full strength, px. */
@@ -24,8 +25,8 @@ export function drawBeam(dc: DrawContext, beam: BeamView): void {
     if (thickness > 0) fillThickLine(surface, beam.from, beam.to, thickness, band.color);
   }
   const flare = MUZZLE_FLARE * beam.intensity;
-  fillDisc(surface, beam.from.x, beam.from.y, flare, '#ffe066');
-  fillDisc(surface, beam.from.x, beam.from.y, flare * 0.5, '#ffffff');
+  fillDisc(surface, beam.from.x, beam.from.y, flare, P.sunYellow);
+  fillDisc(surface, beam.from.x, beam.from.y, flare * 0.5, P.white);
 }
 
 interface Point {

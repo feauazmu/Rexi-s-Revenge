@@ -1,1 +1,9 @@
 time	root	name	model	cost_usd	file	credited	note
+2026-10-01T13:23:25	art	enemy_maletin	google/gemini-3.1-flash-image	0.102235	enemy_maletin.png	yes	
+2026-10-01T13:23:55	art	enemy_archivador	google/gemini-3.1-flash-image	0.102215	enemy_archivador.png	yes	
+2026-10-01T13:24:15	art	enemy_caminadora	google/gemini-3.1-flash-image	0.1022095	enemy_caminadora.png	yes	
+2026-10-01T13:24:37	art	enemy_banca	google/gemini-3.1-flash-image	0.102233	enemy_banca.png	yes	
+2026-10-01T13:25:05	art	projectiles	google/gemini-3.1-flash-image	0.101746	projectiles.png	yes	
+2026-10-01T13:25:33	art	enemy_banca_v2	google/gemini-3.1-flash-image	0.1022565	enemy_banca_v2.png	yes	
+2026-10-01T13:27:12	art	enemy_banca_v3	google/gemini-3.1-flash-image	0.1022605	enemy_banca_v3.png	yes	
+2026-10-01T13:27:34	art	projectiles_v2	google/gemini-3.1-flash-image	0.10175	projectiles_v2.png	yes	

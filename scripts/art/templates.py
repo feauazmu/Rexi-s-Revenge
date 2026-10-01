@@ -11,7 +11,8 @@ Builders (each returns a PIL RGBA image on the grid):
   lineup(anchor, draft, n)      a proven sprite as density anchor + n drafts with ground lines and
                                 head-top ticks at the target height: masters
   slotsheet(anchor, n, box)     a size anchor + n empty slots, each with a light box of the
-                                largest allowed size: props, enemies (flying: ground=None)
+                                largest allowed size: props, enemies (flying: ground=None);
+                                optionally a draft in each box and an explicit slot layout
   icongrid(n, cell, anchor)     n icon cells with guides, an accepted icon in cell 0
   poseguide(poses, n)           two-tone stick figures in the editsheet's slots
   draft(image, size, allowed)   a picture box-downscaled to its in-game size and palette-snapped:
@@ -78,22 +79,30 @@ def lineup(anchor, draft, n=3, height=64, ground=GROUND):
     return im
 
 
-def slotsheet(anchor, n, box, ground=GROUND):
+def slotsheet(anchor, n, box, ground=GROUND, draft=None, slots=None, anchor_at=None):
     """Slot 0: the size anchor standing on the ground; slots 1..n: a light box `box` (w, h) of the
     largest allowed size, bottom on the ground row (or vertically centred when ground is None,
-    for flying Enemies), for the model to draw into."""
+    for flying Enemies), for the model to draw into. `draft` (a sprite on the grid) is drawn
+    centred in every box: a blurry guide fixing size and composition. `slots` [[cx, cy], ...]
+    places the box centres explicitly and `anchor_at` [cx, bottom] the anchor, for boxes too
+    wide for one row (n is then len(slots))."""
     im = blank(); d = ImageDraw.Draw(im)
     sw = GW // (n + 1)
     a = _img(anchor)
     base = ground if ground is not None else GH // 2 + a.height // 2
-    im.alpha_composite(a, (sw // 2 - a.width // 2, base - a.height))
+    ax, ab = anchor_at if anchor_at else (sw // 2, base)
+    im.alpha_composite(a, (ax - a.width // 2, ab - a.height))
     bw, bh = box
-    for c in range(1, n + 1):
-        cx = c * sw + sw // 2
-        bottom = ground if ground is not None else GH // 2 + bh // 2
-        d.rectangle([cx - bw // 2, bottom - bh, cx + bw // 2 - 1, bottom - 1], outline=BOX)
-        if ground is not None:
+    centres = slots or [(c * sw + sw // 2, (ground - bh // 2) if ground is not None else GH // 2)
+                        for c in range(1, n + 1)]
+    r = _img(draft) if draft is not None else None
+    for cx, cy in centres:
+        top = cy - bh // 2
+        d.rectangle([cx - bw // 2, top, cx + bw // 2 - 1, top + bh - 1], outline=BOX)
+        if ground is not None and not slots:
             d.line([(cx - sw // 2 + 4, ground), (cx + sw // 2 - 4, ground)], fill=GUIDE)
+        if r is not None:
+            im.alpha_composite(r, (cx - r.width // 2, cy - r.height // 2))
     return im
 
 

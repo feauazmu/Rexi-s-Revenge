@@ -1,0 +1,9 @@
+Image 1 is the template to edit. On the far left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is. To his right are three light grey boxes, each holding a small rough draft of the same Enemy, the "Maletín-cóptero". Redraw the draft in every box as finished, detailed pixel art that fills its box: about 46 pixels wide and 28 pixels tall, never past the box edges, the three copies identical in design, side by side and not touching. Image 2 is the concept art for this Enemy (it faces right here too): follow its design, shapes and materials, but never its size. Keep exactly the template's pixel size.
+
+The Maletín-cóptero, facing right: a brown leather briefcase turned into a small helicopter.
+1) At the front (right end) a rounded glass bubble cockpit, light blue with a white glint, holding a tiny cartoon lawyer pilot seen in three-quarter view: slicked-back black hair, a cross frown, a white shirt collar, a red tie and a navy suit, both hands on a control stick.
+2) The main body is a chunky briefcase, taller than in the draft: a front flap with a stitched seam, two brass clasps and a small brass lock, leather in four tones from a dark red-brown shadow to a warm tan highlight on the top edge.
+3) On top, the briefcase's carrying handle; a short grey steel rotor mast rises from the handle to a small brass hub at the top. NO rotor blades and no rotor blur: the blades are animated in code.
+4) At the back (left end) a tapered leather tail boom ending in a small brass hub for the tail rotor. NO tail-rotor blades.
+5) Under the cockpit nose, a short dark steel gun barrel pointing right.
+Plain white background, no muzzle flash, no motion lines, no shadow under it.

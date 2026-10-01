@@ -1,0 +1,7 @@
+Image 1 is the template to edit. On the far left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is. To his right are three light grey boxes, each holding a small rough draft of the same Enemy, the "Archivador Artillado". Redraw the draft in every box as finished, detailed pixel art that fills its box: about 60 pixels wide and 44 pixels tall, never past the box edges, the three copies identical in design, side by side and not touching. Image 2 is the concept art for this Enemy (its front view): follow its design, shapes and materials, but never its size. Keep exactly the template's pixel size.
+
+The Archivador Artillado: a riveted steel filing cabinet turned into a flying gunship, seen from the front and almost symmetric, with a narrow strip of its shaded right side panel showing.
+1) The cabinet body is about 27 pixels wide and 35 pixels tall: three drawers, each with a brass label frame holding a cream index card and a brass pull handle below it; a lit top edge; a small red status lamp on the top front corner; rivets along the corners. Blue-grey steel in four tones, from a dark navy shadow to a pale blue-white highlight.
+2) A short swept gunmetal stub wing sticks out of each side, with an orange-red painted tip, and a quad-barrel gun pod hangs under each wing.
+3) Under the cabinet, two stubby jet thruster bells, one under each side, and between them a closed dark bomb-bay hatch. NO flames: the thruster flames are animated in code.
+Plain white background, no flames, no smoke, no motion lines, no shadow under it.

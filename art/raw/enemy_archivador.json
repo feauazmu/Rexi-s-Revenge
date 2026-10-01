@@ -1,0 +1,33 @@
+{
+  "modality": "image",
+  "prompt": "Pixel art for a 16-bit style side-view arena shooter that runs at 640x360. Edit the attached template in place: it is drawn on a chunky pixel grid where one art pixel is exactly 1/240 of the image width; keep exactly that pixel size (never finer, never subdivided), and keep every size anchor and guide position. Crisp hard pixels: a clean 1-pixel near-black outline around every character, Enemy and prop; flat cel shading with 3-4 tones per material, shadows leaning purple-blue and highlights leaning warm yellow, light from the upper left; no anti-aliasing, no gradients, no blur, no soft edges, no semi-transparent pixels (use a checkerboard dither for any in-between tone). Characters are seen in a three-quarter side view (Metal Slug style): facing right, head and chest turned slightly toward the viewer. No text, no watermark, no shadows on the ground unless asked.\n\nImage 1 is the template to edit. On the far left stands Rexi, a 64-pixel-tall judge: he is only the size anchor, leave him exactly as he is. To his right are three light grey boxes, each holding a small rough draft of the same Enemy, the \"Archivador Artillado\". Redraw the draft in every box as finished, detailed pixel art that fills its box: about 60 pixels wide and 44 pixels tall, never past the box edges, the three copies identical in design, side by side and not touching. Image 2 is the concept art for this Enemy (its front view): follow its design, shapes and materials, but never its size. Keep exactly the template's pixel size.\n\nThe Archivador Artillado: a riveted steel filing cabinet turned into a flying gunship, seen from the front and almost symmetric, with a narrow strip of its shaded right side panel showing.\n1) The cabinet body is about 27 pixels wide and 35 pixels tall: three drawers, each with a brass label frame holding a cream index card and a brass pull handle below it; a lit top edge; a small red status lamp on the top front corner; rivets along the corners. Blue-grey steel in four tones, from a dark navy shadow to a pale blue-white highlight.\n2) A short swept gunmetal stub wing sticks out of each side, with an orange-red painted tip, and a quad-barrel gun pod hangs under each wing.\n3) Under the cabinet, two stubby jet thruster bells, one under each side, and between them a closed dark bomb-bay hatch. NO flames: the thruster flames are animated in code.\nPlain white background, no flames, no smoke, no motion lines, no shadow under it.",
+  "model": "google/gemini-3.1-flash-image",
+  "parameters": {
+    "aspect_ratio": "16:9",
+    "resolution": "2K",
+    "count": 1,
+    "references": [
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ada02c143b508a03e/art/templates/archivador_slots.png",
+      "/Users/felipe/github/feauazmu/rexis-revenge/.claude/worktrees/agent-ada02c143b508a03e/art/templates/archivador_concept.png"
+    ]
+  },
+  "seed": null,
+  "cost_usd": 0.102215,
+  "created_at": "2026-10-01T11:23:36.967Z",
+  "asset": {
+    "file": "enemy_archivador.png",
+    "media_type": "image/png",
+    "width": 2752,
+    "height": 1536,
+    "index": 1,
+    "of": 1
+  },
+  "pipeline": {
+    "root": "art",
+    "prompt_file": "prompts/enemy_archivador.txt",
+    "style": true,
+    "references": ["art/templates/archivador_slots.png", "art/templates/archivador_concept.png"],
+    "note": "",
+    "spent_after_usd": 2.01785
+  }
+}

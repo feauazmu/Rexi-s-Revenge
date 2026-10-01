@@ -1,44 +1,14 @@
 import type { ProjectileView } from '../../core';
 import { drawSpriteCentered, type DrawContext } from '../draw-context';
-import { palette } from '../palette';
-import { defineSprite } from '../sprite';
-
-/** Bright paper with a dark outline so it reads against the sky and the buildings. */
-const colors = { k: palette.outline, w: '#ffffff', l: '#8a94b0', c: '#d8deec' } as const;
+import { mirroredSprite, rotateSprite } from '../sprite';
+import { projectileArt } from './art';
 
 /** A tumbling legal paper (a "demanda"): upright, tilted, sideways, tilted back. */
 const FRAMES = [
-  defineSprite(colors, [
-    'kkkkkk.',
-    'kwwwwck',
-    'kwllllk',
-    'kwwwwwk',
-    'kwllllk',
-    'kwwwwwk',
-    'kwlllwk',
-    'kkkkkkk',
-  ]),
-  defineSprite(colors, [
-    '...kk...',
-    '..kwwk..',
-    '.kwllwk.',
-    'kwwwwlwk',
-    'kwlwwwwk',
-    '.kwllwk.',
-    '..kwwk..',
-    '...kk...',
-  ]),
-  defineSprite(colors, ['kkkkkkkk', 'kwlwlwlk', 'kwlwlwlk', 'kwlwlwwk', 'cwwwwwwk', 'kkkkkkkk']),
-  defineSprite(colors, [
-    '...kk...',
-    '..kwwk..',
-    '.kwllwk.',
-    'kwlwwwwk',
-    'kwwwwlwk',
-    '.kwllwk.',
-    '..kwwk..',
-    '...kk...',
-  ]),
+  projectileArt.paper,
+  projectileArt.paper_tilt,
+  rotateSprite(projectileArt.paper, 1),
+  mirroredSprite(projectileArt.paper_tilt),
 ];
 
 /** Ticks each tumble frame is shown. */

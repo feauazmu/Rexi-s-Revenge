@@ -1,141 +1,81 @@
 import type { EnemyView } from '../../core';
+import { sprites as art } from '../art/generated/enemies';
 import type { DrawContext } from '../draw-context';
-import { DRAWER_COLORS, drawDrawerBomb } from '../projectiles/drawer';
-import { defineSprite, mirrorSprite } from '../sprite';
-import type { Color } from '../surface';
-
-const COLORS = {
-  ...DRAWER_COLORS,
-  W: '#7a8591', // wing gunmetal, lit
-  v: '#535c67', // wing gunmetal
-  V: '#2e343c', // wing underside, muzzles
-  o: '#d4502e', // wing tip paint
-  O: '#8c2c1a', // wing tip paint, shade
-  r: '#dde4ea', // rivets
-} as const satisfies Record<string, Color>;
-
-/** Flames out of the thrusters: outer, inner, core. */
-const FLAME_OUTER: Color = '#ff7a1a';
-const FLAME_INNER: Color = '#ffd23a';
-const FLAME_CORE: Color = '#fffbe0';
-/** Status lamp on the cabinet top: dim while cruising, blinking while arming a drop. */
-const LAMP_IDLE: Color = '#b4462a';
-const LAMP_ARMED: Color = '#ff3b2f';
-const LAMP_FLASH: Color = '#ffe0d0';
+import { masterPalette as P } from '../palette';
+import { drawDrawerBomb } from '../projectiles/drawer';
+import type { SpriteDef } from '../sprite';
+import type { Color, Surface } from '../surface';
 
 /**
- * The cabinet in a slight three-quarter view: the front (exactly the 20×26 hitbox) with three
- * drawers, brass label frames and handles and a lamp; the lit top above it and the shaded
- * riveted side to its right.
+ * The pipeline sprite (art/sheets.json `enemy_archivador`, scripts/art/enemies.py): the cabinet
+ * seen from the front with its shaded right side, stub wings with gun pods and two thrusters.
+ * It is symmetric enough to need no facing. The bomb-bay hatch is cut out into HATCH.
  */
-const CABINET = defineSprite(COLORS, [
-  '...kkkkkkkkkkkkkkkkkkkk',
-  '..kHHHHHHHHHHHHHHHHHHLk',
-  '.kHHHHHHHHHHHHHHHHHHLdk',
-  'kkkkkkkkkkkkkkkkkkkkddk',
-  'kLLLLLLLLLLLLLLLL.LkrDk',
-  'kLddddddddddddddddDkdDk',
-  'kDDDDDDDDDDDDDDDDDDkdDk',
-  ...drawerFace(),
-  ...drawerFace(),
-  // The side panel's bottom edge recedes up and to the right.
-  ...drawerFace().map((row, i) => (i < 5 ? row : row.slice(0, 20) + (i === 5 ? 'dk.' : 'k..'))),
-  '.kkkkkkkkkkkkkkkkkk....',
-]);
-/** Rows of the top face above the hitbox. */
-const CABINET_TOP = 3;
+const BODY = art['archivador/body'];
+const HATCH = art['archivador/hatch'];
 
-/** One 7-row drawer face of the cabinet, with the side panel beside it. */
-function drawerFace(): string[] {
-  return [
-    'kLHHHHHHHHHHHHHHHdDkdDk',
-    'kLHmmmmggggggmmmmdDkdDk',
-    'kLHmmmmgccccgmmmmdDkrDk',
-    'kLHmmmmggggggmmmmdDkdDk',
-    'kLHmmmmmmmmmmmmmmdDkdDk',
-    'kLHmmmmmGggGmmmmmdDkdDk',
-    'kLdddddddddddddddDDkdDk',
-  ];
-}
+/** Where the 27×35 hitbox (the cabinet's front face) sits in BODY. */
+const HITBOX = { x: 16, y: 4 } as const;
+/** The hatch's top-left in BODY. */
+const HATCH_AT = { x: 25, y: 39 } as const;
+/** Thruster bells: the center column of each and the row their flames start on. */
+const THRUSTERS = [20, 38] as const;
+const FLAME_ROW = 41;
+/** The status lamp, 2×2, on the cabinet's top front corner. */
+const LAMP = { x: 37, y: 7 } as const;
 
-/**
- * Left wing with its quad-gun pod, drawn from the cabinet's side outward. Its right column
- * tucks under the cabinet outline.
- */
-const WING_LEFT = defineSprite(COLORS, [
-  '........kkkk',
-  '.....kkkWWWk',
-  '..kkkWWWvvvk',
-  'kooWWvvvvvvk',
-  'kOOvvvvVVVVk',
-  '.kkkkkkkkkkk',
-  '......kvvvk.',
-  '.....kVvVvk.',
-  '.....kvvvvk.',
-  '.....kVvVvk.',
-  '......kkkk..',
-]);
-const WING_RIGHT = mirrorSprite(WING_LEFT);
-/** Where the wings attach: rows below the cabinet top, and how far they reach out. */
-const WING_TOP = 9;
-const WING_REACH = WING_LEFT.width - 1;
-/** The right wing attaches to the side panel, this far right of the hitbox. */
-const SIDE_DEPTH = 2;
-
-/** A thruster bell under the cabinet. */
-const THRUSTER = defineSprite(COLORS, ['kkkkk', 'kdLdk', '.kmk.']);
-/** Left edges of the thrusters, relative to the hitbox. */
-const THRUSTER_XS = [1, 14] as const;
-
-/** The bomb bay hatch between the thrusters, closed. */
-const HATCH = defineSprite(COLORS, ['kDDDDk', '.kkkk.']);
-const HATCH_X = 7;
+/** Thruster flames, outer to core (the palette's fire ramp). */
+const FLAME_OUTER: Color = P.skyOrange;
+const FLAME_INNER: Color = P.sunYellow;
+const FLAME_CORE: Color = P.white;
+/** Status lamp: dim while cruising, blinking while arming a drop. */
+const LAMP_IDLE: Color = P.red2;
+const LAMP_ARMED: Color = P.redLight;
+const LAMP_FLASH: Color = P.light;
+/** The open bomb bay and its swung-open doors. */
+const BAY: Color = P.night;
+const DOOR: Color = P.grey1;
 
 /** How far the drawer travels out of the bomb bay during the windup, px. */
-const DRAWER_TRAVEL = 10;
+const DRAWER_TRAVEL = 13;
 
 /**
- * Archivador Artillado: a steel filing cabinet on jet thrusters, stubby wings with gun pods
- * and a bomb bay underneath. Before each drop the lamp blinks and a lit drawer slides down out
- * of the bay, then falls as the drawer bomb.
+ * Archivador Artillado: a riveted steel filing cabinet on jet thrusters, stubby wings with gun
+ * pods and a bomb bay underneath. Before each drop the lamp blinks, the bay doors swing open and
+ * the lit drawer slides down out of it, then falls as the drawer bomb.
  */
 export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void {
   const { surface, sprites } = dc;
-  const x = Math.round(enemy.x);
-  const y = Math.round(enemy.y);
-  const bottom = y + enemy.h;
+  const left = Math.round(enemy.x) - HITBOX.x;
+  const top = Math.round(enemy.y) - HITBOX.y;
   const winding = enemy.pose.attack === 'windup';
 
   // Thruster flames: flickering cones (3 frames), offset per side so they do not pulse together.
-  THRUSTER_XS.forEach((tx, side) => {
+  THRUSTERS.forEach((cx, side) => {
     const frame = (Math.floor(enemy.age / 2) + side) % 3;
-    const length = [6, 8, 7][frame] ?? 6;
-    const fx = x + tx + 1;
-    const fy = bottom + 3;
-    surface.fillRect(fx, fy, 3, length - 2, FLAME_OUTER);
-    surface.fillRect(fx + 1, fy + length - 2, 1, 2, FLAME_OUTER);
-    surface.fillRect(fx + 1, fy, 1, length - 3, FLAME_INNER);
-    surface.fillRect(fx + 1, fy, 1, 1, FLAME_CORE);
+    drawFlame(surface, left + cx, top + FLAME_ROW, [9, 12, 10][frame] ?? 9);
   });
 
   // The armed drawer slides down out of the bay, behind the cabinet.
   if (winding) {
-    const cx = x + enemy.w / 2;
-    const cy = bottom + 5 - Math.round((1 - enemy.pose.windup) * DRAWER_TRAVEL);
+    const cx = left + HITBOX.x + enemy.w / 2;
+    const cy = top + HATCH_AT.y + 8 - Math.round((1 - enemy.pose.windup) * DRAWER_TRAVEL);
     drawDrawerBomb(dc, cx, cy, enemy.age);
   }
 
-  surface.drawBitmap(sprites.get(WING_LEFT), x - WING_REACH, y + WING_TOP);
-  surface.drawBitmap(sprites.get(WING_RIGHT), x + enemy.w - 1 + SIDE_DEPTH, y + WING_TOP);
-  for (const tx of THRUSTER_XS) surface.drawBitmap(sprites.get(THRUSTER), x + tx, bottom);
-  surface.drawBitmap(sprites.get(CABINET), x, y - CABINET_TOP);
+  surface.drawBitmap(sprites.get(BODY), left, top);
 
+  const hatchX = left + HATCH_AT.x;
+  const hatchY = top + HATCH_AT.y;
   if (winding) {
-    // Bay doors swung open on both sides of the drawer.
-    surface.fillRect(x + HATCH_X, bottom, 1, 3, COLORS.k);
-    surface.fillRect(x + HATCH_X + 5, bottom, 1, 3, COLORS.k);
+    // The bay's dark mouth above the drawer, and the doors swung down on either side.
+    surface.fillRect(hatchX + 1, hatchY - 1, HATCH.width - 2, 1, BAY);
+    for (const x of [hatchX, hatchX + HATCH.width - 1]) {
+      surface.fillRect(x, hatchY, 1, 5, P.outline);
+      surface.fillRect(x + (x === hatchX ? 1 : -1), hatchY, 1, 4, DOOR);
+    }
   } else {
-    surface.drawBitmap(sprites.get(HATCH), x + HATCH_X, bottom);
+    surface.drawBitmap(sprites.get(HATCH), hatchX, hatchY);
   }
 
   const lamp = winding
@@ -143,22 +83,25 @@ export function drawArchivadorArtillado(dc: DrawContext, enemy: EnemyView): void
       ? LAMP_FLASH
       : LAMP_ARMED
     : LAMP_IDLE;
-  surface.fillRect(x + 17, y + 1, 1, 1, lamp);
+  surface.fillRect(left + LAMP.x, top + LAMP.y, 2, 2, lamp);
+  surface.fillRect(left + LAMP.x, top + LAMP.y, 1, 1, winding ? LAMP_FLASH : LAMP_ARMED);
 }
 
-/** Chunks it breaks into when destroyed: a drawer, a wing, a thruster, a corner, a file. */
-export const archivadorArtilladoDebris = [
-  defineSprite(COLORS, [
-    'kkkkkkkkkk',
-    'kHHHHHHHHk',
-    'kHmggggmdk',
-    'kHmgccgmdk',
-    'kHmGggGmdk',
-    'kddddddddk',
-    'kkkkkkkkkk',
-  ]),
-  defineSprite(COLORS, ['....kkkk', '.kkkWWWk', 'kooWvvvk', 'kOOvVVVk', '.kkkkkkk']),
-  defineSprite(COLORS, ['kkkkk', 'kdLdk', '.kmk.']),
-  defineSprite(COLORS, ['.kkkkk', 'kHHHHk', 'kHrLLk', 'kLdddk', 'kLHHHk', 'kkkkkk']),
-  defineSprite(COLORS, ['wwwwk', 'wllwk', 'wwwwk', 'wllwk', 'kkkkk']),
-] as const;
+/** A thruster flame `length` px long hanging from (cx, y): 5 wide at the bell, tapering. */
+function drawFlame(surface: Surface, cx: number, y: number, length: number): void {
+  surface.fillRect(cx - 2, y, 5, Math.round(length * 0.4), FLAME_OUTER);
+  surface.fillRect(cx - 1, y, 3, length - 2, FLAME_OUTER);
+  surface.fillRect(cx, y, 1, length, FLAME_OUTER);
+  surface.fillRect(cx - 1, y, 3, Math.round(length * 0.35), FLAME_INNER);
+  surface.fillRect(cx, y, 1, Math.round(length * 0.6), FLAME_INNER);
+  surface.fillRect(cx, y, 1, 2, FLAME_CORE);
+}
+
+/** Chunks it breaks into when destroyed: a drawer, a wing, a thruster, a corner, a gun pod. */
+export const archivadorArtilladoDebris: readonly SpriteDef[] = [
+  art['archivador/debris_0_drawer'],
+  art['archivador/debris_1_wing'],
+  art['archivador/debris_2_thruster'],
+  art['archivador/debris_3_corner'],
+  art['archivador/debris_4_pod'],
+];

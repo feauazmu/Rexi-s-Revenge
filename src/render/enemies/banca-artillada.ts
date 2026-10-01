@@ -1,98 +1,42 @@
 import type { EnemyView, RunView } from '../../core';
+import { sprites as art } from '../art/generated/enemies';
 import type { DrawContext } from '../draw-context';
 import { fillDisc } from '../effects/burst';
-import { defineSprite, mirrorSprite } from '../sprite';
+import { masterPalette as P } from '../palette';
+import { mirroredSprite, type SpriteDef } from '../sprite';
 import type { Color, Surface } from '../surface';
 
-const COLORS = {
-  k: '#141018', // outline
-  L: '#ff8a7a', // upholstery sheen
-  R: '#ec3b3b', // red, lit
-  r: '#c0202a', // red
-  d: '#7a1020', // red, shade
-  K: '#2c2c36', // black steel
-  N: '#4a4a58', // steel
-  n: '#7a7a8a', // steel, lit
-  s: '#e4e8f0', // chrome bar
-  S: '#a0a6b6', // chrome collar
-  P: '#24242e', // iron plate
-  p: '#444452', // plate rim
-  l: '#8a8a9a', // plate lettering
-  w: '#7cc4ee', // canopy glass
-  W: '#e8f8ff', // glass glint
-  b: '#3c6e9c', // glass, shade
-  t: '#3a2418', // the pilot's hair
-  x: '#f0c090', // the pilot's skin
-  e: '#1a1a24', // the pilot's eye
-  u: '#2a2a34', // the pilot's tank top
-  h: '#0a0a0e', // rocket tube
-  G: '#ff6a20', // engine glow
-  g: '#ffb040', // engine glow, hot
-} as const satisfies Record<string, Color>;
-
 /**
- * The body facing left (cockpit toward the left), drawn from the hitbox top. It sticks out
- * `OVERHANG` px past each side of the hitbox (the barbell sleeves and plates).
- * Rotor motors top the two masts; rocket pods hang under each end of the bench, centered
- * `podOffsetX` px either side of the hitbox middle and `podOffsetY` px below it.
+ * The pipeline sprite, facing right (art/sheets.json `enemy_banca_v3`, scripts/art/enemies.py):
+ * the red bench on its black frame, the barbell loaded with plates on the rack, the gym bro in
+ * the canopy, a rocket pod under each end and the engine under the middle.
  */
-const BODY_LEFT = defineSprite(COLORS, [
-  '..kkkk..........kkkk....................................kkkk..........kkkk..',
-  '.kpPPPk........kRRRRk..................................kRRRRk........kPPPpk.',
-  '.kpPPPk.......kRRRRrrk................................krrRRRRk.......kPPPpk.',
-  '.kpPPPkkk.....kRrrrrdk................................kdrrrrRk.....kkkPPPpk.',
-  '.kpPPPkpPk....kddddddk................................kddddddk....kPpkPPPpk.',
-  '.kpPPPkpPk.....kkkkkk..................................kkkkkk.....kPpkPPPpk.',
-  '.kpPPPkpPk......kRrk....................................krRk......kPpkPPPpk.',
-  '.kpPPPkpPk......kRrk....................................krRk......kPpkPPPpk.',
-  '.kplPPkpPkkk....kRrk.......kkkkkk.......................krRk....kkkPpkPPlpk.',
-  'kkplPPkpPkkSkkkkkkkkkkkkkkkWWwwwwkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkSkkPpkPPlpkk',
-  'kkpPlPkpPkkSsssssssssssskWWwttttwwbkssssssssssssssssssssssssssssSkkPpkPlPpkk',
-  'kkpPlPkpPkkSSSSSSSSSSSSkWwwRRRRtwwbbkSSSSSSSSSSSSSSSSSSSSSSSSSSSSkkPpkPlPpkk',
-  'kkplPPkpPkkSkkkkkkkkkkkkwwexxxxwwwbbkkkkkkkkkkkkkkkkkkkkkkkkkkkkSkkPpkPPlpkk',
-  '.kplPPkpPkkk....kNnk..kwwwxxxxxwwbbbbk..................knNk....kkkPpkPPlpk.',
-  '.kpPPPkpPk......kNnk..kwwwuuuuuuwbbbbk..................knNk......kPpkPPPpk.',
-  '.kpPPPkpPkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkPpkPPPpk.',
-  '.kpPPPkPPkRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLRRLkPPkPPPpk.',
-  '.kpPPPkkkkRRRRrRRRRRRRrRRRRRRRrRRRRRRRrRRRRRRRrRRRRRRRrRRRRRRRrRRRkkkkPPPpk.',
-  '.kpPPPk..krrrrdrrrrrrrdrrrrrrrdrrrrrrrdrrrrrrrdrrrrrrrdrrrrrrrdrrrk..kPPPpk.',
-  '.kpPPPk..krrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrk..kPPPpk.',
-  '.kPPPPk..kddddddddddddddddddddddddddddddddddddddddddddddddddddddddk..kPPPPk.',
-  '..kkkk....kkkkkkkkkKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKkkkkkkkkk....kkkk..',
-  '...........kk..kkkkKkkkkkkkkkkkKKKkrRRRRRRRRRRRRRRRRRRrKKkkkk..kk...........',
-  '...........kk.....kKknknknknnkkKKKkrrrrrrrrrrrrrrrrrrrrKNk.....kk...........',
-  '.........kkkkkk...kKknknknknnkkKKKkrrrrrrrrrrrrrrrrrrrrKNk...kkkkkk.........',
-  '........kRRRRRRk..kKkGgGgGgGgkkKKKkddddddddddddddddddddKNk..kRRRRRRk........',
-  '.......kRhhRRhhrk.kKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKk.krhhRRhhRk.......',
-  '.......kRhhrrhhrk..kkkkkkkkkNkkkkkkkkkkkkkkkkkkNkkkkkkkkk..krhhrrhhRk.......',
-  '.......kRrrkkrrdk..........kNk................kNk..........kdrrkkrrRk.......',
-  '.......kRrrkkrrdk..........kNk................kNk..........kdrrkkrrRk.......',
-  '.......kRhhrrhhdk..........kNk................kNk..........kdhhrrhhRk.......',
-  '.......kRhhrrhhdk..........kNk................kNk..........kdhhrrhhRk.......',
-  '........kdrrrrdk.......kkkkkkkkkkk........kkkkkkkkkkk.......kdrrrrdk........',
-  '.........kkkkkk.......kNnnnnnnnnnNk......kNnnnnnnnnnNk.......kkkkkk.........',
-  '.......................kkkkkkkkkkk........kkkkkkkkkkk.......................',
-]);
-const BODY_RIGHT = mirrorSprite(BODY_LEFT);
+const BODY = art['banca/body'];
 
-const OVERHANG = 4;
+/** Where the 91×45 hitbox sits in BODY: the plates stick out 5 px past each side. */
+const HITBOX = { x: 5, y: 1 } as const;
 /** Rotor hubs: the left of each mast's two middle columns (symmetric, so both facings). */
-const HUBS = [17, 57] as const;
-/** Pod centers in the sprite. */
+const HUBS = [23, 76] as const;
+/** Pod centers in the right-facing sprite (the core fires from the hitbox center ± its pod offset). */
 const PODS = [
-  { x: 12, y: 29 },
-  { x: 64, y: 29 },
+  { x: 16, y: 39 },
+  { x: 85, y: 39 },
 ] as const;
-/** Engine grille row and span in the left-facing sprite. */
-const GRILLE = { x: 21, y: 25, w: 8 } as const;
+/** Engine grille row and span in the right-facing sprite. */
+const GRILLE = { x: 62, y: 34, w: 11 } as const;
+/** Where the damage smoke rises from, in the right-facing sprite. */
+const ENGINE = { x: 66, y: 30 } as const;
 
-const RING: Color = '#20202a';
-const BLADE: Color = '#e02a2a';
-const BLADE_SHADE: Color = '#8a1420';
-const FLASH: readonly Color[] = ['#ffffff', '#fff4c0', '#ffd040'];
+const RING: Color = P.night;
+const BLADE: Color = P.red3;
+const BLADE_SHADE: Color = P.red2;
+const HUB: Color = P.grey1;
+const GRILLE_HOT: Color = P.sunYellow;
+const GRILLE_WARM: Color = P.skyOrange;
+const FLASH: readonly Color[] = [P.white, P.light, P.sunYellow];
 /** Pod glow while winding up a volley, coolest first. */
-const GLOW: readonly Color[] = [COLORS.G, COLORS.g, '#fff4c0', '#ffffff'];
-const SMOKE: readonly Color[] = ['#3a3440', '#5a5262', '#7a7284'];
+const GLOW: readonly Color[] = [P.skyOrange, P.skyPeach, P.light, P.white];
+const SMOKE: readonly Color[] = [P.robe, P.robeMid, P.robeSheen];
 
 /**
  * Banca Artillada: a red bench press turned gunship. A barbell loaded with iron plates rests
@@ -103,25 +47,28 @@ const SMOKE: readonly Color[] = ['#3a3440', '#5a5262', '#7a7284'];
  */
 export function drawBancaArtillada(dc: DrawContext, enemy: EnemyView, run: RunView): void {
   const { surface, sprites } = dc;
-  const x = Math.round(enemy.x);
-  const y = Math.round(enemy.y);
-  const facingLeft = run.rexi.x + run.rexi.w / 2 < enemy.x + enemy.w / 2;
-  const left = x - OVERHANG;
+  const top = Math.round(enemy.y) - HITBOX.y;
+  const left = Math.round(enemy.x) - HITBOX.x;
+  const right = run.rexi.x + run.rexi.w / 2 >= enemy.x + enemy.w / 2;
+  /** Screen x of BODY column `c` for the current facing. */
+  const column = (c: number) => (right ? left + c : left + BODY.width - 1 - c);
 
-  for (const hub of HUBS) drawRotor(surface, left + hub, y - 1, enemy.age);
-  surface.drawBitmap(sprites.get(facingLeft ? BODY_LEFT : BODY_RIGHT), left, y);
+  for (const hub of HUBS) drawRotor(surface, left + hub, top - 1, enemy.age);
+  surface.drawBitmap(sprites.get(right ? BODY : mirroredSprite(BODY)), left, top);
 
   // The engine grille glows and flickers.
-  const grilleX = facingLeft ? GRILLE.x : BODY_LEFT.width - GRILLE.x - GRILLE.w;
   const hot = Math.floor(enemy.age / 3) % 2 === 0;
   for (let i = 0; i < GRILLE.w; i++) {
     const lit = (i + (hot ? 0 : 1)) % 2 === 0;
-    surface.fillRect(left + grilleX + i, y + GRILLE.y, 1, 1, lit ? COLORS.g : COLORS.G);
+    surface.fillRect(column(GRILLE.x + i), top + GRILLE.y, 1, 1, lit ? GRILLE_HOT : GRILLE_WARM);
   }
 
-  if (enemy.pose.attack === 'windup') drawPodGlow(surface, enemy, left, y);
-  drawMuzzleFlashes(surface, run, left, y);
-  if (enemy.health <= enemy.maxHealth * 0.4) drawDamageSmoke(surface, enemy, left, y);
+  const pods = PODS.map((pod) => ({ x: column(pod.x), y: top + pod.y }));
+  if (enemy.pose.attack === 'windup') drawPodGlow(surface, enemy, pods);
+  drawMuzzleFlashes(surface, run, pods);
+  if (enemy.health <= enemy.maxHealth * 0.4) {
+    drawDamageSmoke(surface, enemy, column(ENGINE.x), top + ENGINE.y);
+  }
 }
 
 /**
@@ -138,94 +85,90 @@ function drawRotor(surface: Surface, c: number, cy: number, age: number): void {
     span(-outer, -inner, y, RING);
     span(1 + inner, 1 + outer, y, RING);
   };
-  span(-10, 11, cy - 2, RING);
-  pair(11, 14, cy - 1);
-  pair(15, 16, cy);
-  pair(11, 14, cy + 1);
-  span(-10, 11, cy + 2, RING);
+  span(-13, 14, cy - 2, RING);
+  pair(14, 18, cy - 1);
+  pair(19, 21, cy);
+  pair(14, 18, cy + 1);
+  span(-13, 14, cy + 2, RING);
 
   switch (Math.floor(age / 2) % 4) {
     case 0: // side on: one long blade across
-      span(-15, 16, cy, BLADE);
+      span(-20, 21, cy, BLADE);
       break;
     case 1: // turning toward the viewer
-      span(-12, -5, cy - 1, BLADE_SHADE);
-      span(-4, 5, cy, BLADE);
-      span(6, 13, cy + 1, BLADE);
+      span(-16, -6, cy - 1, BLADE_SHADE);
+      span(-5, 6, cy, BLADE);
+      span(7, 17, cy + 1, BLADE);
       break;
     case 2: // end on: short and foreshortened
-      span(0, 0, cy - 2, BLADE_SHADE);
-      span(0, 0, cy - 1, BLADE_SHADE);
-      span(-3, 4, cy, BLADE);
-      span(1, 1, cy + 1, BLADE);
-      span(1, 1, cy + 2, BLADE);
+      span(0, 1, cy - 2, BLADE_SHADE);
+      span(0, 1, cy - 1, BLADE_SHADE);
+      span(-4, 5, cy, BLADE);
+      span(0, 1, cy + 1, BLADE);
+      span(0, 1, cy + 2, BLADE);
       break;
     default: // turning away
-      span(6, 13, cy - 1, BLADE_SHADE);
-      span(-4, 5, cy, BLADE);
-      span(-12, -5, cy + 1, BLADE);
+      span(7, 17, cy - 1, BLADE_SHADE);
+      span(-5, 6, cy, BLADE);
+      span(-16, -6, cy + 1, BLADE);
   }
-  surface.fillRect(c - 1, cy - 1, 4, 2, COLORS.k);
-  surface.fillRect(c, cy - 1, 2, 1, COLORS.N);
+  surface.fillRect(c - 1, cy - 1, 4, 2, P.outline);
+  surface.fillRect(c, cy - 1, 2, 1, HUB);
+}
+
+interface Point {
+  readonly x: number;
+  readonly y: number;
 }
 
 /**
  * The volley telegraph: both pods glow up as the windup runs, from a dim ember to a white-hot
  * disc, blinking faster toward the end.
  */
-function drawPodGlow(surface: Surface, enemy: EnemyView, left: number, top: number): void {
+function drawPodGlow(surface: Surface, enemy: EnemyView, pods: readonly Point[]): void {
   const { windup } = enemy.pose;
   const blinkEvery = windup < 0.6 ? 4 : 2;
   if (Math.floor(enemy.age / blinkEvery) % 2 === 1 && windup < 0.9) return;
-  const color = GLOW[Math.min(GLOW.length - 1, Math.floor(windup * GLOW.length))] ?? '#ffffff';
-  const r = 1 + Math.round(windup * 2);
-  for (const pod of PODS) fillDisc(surface, left + pod.x, top + pod.y, r, color);
+  const color = GLOW[Math.min(GLOW.length - 1, Math.floor(windup * GLOW.length))] ?? P.white;
+  const r = 2 + Math.round(windup * 3);
+  for (const pod of pods) fillDisc(surface, pod.x, pod.y, r, color);
 }
 
 /** A star-shaped flash on a pod for the first ticks after a rocket leaves it. */
-function drawMuzzleFlashes(surface: Surface, run: RunView, left: number, top: number): void {
+function drawMuzzleFlashes(surface: Surface, run: RunView, pods: readonly Point[]): void {
   for (const rocket of run.projectiles) {
     if (rocket.kind !== 'rocket' || rocket.owner !== 'enemy' || rocket.age > 4) continue;
     const rx = rocket.x + rocket.w / 2;
     const ry = rocket.y + rocket.h / 2;
-    for (const pod of PODS) {
-      const px = left + pod.x;
-      const py = top + pod.y;
-      if (Math.abs(rx - px) > 14 || Math.abs(ry - py) > 14) continue;
-      const color = FLASH[Math.min(FLASH.length - 1, rocket.age)] ?? '#ffffff';
-      const r = rocket.age < 2 ? 4 : 3;
-      fillDisc(surface, px, py, r, color);
-      surface.fillRect(px - r - 2, py, 2 * r + 4, 1, color);
-      surface.fillRect(px, py - r - 2, 1, 2 * r + 4, color);
+    for (const pod of pods) {
+      if (Math.abs(rx - pod.x) > 18 || Math.abs(ry - pod.y) > 18) continue;
+      const color = FLASH[Math.min(FLASH.length - 1, rocket.age)] ?? P.white;
+      const r = rocket.age < 2 ? 5 : 4;
+      fillDisc(surface, pod.x, pod.y, r, color);
+      surface.fillRect(pod.x - r - 3, pod.y, 2 * r + 6, 1, color);
+      surface.fillRect(pod.x, pod.y - r - 3, 1, 2 * r + 6, color);
     }
   }
 }
 
 /** Badly damaged: dark puffs rise from the engine and drift back, cycling with its age. */
-function drawDamageSmoke(surface: Surface, enemy: EnemyView, left: number, top: number): void {
+function drawDamageSmoke(surface: Surface, enemy: EnemyView, x: number, y: number): void {
   const period = 36;
   for (let i = 0; i < 3; i++) {
     const t = ((enemy.age + i * (period / 3)) % period) / period;
-    const px = left + 38 + Math.round(Math.sin((enemy.age / 9 + i) * 1.7) * 3);
-    const py = top + 20 - Math.round(t * 22);
-    const color = SMOKE[Math.min(SMOKE.length - 1, Math.floor(t * SMOKE.length))] ?? '#5a5262';
-    fillDisc(surface, px, py, 2 + Math.round(t * 2), color);
+    const px = x + Math.round(Math.sin((enemy.age / 9 + i) * 1.7) * 4);
+    const py = y - Math.round(t * 30);
+    const color = SMOKE[Math.min(SMOKE.length - 1, Math.floor(t * SMOKE.length))] ?? P.robeMid;
+    fillDisc(surface, px, py, 2 + Math.round(t * 3), color);
   }
 }
 
 /** Chunks it breaks into: a plate, a rotor motor, the canopy and pilot, a pod, pad, a foot. */
-export const bancaArtilladaDebris = [
-  defineSprite(COLORS, ['.kkk.', 'kpPPk', 'kpPPk', 'kplPk', 'kplPk', 'kpPPk', 'kPPPk', '.kkk.']),
-  defineSprite(COLORS, ['kkkkkkkkk', '....k....', '..kRRrk..', '..kRrdk..', '...kdk...']),
-  defineSprite(COLORS, [
-    '...kkkkk..',
-    '..kWWtwbk.',
-    '.kWtxxRwbk',
-    'kwwxexwbbk',
-    'kwuuuuwbbk',
-    'kkkkkkkkkk',
-  ]),
-  defineSprite(COLORS, ['.kkkk.', 'kRRRRk', 'kRhhrk', 'kRhhdk', '.kddk.', '..kk..']),
-  defineSprite(COLORS, ['kkkkkkkkkk', 'kRRRRRRRRk', 'krrrrrrrrk', 'kddddddddk', 'kkkkkkkkkk']),
-  defineSprite(COLORS, ['..kNk..', '..kNk..', 'kkkkkkk', 'kNnnnNk', 'kkkkkkk']),
-] as const;
+export const bancaArtilladaDebris: readonly SpriteDef[] = [
+  art['banca/debris_0_plate'],
+  art['banca/debris_1_motor'],
+  art['banca/debris_2_canopy'],
+  art['banca/debris_3_pod'],
+  art['banca/debris_4_pad'],
+  art['banca/debris_5_foot'],
+];

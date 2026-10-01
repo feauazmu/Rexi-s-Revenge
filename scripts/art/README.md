@@ -57,7 +57,7 @@ An art root is a directory with a `sheets.json` manifest. `--root` defaults to `
 4. **Add the sheet entry** (`prompt`, `refs`, `kind`, `names`, …) and check the call without spending: `npm run art -- gen NAME --dry-run`.
 5. **Generate:** `npm run art -- gen NAME`. Look at `raw/NAME.png`. If it misses, write a new prompt or template and generate as `NAME_v2`; never overwrite a render. Then run `npm run art -- credit`.
 6. **Clean, preview, audit:** `npm run art -- build`. Fix the `names` order if `clean` reports a count mismatch, and add `post` fixes. Keep or fill holes by seed (see `holes -v`).
-7. **Animate in code** (characters): a script in `scripts/art/characters/` composes frames from the master and the key poses, adding IK limbs, breathing, blinks and effects, and writes `<root>/frames/`. Hand fixes are pixel-text patches in that script.
+7. **Hand pass and animate in code.** Enemies and projectiles: `scripts/art/enemies.py` picks the best copy, re-inks the outline, applies colour fixes and pixel-text patches, cuts debris chunks and movable parts (the Archivador's hatch) and writes `art/enemies/` and `art/projectiles/`; the game draws rotors, flames and telegraphs. Characters: a script in `scripts/art/characters/` composes frames from the master and the key poses, adding IK limbs, breathing, blinks and effects, and writes `<root>/frames/`. Hand fixes are pixel-text patches in that script.
 8. **Export** to TypeScript and wire the module into the renderer, in the art pass that owns that area.
 9. **Commit** the prompt, sidecar, grid, sprites, frames, manifest, exported module and CREDITS.md together.
 
@@ -91,6 +91,25 @@ An art root is a directory with a `sheets.json` manifest. `--root` defaults to `
       "n": 3,
       "box": [48, 36],
       "ground": null,
+      "draft": "templates/maletin_draft_1x.png", // optional: a guide drawn in every box
+      "slots": [
+        [70, 67],
+        [138, 67],
+        [206, 67],
+      ], // optional: explicit box centres
+      "anchor_at": [16, 103], // optional: the anchor's centre column and bottom row
+    },
+    "maletin_draft": {
+      "type": "draft",
+      "image": "drafts/maletin_480.png", // the old 480×270 sprite: identity and hitbox fit
+      "size": [43, 21],
+      "palette": "enemy",
+    },
+    "maletin_concept": {
+      "type": "crop", // one view cut out of a concept sheet, passed whole as a design reference
+      "image": "../reference/enemy-maletin-coptero.png",
+      "box": [340, 150, 960, 560],
+      "flip": true,
     },
     "icon_cells": { "type": "icongrid", "n": 11, "cell": 16, "anchor": "sprites/icons/mazo.png" },
     "pose_run": {
@@ -275,6 +294,13 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 - **The model drew the stretched air poses' legs 10–15 px too long.** Deleting the most redundant trouser rows (`shorten`) fixes this without resampling.
 - **The robe snapped to outline black.** The hand pass moves its inside to `night`. With the 56-colour palette, `robeMid` gives the folds a step of their own.
 
+### Lessons from the Enemy pass (#27)
+
+- **The old sprite makes the best draft.** Each Enemy's 480×270 code-drawn sprite, box-scaled by 4/3, fills its new hitbox exactly and keeps its identity (the pilots). The concept goes in as a second reference, cropped to one view, used for design only and never for size.
+- **Large, crowded sheets lose the grid.** Three 104-px boxes of the Banca came back at twice the pixel size and in ¾ view, and a single box enlarged itself by 1.5×. What held: one box, the draft at exact size, the target given as a ratio of Rexi's height, "do not enlarge the box", and the symmetric front view as the reference.
+- **Tiny sprites cannot be generated at size.** In 16-px cells, Flash drew the projectiles 2.5× too big. Drawn at 2× in 30-px cells they kept the grid, but the 2:1 reduction loses what reads at 8–15 px. So the projectiles are pixel text drawn over that reference (`enemies.py`, `DRAWN`).
+- **A box frame touching the sprite traps the white inside it** when `keep_white` is set. Leave it off unless the sprite has white details.
+
 ## Files
 
 | File                                  | Role                                                                                                    |
@@ -291,4 +317,5 @@ The prompt files describe the right-arm sleeve. The sidecars keep each prompt as
 | `preview.py`, `audit.py`              | Contact sheets; palette and pixel-rule lint.                                                            |
 | `pixtext.py`, `reduce.py`             | Pixel text (one fixed code per colour); exact 2:1 reduction.                                            |
 | `characters/`                         | Rexi's prototype: shared setup, templates, hand pass, rig and exports.                                  |
+| `enemies.py`                          | Hand pass for the Enemies and projectiles (#27): ink, patches, debris chunks, hatch split.              |
 | `tests/`                              | pytest: ledger and cap, grid recovery, snap, fit, RotSprite, IK, audit, export, prototype reproduction. |
