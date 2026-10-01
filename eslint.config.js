@@ -32,7 +32,7 @@ const headlessRules = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'test-results', 'playwright-report', 'node_modules'] },
+  { ignores: ['dist', 'coverage', 'test-results', 'playwright-report', 'node_modules', '.claude'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
