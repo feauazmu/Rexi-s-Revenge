@@ -527,6 +527,12 @@ already in F11 fullscreen, so a page loaded that way shows no toggle until it is
   (`!view.fullscreen`). The Game does not change `fullscreen` itself.
 - **Shell**: turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick, inside the
   browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **First touch**: on touch devices with `toggle`, the first `touchend` on the page (the Title tap) requests
+  fullscreen inside the handler, so it counts as a user gesture; once per page load, whatever the outcome.
+  Desktop enters fullscreen only through the pause menu.
+- **Landscape lock**: whenever a touch device enters fullscreen (first touch or the pause menu), the shell
+  then calls `screen.orientation.lock('landscape')` (Android; desktop and iOS refuse), so tilting the phone
+  mid-Run doesn't freeze it behind the rotate prompt. Refusals are ignored; leaving fullscreen releases it.
 - **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
   at startup, the shell calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right away.
 

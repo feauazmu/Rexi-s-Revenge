@@ -43,18 +43,63 @@ export function isFullscreen(): boolean {
   return document.fullscreenElement !== null;
 }
 
+/** Options for {@link setFullscreen}. */
+export interface SetFullscreenOptions {
+  /**
+   * Once fullscreen is entered, lock the screen to landscape where the browser allows it
+   * (Android), so tilting a phone mid-Run doesn't freeze the game behind the rotate prompt.
+   */
+  readonly lockLandscape?: boolean;
+}
+
 /**
  * Enters or leaves fullscreen. The browser may refuse (no user gesture, a policy, the player
- * declining); failures are ignored and the game carries on as it is.
+ * declining), and most refuse the orientation lock (desktop, iOS); failures are ignored and the
+ * game carries on as it is. Leaving fullscreen releases the lock.
  */
-export function setFullscreen(on: boolean): void {
+export function setFullscreen(on: boolean, options: SetFullscreenOptions = {}): void {
   if (on === isFullscreen()) return;
   try {
-    const request = on ? document.documentElement.requestFullscreen() : document.exitFullscreen();
-    request.catch(() => undefined);
+    if (!on) {
+      document.exitFullscreen().catch(ignore);
+      return;
+    }
+    document.documentElement
+      .requestFullscreen()
+      .then(() => {
+        if (options.lockLandscape) lockLandscape();
+      })
+      .catch(ignore);
   } catch {
     // Older engines throw instead of rejecting.
   }
+}
+
+/**
+ * Enters fullscreen (locked to landscape) on the player's first touch on `target`, once per
+ * page load. The request runs inside the `touchend` handler, where the browser counts it as a
+ * user gesture.
+ */
+export function fullscreenOnFirstTouch(target: EventTarget): () => void {
+  const onTouchEnd = () => {
+    setFullscreen(true, { lockLandscape: true });
+  };
+  target.addEventListener('touchend', onTouchEnd, { once: true });
+  return () => {
+    target.removeEventListener('touchend', onTouchEnd);
+  };
+}
+
+function lockLandscape(): void {
+  try {
+    screen.orientation.lock('landscape').catch(ignore);
+  } catch {
+    // No Screen Orientation API (older Safari) or no `lock` on it.
+  }
+}
+
+function ignore(): void {
+  // The browser refused; the game carries on as it is.
 }
 
 /** Calls `listener` with the new state whenever the page enters or leaves fullscreen. */

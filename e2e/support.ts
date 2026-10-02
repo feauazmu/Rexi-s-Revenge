@@ -33,3 +33,36 @@ export async function readHighScores(
     entries?: { initials: string; score: number }[];
   };
 }
+
+/** What {@link spyOnFullscreen} counted: fullscreen requests and landscape orientation locks. */
+export interface FullscreenCalls {
+  requests: number;
+  locks: string[];
+}
+
+/**
+ * Before the page loads, replaces `requestFullscreen` and `screen.orientation.lock` with
+ * counters that resolve without entering fullscreen. Read the counts with
+ * {@link readFullscreenCalls}.
+ */
+export async function spyOnFullscreen(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const calls = { requests: 0, locks: [] as string[] };
+    (window as unknown as { __fullscreenCalls: typeof calls }).__fullscreenCalls = calls;
+    Element.prototype.requestFullscreen = function () {
+      calls.requests += 1;
+      return Promise.resolve();
+    };
+    screen.orientation.lock = (orientation) => {
+      calls.locks.push(orientation);
+      return Promise.resolve();
+    };
+  });
+}
+
+/** The calls {@link spyOnFullscreen} has counted so far. */
+export function readFullscreenCalls(page: Page): Promise<FullscreenCalls> {
+  return page.evaluate(
+    () => (window as unknown as { __fullscreenCalls: FullscreenCalls }).__fullscreenCalls,
+  );
+}

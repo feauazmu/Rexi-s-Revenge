@@ -1,5 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readHighScores, SWEEP_STEP_MS, SWEEP_STEPS, sweepAngle, trackErrors } from './support';
+import {
+  readFullscreenCalls,
+  readHighScores,
+  spyOnFullscreen,
+  SWEEP_STEP_MS,
+  SWEEP_STEPS,
+  sweepAngle,
+  trackErrors,
+} from './support';
 
 /** Number of distinct colors in the game canvas (1 means blank). */
 function distinctCanvasColors(page: Page): Promise<number> {
@@ -118,6 +126,17 @@ test('a key press moves from the Title into the Run, and the Run plays', async (
 
   expect(await distinctCanvasColors(page)).toBeGreaterThan(8);
   expect(errors).toEqual([]);
+});
+
+test('desktop never requests fullscreen on its own', async ({ page }) => {
+  await spyOnFullscreen(page);
+  await page.goto('');
+  await expect.poll(() => screenOf(page)).toBe('title');
+  await page.waitForTimeout(600);
+  await page.locator('canvas').click();
+  await expect.poll(() => screenOf(page)).not.toBe('title');
+  await page.keyboard.press('Enter');
+  expect(await readFullscreenCalls(page)).toEqual({ requests: 0, locks: [] });
 });
 
 test('a whole Run end to end: Rexi falls, the Veredicto is signed, the Title keeps the score', async ({

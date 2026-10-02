@@ -18,6 +18,7 @@ import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
 import {
   detectFullscreenSupport,
+  fullscreenOnFirstTouch,
   isFullscreen,
   setFullscreen,
   watchFullscreen,
@@ -72,7 +73,9 @@ interface InputAdapter {
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
  *
  * Where the pause menu can toggle fullscreen, it turns the Game's fullscreen toggle requests
- * into Fullscreen API calls and reports every browser fullscreen change back to the Game.
+ * into Fullscreen API calls and reports every browser fullscreen change back to the Game. Touch
+ * devices there also enter fullscreen on the first tap, and lock the screen to landscape
+ * whenever they enter it.
  */
 export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell {
   const device = detectDevice();
@@ -115,10 +118,11 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     }
   };
 
+  const fullscreenSupport = detectFullscreenSupport();
   const game = createGame({
     seed: options.seed ?? seedFromUrl() ?? randomSeed(),
     device,
-    fullscreenSupport: detectFullscreenSupport(),
+    fullscreenSupport,
     storage: browserStorage(),
   });
   game.reportFullscreen(isFullscreen());
@@ -153,6 +157,10 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   };
   window.addEventListener('resize', onResize);
 
+  // Touch devices go fullscreen on the first tap; desktop only through the pause menu.
+  const stopFullscreenOnFirstTouch =
+    device === 'touch' && fullscreenSupport === 'toggle' ? fullscreenOnFirstTouch(root) : null;
+
   // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
   const unwatchFullscreen = watchFullscreen((active) => {
     game.reportFullscreen(active);
@@ -181,7 +189,9 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       for (let i = 0; i < ticks; i++) {
         const events = game.tick(input.sample(game.view, viewport));
         for (const event of events) {
-          if (event.type === 'fullscreen-toggle-requested') setFullscreen(event.fullscreen);
+          if (event.type === 'fullscreen-toggle-requested') {
+            setFullscreen(event.fullscreen, { lockLandscape: device === 'touch' });
+          }
         }
         if (events.length > 0) options.onEvents?.(events);
       }
@@ -201,6 +211,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       window.removeEventListener('blur', autoPause);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       unwatchFullscreen();
+      stopFullscreenOnFirstTouch?.();
       input.dispose();
       canvas.element.remove();
       rotateCanvas?.element.remove();
