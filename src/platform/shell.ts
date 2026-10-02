@@ -116,11 +116,6 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     storage: browserStorage(),
   });
   game.reportFullscreen(isFullscreen());
-  // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
-  const unwatchFullscreen = watchFullscreen((active) => {
-    game.reportFullscreen(active);
-    present();
-  });
   const input =
     device === 'touch' ? touchAdapter(root, () => viewport) : keyboardMouseAdapter(root);
   const renderer = createRenderer(createCanvasBitmap, {
@@ -151,6 +146,12 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     present();
   };
   window.addEventListener('resize', onResize);
+
+  // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
+  const unwatchFullscreen = watchFullscreen((active) => {
+    game.reportFullscreen(active);
+    present();
+  });
 
   // Never let Rexi die while the player is away: pause when the tab hides or loses focus.
   const autoPause = () => {

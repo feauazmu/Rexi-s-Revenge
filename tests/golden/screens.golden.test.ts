@@ -4,7 +4,7 @@
  * Views come from driving the real Game core; frames are picked where the prompts are visible.
  */
 import { describe, expect, it } from 'vitest';
-import { memoryStorage, saveHighScores, type DeviceKind } from '../../src/core';
+import { memoryStorage, saveHighScores, type DeviceKind, type GameOptions } from '../../src/core';
 import { drive, driveFromTitle, type Driver } from '../support/driver';
 import { holdStill } from '../support/fixtures';
 import { driveToRunEnd } from '../support/run-end';
@@ -25,6 +25,23 @@ function howToPlay(device: DeviceKind): Driver {
   untilPromptShows(game);
   expect(game.view.screen).toBe('how-to-play');
   return game;
+}
+
+/** A Run paused half a second in, with a Maletín-cóptero hovering under the menu. */
+function pausedOverFrozenRun(options: Partial<GameOptions> = {}): Driver {
+  const game = drive({
+    seed: 1,
+    ...options,
+    overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
+  });
+  game.seconds(0.5, { aim: { x: 443, y: 105 } });
+  game.ticks(1, { pause: true });
+  return game;
+}
+
+/** Advances to the same phase of the cursor's blink for every pause-menu golden. */
+function alignToBlink(game: Driver): void {
+  while (game.view.tick % 60 !== 5) game.ticks(1);
 }
 
 describe('Screen goldens', () => {
@@ -65,15 +82,10 @@ describe('Screen goldens', () => {
   });
 
   it('pause-menu: music muted, Silenciar música selected, over the frozen Run', async () => {
-    const game = drive({
-      seed: 1,
-      overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
-    });
-    game.seconds(0.5, { aim: { x: 443, y: 105 } });
-    game.ticks(1, { pause: true });
+    const game = pausedOverFrozenRun();
     game.ticks(1, { menu: { down: true } });
     game.ticks(1, { menu: { confirm: true } });
-    while (game.view.tick % 60 !== 5) game.ticks(1);
+    alignToBlink(game);
     expect(game.view.musicMuted).toBe(true);
     await expectGolden('pause-menu', renderView(game.view));
   });
@@ -82,17 +94,10 @@ describe('Screen goldens', () => {
     ['pause-menu-fullscreen-off', false],
     ['pause-menu-fullscreen-on', true],
   ] as const)('%s: Pantalla completa selected, with its box', async (name, fullscreen) => {
-    const game = drive({
-      seed: 1,
-      fullscreenSupport: 'toggle',
-      overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
-    });
-    game.seconds(0.5, { aim: { x: 443, y: 105 } });
+    const game = pausedOverFrozenRun({ fullscreenSupport: 'toggle' });
     game.reportFullscreen(fullscreen);
-    game.ticks(1, { pause: true });
-    game.ticks(1, { menu: { down: true } });
-    game.ticks(1, { menu: { down: true } });
-    while (game.view.tick % 60 !== 5) game.ticks(1);
+    game.ticks(2, { menu: { down: true } });
+    alignToBlink(game);
     expect(game.view.pauseMenu?.items[game.view.pauseMenu.selected]).toBe('fullscreen');
     expect(game.view.fullscreen).toBe(fullscreen);
     await expectGolden(name, renderView(game.view));
