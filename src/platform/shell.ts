@@ -17,6 +17,7 @@ import { createCanvasBitmap, loadBitmap } from './bitmaps';
 import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
 import {
+  chooseFullscreenBehavior,
   detectFullscreenSupport,
   fullscreenOnFirstTouch,
   isFullscreen,
@@ -119,6 +120,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   };
 
   const fullscreenSupport = detectFullscreenSupport();
+  const fullscreenBehavior = chooseFullscreenBehavior(device, fullscreenSupport);
   const game = createGame({
     seed: options.seed ?? seedFromUrl() ?? randomSeed(),
     device,
@@ -158,8 +160,9 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   window.addEventListener('resize', onResize);
 
   // Touch devices go fullscreen on the first tap; desktop only through the pause menu.
-  const stopFullscreenOnFirstTouch =
-    device === 'touch' && fullscreenSupport === 'toggle' ? fullscreenOnFirstTouch(root) : null;
+  const stopFullscreenOnFirstTouch = fullscreenBehavior.onFirstTouch
+    ? fullscreenOnFirstTouch(root)
+    : null;
 
   // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
   const unwatchFullscreen = watchFullscreen((active) => {
@@ -190,7 +193,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
         const events = game.tick(input.sample(game.view, viewport));
         for (const event of events) {
           if (event.type === 'fullscreen-toggle-requested') {
-            setFullscreen(event.fullscreen, { lockLandscape: device === 'touch' });
+            setFullscreen(event.fullscreen, { lockLandscape: fullscreenBehavior.lockLandscape });
           }
         }
         if (events.length > 0) options.onEvents?.(events);

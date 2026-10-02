@@ -1,4 +1,4 @@
-import type { FullscreenSupport } from '../core';
+import type { DeviceKind, FullscreenSupport } from '../core';
 
 /** What the browser tells us about fullscreen, for {@link chooseFullscreenSupport}. */
 export interface FullscreenFacts {
@@ -11,8 +11,9 @@ export interface FullscreenFacts {
 const SUPPORT_VALUES: readonly FullscreenSupport[] = ['toggle', 'install-hint', 'none'];
 
 /**
- * Picks how the player can get fullscreen: the pause-menu toggle when the Fullscreen API is
- * available and the game is not installed, else nothing. `?fullscreen=toggle|install-hint|none`
+ * Picks how the player can get fullscreen: the pause-menu toggle (and, on touch devices, the
+ * first touch; see {@link chooseFullscreenBehavior}) when the Fullscreen API is available and
+ * the game is not installed, else nothing. `?fullscreen=toggle|install-hint|none`
  * in the URL overrides it (for trying each value in a desktop browser's device emulation).
  */
 export function chooseFullscreenSupport(
@@ -22,6 +23,26 @@ export function chooseFullscreenSupport(
   const override = SUPPORT_VALUES.find((value) => value === urlParam);
   if (override) return override;
   return facts.api && !facts.installed ? 'toggle' : 'none';
+}
+
+/** How the shell drives fullscreen on this device, from {@link chooseFullscreenBehavior}. */
+export interface FullscreenBehavior {
+  /** Enter fullscreen on the player's first touch ({@link fullscreenOnFirstTouch}). */
+  readonly onFirstTouch: boolean;
+  /** Lock the screen to landscape whenever fullscreen is entered ({@link setFullscreen}). */
+  readonly lockLandscape: boolean;
+}
+
+/**
+ * Touch devices with the toggle go fullscreen on the first touch, and every touch device locks
+ * landscape on entering fullscreen; desktop enters fullscreen only through the pause menu.
+ */
+export function chooseFullscreenBehavior(
+  device: DeviceKind,
+  support: FullscreenSupport,
+): FullscreenBehavior {
+  const touch = device === 'touch';
+  return { onFirstTouch: touch && support === 'toggle', lockLandscape: touch };
 }
 
 /**
@@ -55,13 +76,13 @@ export interface SetFullscreenOptions {
 /**
  * Enters or leaves fullscreen. The browser may refuse (no user gesture, a policy, the player
  * declining), and most refuse the orientation lock (desktop, iOS); failures are ignored and the
- * game carries on as it is. Leaving fullscreen releases the lock.
+ * game carries on as it is. The browser releases the lock when the page leaves fullscreen.
  */
 export function setFullscreen(on: boolean, options: SetFullscreenOptions = {}): void {
   if (on === isFullscreen()) return;
   try {
     if (!on) {
-      document.exitFullscreen().catch(ignore);
+      document.exitFullscreen().catch(ignoreRefusal);
       return;
     }
     document.documentElement
@@ -69,7 +90,7 @@ export function setFullscreen(on: boolean, options: SetFullscreenOptions = {}): 
       .then(() => {
         if (options.lockLandscape) lockLandscape();
       })
-      .catch(ignore);
+      .catch(ignoreRefusal);
   } catch {
     // Older engines throw instead of rejecting.
   }
@@ -92,13 +113,13 @@ export function fullscreenOnFirstTouch(target: EventTarget): () => void {
 
 function lockLandscape(): void {
   try {
-    screen.orientation.lock('landscape').catch(ignore);
+    screen.orientation.lock('landscape').catch(ignoreRefusal);
   } catch {
     // No Screen Orientation API (older Safari) or no `lock` on it.
   }
 }
 
-function ignore(): void {
+function ignoreRefusal(): void {
   // The browser refused; the game carries on as it is.
 }
 
