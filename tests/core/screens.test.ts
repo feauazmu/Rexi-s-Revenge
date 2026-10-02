@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { memoryStorage, PAUSE_MENU_ITEMS, type StoragePort } from '../../src/core';
+import {
+  memoryStorage,
+  type FullscreenSupport,
+  type PauseMenuItem,
+  type StoragePort,
+} from '../../src/core';
 import { drive, driveFromTitle, eventsOf, runOf, type Driver } from '../support/driver';
 
 /** Storage that throws on every access, like a browser that blocks storage outright. */
@@ -20,11 +25,13 @@ function pressStart(game: Driver) {
 }
 
 /** Opens the pause menu, selects `item` and confirms it. */
-function choose(game: Driver, item: (typeof PAUSE_MENU_ITEMS)[number]) {
+function choose(game: Driver, item: PauseMenuItem) {
   if (game.view.screen === 'run') game.ticks(1, { pause: true });
   const menu = game.view.pauseMenu;
   if (!menu) throw new Error(`Expected the pause menu, screen is "${game.view.screen}"`);
-  const steps = (PAUSE_MENU_ITEMS.indexOf(item) - menu.selected + menu.items.length) % 3;
+  const index = menu.items.indexOf(item);
+  if (index < 0) throw new Error(`"${item}" is not in the pause menu`);
+  const steps = (index - menu.selected + menu.items.length) % menu.items.length;
   for (let i = 0; i < steps; i++) game.ticks(1, { menu: { down: true } });
   return game.ticks(1, { menu: { confirm: true } });
 }
@@ -148,8 +155,18 @@ describe('Pause', () => {
     game.seconds(1);
     const events = game.ticks(1, { pause: true });
     expect(events).toEqual([{ type: 'screen-changed', from: 'run', to: 'paused' }]);
-    expect(game.view.pauseMenu).toEqual({ items: PAUSE_MENU_ITEMS, selected: 0 });
-    expect(PAUSE_MENU_ITEMS).toEqual(['resume', 'mute-music', 'quit']);
+    expect(game.view.pauseMenu).toEqual({ items: ['resume', 'mute-music', 'quit'], selected: 0 });
+  });
+
+  it.each([
+    ['toggle', ['resume', 'mute-music', 'fullscreen', 'quit']],
+    ['install-hint', ['resume', 'mute-music', 'quit']],
+    ['none', ['resume', 'mute-music', 'quit']],
+  ] as const)('lists Pantalla completa only with %s fullscreen support', (support, items) => {
+    const game = drive({ fullscreenSupport: support });
+    game.ticks(1, { pause: true });
+    expect(game.view.pauseMenu?.items).toEqual(items);
+    expect(game.view.fullscreenSupport).toBe(support);
   });
 
   it('freezes the Run simulation entirely while the menu is open', () => {
@@ -199,6 +216,17 @@ describe('Pause', () => {
     expect(selected()).toBe(0);
     game.ticks(1, { menu: { up: true } });
     expect(selected()).toBe(2);
+  });
+
+  it('wraps around over all four entries when Pantalla completa is listed', () => {
+    const game = drive({ fullscreenSupport: 'toggle' });
+    game.ticks(1, { pause: true });
+    const selected = () => game.view.pauseMenu?.selected;
+    game.ticks(1, { menu: { up: true } });
+    expect(selected()).toBe(3);
+    game.ticks(1, { menu: { confirm: true } });
+    expect(game.view.screen).toBe('title');
+    expect(game.view.run).toBeNull();
   });
 
   it('emits menu-moved when the selection moves (for the navigation sound)', () => {
@@ -306,6 +334,46 @@ describe('Silenciar música', () => {
   it('defaults to music on when the stored value is unreadable', () => {
     const game = driveFromTitle({ storage: throwingStorage() });
     expect(game.view.musicMuted).toBe(false);
+  });
+});
+
+describe('Pantalla completa', () => {
+  const withSupport = (support: FullscreenSupport = 'toggle') =>
+    drive({ fullscreenSupport: support });
+
+  it('asks the platform to enter fullscreen, without changing the mirrored state itself', () => {
+    const game = withSupport();
+    expect(game.view.fullscreen).toBe(false);
+    expect(choose(game, 'fullscreen')).toEqual([
+      { type: 'fullscreen-toggle-requested', fullscreen: true },
+    ]);
+    expect(game.view.fullscreen).toBe(false);
+    expect(game.view.screen).toBe('paused');
+    expect(game.view.pauseMenu?.selected).toBe(2);
+  });
+
+  it('shows the fullscreen state the platform reports, right away', () => {
+    const game = withSupport();
+    game.ticks(1, { pause: true });
+    game.reportFullscreen(true);
+    expect(game.view.fullscreen).toBe(true);
+    game.reportFullscreen(false);
+    expect(game.view.fullscreen).toBe(false);
+  });
+
+  it('asks to leave fullscreen while the platform reports it on', () => {
+    const game = withSupport();
+    game.reportFullscreen(true);
+    expect(choose(game, 'fullscreen')).toEqual([
+      { type: 'fullscreen-toggle-requested', fullscreen: false },
+    ]);
+  });
+
+  it('is off and unlisted without toggle support', () => {
+    const game = withSupport('none');
+    game.ticks(1, { pause: true });
+    expect(game.view.fullscreen).toBe(false);
+    expect(game.view.pauseMenu?.items).not.toContain('fullscreen');
   });
 });
 

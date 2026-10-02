@@ -80,6 +80,7 @@ export const strings = {
     title: 'Pausa',
     resume: 'Continuar',
     muteMusic: 'Silenciar música',
+    fullscreen: 'Pantalla completa',
     quit: 'Salir',
   },
 

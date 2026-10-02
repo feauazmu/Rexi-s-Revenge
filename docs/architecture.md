@@ -14,17 +14,17 @@ art pipeline in `scripts/art/`, see "Art pipeline" below).
 
 ## Modules
 
-| Path                | Role                                                                                              | May import         |
-| ------------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
-| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.       | `src/core` only    |
-| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                      |                    |
-| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).  |                    |
-| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                      |                    |
-| `src/render/`       | Pure renderer: `GameView` → pixels on a 640×360 `Surface`. No DOM, no clock.                      | `src/core` (index) |
-| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
-| `src/main.ts`       | Entry point: starts the shell.                                                                    |                    |
-| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.           |                    |
-| `e2e/`              | Playwright smoke tests against the production build.                                              |                    |
+| Path                | Role                                                                                                  | May import         |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
+| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.           | `src/core` only    |
+| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                          |                    |
+| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).      |                    |
+| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                          |                    |
+| `src/render/`       | Pure renderer: `GameView` → pixels on a 640×360 `Surface`. No DOM, no clock.                          | `src/core` (index) |
+| `src/platform/`     | Browser adapters: shell + loop, viewport, fullscreen, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
+| `src/main.ts`       | Entry point: starts the shell.                                                                        |                    |
+| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.               |                    |
+| `e2e/`              | Playwright smoke tests against the production build.                                                  |                    |
 
 These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clocks and `Math.random` in
 `src/core` and `src/render`, bans cross-layer imports and deep imports into the core, and
@@ -33,17 +33,19 @@ These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clo
 ## Seam 1: the Game core
 
 ```ts
-const game = createGame({ seed, device?, storage?, overrides?: { tuning?, spawns? } });
+const game = createGame({ seed, device?, fullscreenSupport?, storage?, overrides?: { tuning?, spawns? } });
 const events = game.tick(inputFrame); // exactly one 1/60 s step
 draw(game.view);                       // read-only snapshot, rebuilt lazily after each tick
 game.pause();                          // shell: tab hidden / focus lost (no-op outside a Run)
+game.reportFullscreen(active);         // shell: the browser entered or left fullscreen
 ```
 
 - **`InputFrame`** (`src/core/input.ts`): device-agnostic intent. Held fields (move, jump, drop, aim, fire) and
   edge fields (weapon next/previous/slot, pause, menu, start) that are true for exactly one tick.
 - **`GameEvent`** (`src/core/events.ts`): discriminated union on `type`.
 - **`GameView`** (`src/core/view.ts`): everything needed to draw, including `tick` for animation phase.
-- **Determinism**: same seed + same input frames ⇒ identical event log and view. All randomness goes through
+- **Determinism**: same seed + same input frames (and the same `pause()` / `reportFullscreen()` calls
+  between ticks) ⇒ identical event log and view. All randomness goes through
   seeded `Rng` streams: the gameplay `rng` in `RunContext` (seeded with the Game's seed), plus the effects
   and Quip streams, each seeded from it with `deriveSeed(seed, stream)`; entity ids come from a counter. The streams and the
   id counter belong to the **Game**, not the Run: they carry on across Runs, so a Game's second Run
@@ -72,7 +74,7 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
 - Title and Cómo jugar accept `start` once `view.startReady` (a guard against double presses,
   `tuning.screens.startGuard`).
 - Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
-  The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
+  The pause menu (`pauseMenuItems(fullscreenSupport)`, see [Fullscreen](#fullscreen)) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
   `view.musicMuted`, persists it and emits `mute-toggled`.
 - **Run end**: the ended Run stays on the `run` screen for the defeat beat (`tuning.screens.defeatBeat`;
   `view.defeatAge` counts it), then the Veredicto (`view.verdict`, `src/core/verdict.ts`) shows its stats over
@@ -509,6 +511,25 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 the shell and passes it as `ShellOptions.titleIllustration`; if it cannot be loaded, the Title uses its
 code-drawn backdrop.
 
+### Fullscreen
+
+The fullscreen support is chosen once at startup (`src/platform/fullscreen.ts`, pure
+`chooseFullscreenSupport` like the device chooser) and passed to the Game as `GameOptions.fullscreenSupport`
+(UI only, never gameplay): `toggle` when the Fullscreen API is available and the game is not installed
+(display mode `standalone`/`fullscreen`, or iOS's `navigator.standalone`), else `none`.
+`?fullscreen=toggle|install-hint|none` overrides it. The type also has `install-hint` (the iPhone Title
+hint), which detection does not pick yet. Known edge: `(display-mode: fullscreen)` also matches a browser tab
+already in F11 fullscreen, so a page loaded that way shows no toggle until it is reloaded outside it.
+
+- **Pause menu**: `pauseMenuItems(support)` lists Continuar, Silenciar música, Pantalla completa (only with
+  `toggle`) and Salir; navigation wraps over that list. The item draws an on/off box from `view.fullscreen`.
+- **Request**: choosing Pantalla completa emits `fullscreen-toggle-requested` with the desired state
+  (`!view.fullscreen`). The Game does not change `fullscreen` itself.
+- **Shell**: turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick, inside the
+  browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
+  at startup, the shell calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right away.
+
 ### Touch controls
 
 The device kind is chosen once at startup (`src/platform/device.ts`): `touch` when the primary pointer is
@@ -781,7 +802,8 @@ await expectGolden('my-scene', renderView(game.view));
   scenarios that aim at fixed points.
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
-- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping, audio
+- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, the `device` and fullscreen-support
+  choosers, `keyboard-mouse` mapping, audio
   synth/sound map/voice limiter, touch `stick` math and the touch `controller`, which is driven with real
   views from `drive()`); the audio engine runs against a fake `AudioContext`.
 - Touch goldens (`tests/golden/touch.golden.test.ts`) feed the controller's frames into the core and render

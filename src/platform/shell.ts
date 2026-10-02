@@ -16,6 +16,12 @@ import {
 import { createCanvasBitmap, loadBitmap } from './bitmaps';
 import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
+import {
+  detectFullscreenSupport,
+  isFullscreen,
+  setFullscreen,
+  watchFullscreen,
+} from './fullscreen';
 import { createKeyboardMouseInput } from './keyboard-mouse';
 import { browserStorage } from './storage';
 import { createTouchInput } from './touch/touch';
@@ -64,6 +70,9 @@ interface InputAdapter {
  *
  * On touch devices it uses the touch adapter and draws its controls over the game; held in
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
+ *
+ * Where the pause menu can toggle fullscreen, it turns the Game's fullscreen toggle requests
+ * into Fullscreen API calls and reports every browser fullscreen change back to the Game.
  */
 export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell {
   const device = detectDevice();
@@ -109,8 +118,10 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   const game = createGame({
     seed: options.seed ?? seedFromUrl() ?? randomSeed(),
     device,
+    fullscreenSupport: detectFullscreenSupport(),
     storage: browserStorage(),
   });
+  game.reportFullscreen(isFullscreen());
   const input =
     device === 'touch' ? touchAdapter(root, () => viewport) : keyboardMouseAdapter(root);
   const renderer = createRenderer(createCanvasBitmap, {
@@ -142,6 +153,12 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   };
   window.addEventListener('resize', onResize);
 
+  // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
+  const unwatchFullscreen = watchFullscreen((active) => {
+    game.reportFullscreen(active);
+    present();
+  });
+
   // Never let Rexi die while the player is away: pause when the tab hides or loses focus.
   const autoPause = () => {
     game.pause();
@@ -163,6 +180,9 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     } else {
       for (let i = 0; i < ticks; i++) {
         const events = game.tick(input.sample(game.view, viewport));
+        for (const event of events) {
+          if (event.type === 'fullscreen-toggle-requested') setFullscreen(event.fullscreen);
+        }
         if (events.length > 0) options.onEvents?.(events);
       }
     }
@@ -180,6 +200,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       window.removeEventListener('resize', onResize);
       window.removeEventListener('blur', autoPause);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      unwatchFullscreen();
       input.dispose();
       canvas.element.remove();
       rotateCanvas?.element.remove();

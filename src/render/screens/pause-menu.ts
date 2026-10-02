@@ -1,8 +1,9 @@
 /**
  * Pause menu: the frozen Run is dimmed with a checkerboard and a framed panel lists
- * Continuar, Silenciar música (with a checkbox showing the persisted choice) and Salir.
+ * Continuar, Silenciar música (with a checkbox showing the persisted choice), Pantalla completa
+ * where the platform can toggle it (with a checkbox showing whether fullscreen is on) and Salir.
  */
-import { SCREEN_WIDTH, type PauseMenuItem, type PauseMenuView } from '../../core';
+import { SCREEN_WIDTH, type GameView, type PauseMenuItem, type PauseMenuView } from '../../core';
 import type { DrawContext } from '../draw-context';
 import { defineSprite } from '../sprite';
 import { strings } from '../strings';
@@ -12,6 +13,7 @@ import { blinkOn, drawOutlinedText, drawPanel, ui } from './ui';
 const LABELS: Readonly<Record<PauseMenuItem, string>> = {
   resume: strings.pause.resume,
   'mute-music': strings.pause.muteMusic,
+  fullscreen: strings.pause.fullscreen,
   quit: strings.pause.quit,
 };
 
@@ -54,6 +56,14 @@ const UNCHECKED = defineSprite({ k: ui.ink, w: ui.keyFace }, [
   'kkkkkkkkk',
 ]);
 
+/** The on/off state each entry's checkbox shows, or null for entries without one. */
+const CHECKBOX_STATE: Readonly<Record<PauseMenuItem, (view: GameView) => boolean | null>> = {
+  resume: () => null,
+  'mute-music': (view) => view.musicMuted,
+  fullscreen: (view) => view.fullscreen,
+  quit: () => null,
+};
+
 /** Draws the panel; the caller has drawn and dimmed the frozen Run underneath. */
 export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
   const { surface, view } = dc;
@@ -81,9 +91,9 @@ export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
       surface.drawBitmap(dc.sprites.get(CURSOR), x + 16 + nudge, rowTop + 6);
     }
     drawOutlinedText(dc, font, LABELS[item], x + 34, textTop, selected ? ui.gold : ui.text);
-    if (item === 'mute-music') {
-      const box = view.musicMuted ? CHECK : UNCHECKED;
-      surface.drawBitmap(dc.sprites.get(box), x + PANEL_W - 28, rowTop + 5);
+    const on = CHECKBOX_STATE[item](view);
+    if (on !== null) {
+      surface.drawBitmap(dc.sprites.get(on ? CHECK : UNCHECKED), x + PANEL_W - 28, rowTop + 5);
     }
   });
 }
