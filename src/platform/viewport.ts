@@ -72,8 +72,9 @@ export function computeViewport(
   { image = GAME_SIZE, mode = 'integer', insets = NO_INSETS }: ViewportOptions = {},
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const areaWidth = containerWidth - insets.left - insets.right;
-  const areaHeight = containerHeight - insets.top - insets.bottom;
+  // Clamped so insets wider than the container (e.g. before it has a size) never flip the image.
+  const areaWidth = Math.max(0, containerWidth - insets.left - insets.right);
+  const areaHeight = Math.max(0, containerHeight - insets.top - insets.bottom);
   const fitScale = Math.min((areaWidth * dpr) / image.width, (areaHeight * dpr) / image.height);
   const scale = mode === 'fit' ? fitScale : Math.max(1, Math.floor(fitScale));
   const cssScale = scale / dpr;

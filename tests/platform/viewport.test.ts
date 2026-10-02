@@ -160,8 +160,17 @@ describe('computeViewport in fit mode', () => {
 });
 
 describe('computeViewport with safe-area insets', () => {
-  // iPhone 15 landscape, installed app: 852×393 CSS px @3, notch on the left, home indicator below.
+  // iPhone 15 landscape, installed app: 852×393 CSS px @3. iOS reports the notch inset on both
+  // sides (whichever way the phone is turned) and the home indicator below.
   const notch = { top: 0, right: 59, bottom: 21, left: 59 };
+
+  it('never gives a negative size when the insets exceed the container', () => {
+    // The first layout can run before the root has a size, with the iPhone insets already set.
+    const vp = computeViewport(0, 0, 3, { mode: 'fit', insets: notch });
+    expect(vp.scale).toBe(0);
+    expect(vp.width).toBe(0);
+    expect(vp.height).toBe(0);
+  });
 
   it('fits the game inside the safe area in fit mode, centered there', () => {
     const vp = computeViewport(852, 393, 3, { mode: 'fit', insets: notch });
