@@ -1,5 +1,13 @@
 import { devices, expect, test, type Page } from '@playwright/test';
-import { readHighScores, SWEEP_STEP_MS, SWEEP_STEPS, sweepAngle, trackErrors } from './support';
+import {
+  readFullscreenCalls,
+  readHighScores,
+  spyOnFullscreen,
+  SWEEP_STEP_MS,
+  SWEEP_STEPS,
+  sweepAngle,
+  trackErrors,
+} from './support';
 
 // Emulated phones: a coarse touch pointer, so the shell picks the touch controls.
 // `defaultBrowserType` cannot be set inside a describe block; the project's browser is used.
@@ -90,6 +98,77 @@ test.describe('phone in landscape', () => {
   });
 });
 
+test.describe('phone in landscape, fullscreen', () => {
+  test.use(phoneLandscape);
+
+  test('the first Title tap requests fullscreen and locks landscape, later taps do not', async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await spyOnFullscreen(page);
+    await page.goto('');
+    await expect(app(page)).toHaveAttribute('data-screen', 'title');
+    expect(await readFullscreenCalls(page)).toEqual({ requests: 0, locks: [] });
+
+    await tapGame(page, 320, 180);
+    await expect
+      .poll(() => readFullscreenCalls(page))
+      .toEqual({
+        requests: 1,
+        locks: ['landscape'],
+      });
+
+    // The stub never enters fullscreen, so a second request would show up in the count.
+    await page.waitForTimeout(600);
+    await tapGame(page, 320, 180);
+    await expect(app(page)).not.toHaveAttribute('data-screen', 'title');
+    await page.waitForTimeout(600);
+    await tapGame(page, 320, 180);
+    await expect(app(page)).toHaveAttribute('data-screen', 'run');
+    expect(await readFullscreenCalls(page)).toEqual({ requests: 1, locks: ['landscape'] });
+    expect(errors).toEqual([]);
+  });
+
+  test('Pantalla completa in the pause menu also locks landscape', async ({ page }) => {
+    await spyOnFullscreen(page);
+    await page.goto('');
+    await page.waitForTimeout(600);
+    await tapGame(page, 320, 180);
+    await page.waitForTimeout(600);
+    await tapGame(page, 320, 180);
+    await expect(app(page)).toHaveAttribute('data-screen', 'run');
+
+    // Pause; d-pad up twice wraps to Salir, then Pantalla completa; confirm.
+    await tapGame(page, 621, 39);
+    await expect(app(page)).toHaveAttribute('data-screen', 'paused');
+    await tapGame(page, 69, 285 - 23);
+    await tapGame(page, 69, 285 - 23);
+    await tapGame(page, 576, 280);
+    await expect
+      .poll(() => readFullscreenCalls(page))
+      .toEqual({
+        requests: 2,
+        locks: ['landscape', 'landscape'],
+      });
+  });
+
+  test('a refused fullscreen request or orientation lock does not affect the game', async ({
+    page,
+  }) => {
+    const errors = trackErrors(page);
+    await page.addInitScript(() => {
+      Element.prototype.requestFullscreen = () => Promise.reject(new TypeError('refused'));
+      screen.orientation.lock = () =>
+        Promise.reject(new DOMException('not supported', 'NotSupportedError'));
+    });
+    await page.goto('');
+    await page.waitForTimeout(600);
+    await tapGame(page, 320, 180);
+    await expect(app(page)).not.toHaveAttribute('data-screen', 'title');
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('phone in landscape, a whole Run', () => {
   test.use(phoneLandscape);
 
@@ -172,6 +251,8 @@ test.describe('phone in portrait', () => {
   });
 
   test('turning the phone upright mid-Run pauses it', async ({ page }) => {
+    // Out of fullscreen (a browser without the lock, e.g. iOS): the first tap must not enter it.
+    await spyOnFullscreen(page);
     await page.addInitScript(() => {
       localStorage.setItem('rexis-revenge:how-to-play-seen', '1');
     });

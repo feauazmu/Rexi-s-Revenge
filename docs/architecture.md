@@ -537,6 +537,13 @@ browser tab already in F11 fullscreen, so a page loaded that way shows no toggle
   (`!view.fullscreen`). The Game does not change `fullscreen` itself.
 - **Shell**: turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick, inside the
   browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **First touch**: on touch devices with `toggle`, the first `touchend` on the page (the Title tap) requests
+  fullscreen inside the handler, so it counts as a user gesture; once per page load, whatever the outcome.
+  Desktop enters fullscreen only through the pause menu.
+- **Landscape lock**: whenever a touch device enters fullscreen (first touch or the pause menu), the shell
+  then calls `screen.orientation.lock('landscape')` (Android; desktop and iOS refuse), so tilting the phone
+  mid-Run doesn't freeze it behind the rotate prompt. Refusals are ignored; the browser releases the lock when
+  the page leaves fullscreen. Both rules come from the pure `chooseFullscreenBehavior(device, support)`.
 - **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
   at startup, the shell calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right away.
 
@@ -812,8 +819,8 @@ await expectGolden('my-scene', renderView(game.view));
   scenarios that aim at fixed points.
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
-- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, the `device` and fullscreen-support
-  choosers, `keyboard-mouse` mapping, audio
+- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, the `device`, fullscreen-support and
+  fullscreen-behavior choosers, `keyboard-mouse` mapping, audio
   synth/sound map/voice limiter, touch `stick` math and the touch `controller`, which is driven with real
   views from `drive()`); the audio engine runs against a fake `AudioContext`.
 - Touch goldens (`tests/golden/touch.golden.test.ts`) feed the controller's frames into the core and render

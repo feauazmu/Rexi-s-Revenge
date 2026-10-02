@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chooseFullscreenSupport } from '../../src/platform/fullscreen';
+import { chooseFullscreenBehavior, chooseFullscreenSupport } from '../../src/platform/fullscreen';
 
 describe('chooseFullscreenSupport', () => {
   it.each([
@@ -25,5 +25,26 @@ describe('chooseFullscreenSupport', () => {
     const browser = { api: true, installed: false, ios: false };
     expect(chooseFullscreenSupport('none', browser)).toBe('none');
     expect(chooseFullscreenSupport('yes', browser)).toBe('toggle');
+  });
+});
+
+describe('chooseFullscreenBehavior', () => {
+  it('a touch device with the toggle enters fullscreen on the first touch and locks landscape', () => {
+    expect(chooseFullscreenBehavior('touch', 'toggle')).toEqual({
+      onFirstTouch: true,
+      lockLandscape: true,
+    });
+  });
+
+  it('desktop enters fullscreen only through the pause menu, without a lock', () => {
+    expect(chooseFullscreenBehavior('desktop', 'toggle')).toEqual({
+      onFirstTouch: false,
+      lockLandscape: false,
+    });
+  });
+
+  it('without the toggle, a touch device never enters fullscreen on its own', () => {
+    expect(chooseFullscreenBehavior('touch', 'install-hint').onFirstTouch).toBe(false);
+    expect(chooseFullscreenBehavior('touch', 'none').onFirstTouch).toBe(false);
   });
 });
