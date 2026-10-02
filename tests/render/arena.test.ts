@@ -77,6 +77,7 @@ describe('Arena', () => {
     expect(ops).toContainEqual({ kind: 'bitmap', sprite: ledgeSprite(120), x: 100, y: 199 });
     expect(ledgeSprite(102)).toBe(art.ledge_102);
     expect(ledgeSprite(144)).toBe(art.ledge_144);
+    expect(ledgeSprite(208)).toBe(art.ledge_208);
     for (const w of [8, 31, 47, 48, 60, 101, 120, 200]) {
       const ledge = ledgeSprite(w);
       expect(ledge.width, `w=${w}`).toBe(w);

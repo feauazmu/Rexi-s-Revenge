@@ -3,7 +3,9 @@
     uv run -q --with pillow --with numpy python scripts/art/scenes/ledges.py
 
 Reads art/sprites/arena/stone/ledge_{102,144}.png (the props edit, as `art.py clean arena_props`
-writes it) and writes art/sprites/arena/ledge_{102,144}.png, which `art.py export arena` exports.
+writes it) and writes art/sprites/arena/ledge_{102,144,208}.png, which `art.py export arena`
+exports. The props edit has no 208 px stone ledge (the middle Ledge was widened in #43), so
+`stone_ledge` widens the 144 px one: its two ends with the fittings, and plain slab columns between.
 A Ledge is a slab of polished courtroom mahogany with a brass edge (CONTEXT.md), so it stands
 out over the marble, the sunset sky and the glass behind it (#33).
 
@@ -36,7 +38,9 @@ from pixtext import CODE_OF, from_text, to_text  # noqa: E402
 
 ART = os.path.join(ROOT, "art", "sprites", "arena")
 SOURCE = os.path.join(ART, "stone")
-NAMES = ("ledge_102", "ledge_144")
+NAMES = ("ledge_102", "ledge_144", "ledge_208")
+#: Stone ledges the props edit lacks: name -> (the stone ledge widened, its slab columns repeated).
+WIDENED = {"ledge_208": ("ledge_144", range(30, 94))}
 
 #: Rows of the slab: its outlined top and bottom, and the fittings' rows under it.
 TOP, BOTTOM, FITTINGS = 0, 10, range(11, 16)
@@ -132,12 +136,25 @@ def redraw(stone):
     return from_text(["".join(r) for r in rows])
 
 
+def stone_ledge(name, source=SOURCE):
+    """The cleaned stone ledge `name` (an RGBA array), widened from a narrower one when the props
+    edit has none that wide: the narrower ledge split in half, with its plain slab columns (the
+    outlined slab only, no fittings under it) inserted between the halves."""
+    if name not in WIDENED:
+        return np.asarray(Image.open(os.path.join(source, f"{name}.png")).convert("RGBA"))
+    base, columns = WIDENED[name]
+    narrow = stone_ledge(base, source)
+    middle = narrow[:, list(columns)]
+    assert (middle[BOTTOM + 1:, :, 3] == 0).all(), f"{base} columns {columns} reach the fittings"
+    half = narrow.shape[1] // 2
+    return np.concatenate([narrow[:, :half], middle, narrow[:, half:]], axis=1)
+
+
 def build(source=SOURCE, out=ART):
     """Writes <out>/ledge_*.png and returns {name: RGBA array}."""
     done = {}
     for name in NAMES:
-        stone = np.asarray(Image.open(os.path.join(source, f"{name}.png")).convert("RGBA"))
-        done[name] = redraw(stone)
+        done[name] = redraw(stone_ledge(name, source))
         Image.fromarray(done[name]).save(os.path.join(out, f"{name}.png"))
     return done
 
