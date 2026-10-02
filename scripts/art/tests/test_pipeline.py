@@ -71,7 +71,7 @@ def test_the_ledges_keep_the_stone_silhouette_and_match_the_committed_ones(tmp_p
     spec.loader.exec_module(ledges)
 
     for name, ledge in ledges.build(out=str(tmp_path)).items():
-        stone = np.asarray(Image.open(os.path.join(ledges.SOURCE, f"{name}.png")).convert("RGBA"))
+        stone = ledges.stone_ledge(name)
         assert ((ledge[..., 3] > 0) == (stone[..., 3] > 0)).all(), name
         for row in (ledges.TOP, ledges.BOTTOM):                    # the slab's outline
             assert (ledge[row, :, :3] == stone[row, :, :3]).all(), name

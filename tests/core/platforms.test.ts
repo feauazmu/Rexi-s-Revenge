@@ -1,11 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { defaultTuning, SCREEN_WIDTH } from '../../src/core';
+import { defaultTuning, DT, SCREEN_WIDTH } from '../../src/core';
 import { driveEmptyArena, runOf, type Driver } from '../support/driver';
 
 const { groundY, gravity } = defaultTuning.arena;
-const { jumpSpeed, spawnX, width: rexiWidth } = defaultTuning.rexi;
+const { jumpSpeed, runSpeed, spawnX, width: rexiWidth } = defaultTuning.rexi;
 /** Height of a full (held) jump, in pixels. */
 const fullJumpHeight = (jumpSpeed * jumpSpeed) / (2 * gravity);
+
+/** Something Rexi stands on: the ground or a Ledge. */
+interface Surface {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+}
+
+/**
+ * How far sideways a full running jump carries Rexi before his feet fall back below a surface
+ * `rise` px above the one he jumped from, px; or -Infinity when the jump is not that high.
+ */
+function runningJumpReach(rise: number): number {
+  const lift = jumpSpeed * jumpSpeed - 2 * gravity * rise;
+  if (lift < 0) return -Infinity;
+  return (runSpeed * (jumpSpeed + Math.sqrt(lift))) / gravity;
+}
+
+/**
+ * How far sideways Rexi's hitbox has to travel, from the last spot on `from` he can jump from,
+ * until it overlaps `to`; 0 when he can jump straight up into it.
+ */
+function sidewaysGap(from: Surface, to: Surface): number {
+  const rightward = to.x - (from.x + from.w) - rexiWidth;
+  const leftward = from.x - (to.x + to.w) - rexiWidth;
+  return Math.max(0, rightward, leftward);
+}
 
 /** A one-way platform 53 px above the ground, right over Rexi's spawn point. */
 const overhead = { x: spawnX - 40, y: groundY - 53, w: 107 };
@@ -159,12 +186,61 @@ describe('default Arena layout', () => {
     }
   });
 
-  it('makes every platform reachable with one jump from the ground or a lower platform', () => {
-    const surfaces = [groundY, ...platforms.map((p) => p.y)];
-    for (const p of platforms) {
-      const below = surfaces.filter((y) => y > p.y);
-      const closest = Math.min(...below);
-      expect(closest - p.y).toBeLessThan(fullJumpHeight - 4);
+  it('makes every Ledge reachable with running jumps from the ground, up and across', () => {
+    // A few px of slack, for the tick-by-tick physics and for the player's timing.
+    const slack = 4;
+    const ground = { x: 0, y: groundY, w: SCREEN_WIDTH };
+    const reached: Surface[] = [ground];
+    let left = [...platforms];
+    for (let found = true; found;) {
+      found = false;
+      for (const to of left) {
+        const reachable = reached.some(
+          (from) =>
+            from.y > to.y &&
+            from.y - to.y < fullJumpHeight - slack &&
+            sidewaysGap(from, to) < runningJumpReach(from.y - to.y) - slack,
+        );
+        if (reachable) {
+          reached.push(to);
+          left = left.filter((p) => p !== to);
+          found = true;
+        }
+      }
+    }
+    expect(left).toEqual([]);
+  });
+
+  it('lets Rexi land on the high middle Ledge with a running jump from either side Ledge', () => {
+    const [low, , high] = [...platforms].sort((a, b) => b.y - a.y);
+    if (!low || !high) throw new Error('Expected low side Ledges and a high middle one');
+    const sides = platforms.filter((p) => p.y === low.y);
+    expect(sides).toHaveLength(2);
+
+    for (const side of sides) {
+      const towardMiddle = side.x < high.x ? 1 : -1;
+      // Spawn under the side Ledge, jump onto it, then run toward the middle.
+      const game = driveEmptyArena({
+        overrides: { tuning: { rexi: { spawnX: side.x + side.w / 2 - rexiWidth / 2 } } },
+      });
+      game.ticks(1);
+      jumpAndSettle(game);
+      expect(feetOf(game)).toBe(side.y);
+
+      // Run to the edge and jump on the last tick before running off it.
+      const step = runSpeed * DT;
+      const atEdge = () => {
+        const { x } = rexiOf(game);
+        return towardMiddle > 0 ? x + step >= side.x + side.w : x + rexiWidth - step <= side.x;
+      };
+      for (let i = 0; i < 120 && !atEdge(); i++) game.ticks(1, { move: towardMiddle });
+      expect(rexiOf(game).grounded).toBe(true);
+      // Keep running and holding jump until he lands.
+      game.ticks(1, { move: towardMiddle, jump: true });
+      for (let i = 0; i < 120 && !rexiOf(game).grounded; i++) {
+        game.ticks(1, { move: towardMiddle, jump: true });
+      }
+      expect(feetOf(game), `from the Ledge at x ${side.x}`).toBe(high.y);
     }
   });
 

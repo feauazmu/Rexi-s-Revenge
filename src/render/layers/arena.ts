@@ -159,7 +159,7 @@ function drawBillboardBulbs(surface: Surface, tick: number): void {
 // ---------------------------------------------------------------------------------------------
 
 /** The pipeline's mahogany Ledges, by width; the walkable top is their second row, in brass. */
-const LEDGES: readonly SpriteDef[] = [art.ledge_102, art.ledge_144];
+const LEDGES: readonly SpriteDef[] = [art.ledge_102, art.ledge_144, art.ledge_208];
 /**
  * Columns of the 102 px Ledge used for other widths: the left end with its brass fitting runs up
  * to the second panel seam, then 18 px panels repeat, then the right end with its fitting.

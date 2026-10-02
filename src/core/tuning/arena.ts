@@ -19,9 +19,12 @@ export interface ArenaTuning {
   /** Terminal falling speed, px/s. */
   readonly maxFallSpeed: number;
   /**
-   * The Arena's one-way platforms (HA3-style vertical play). Each one sits less than a full
-   * jump (about 78 px with the default jump and gravity) above the ground or a lower platform.
-   * Rexi's spawn point stays clear, so a standing jump there lands back on the ground.
+   * The Arena's one-way platforms (HA3-style vertical play). Each one is in reach of a running
+   * jump from the ground or a lower platform, both up and across: it sits less than a full jump
+   * (about 78 px with the default jump and gravity) above it, and close enough sideways that
+   * Rexi's hitbox gets over its edge before he falls back below its top (a full running jump
+   * up 67 px carries him about 77 px sideways). Rexi's spawn point stays clear, so a standing
+   * jump there lands back on the ground.
    */
   readonly platforms: readonly PlatformTuning[];
 }
@@ -34,7 +37,8 @@ export const arenaTuning: ArenaTuning = {
     // Low ledges at both sides, 66 px above the ground.
     { x: 29, y: 251, w: 102 },
     { x: 509, y: 251, w: 102 },
-    // High ledge in the middle, 67 px above the low ones.
-    { x: 248, y: 184, w: 144 },
+    // High ledge in the middle, 67 px above the low ones. Its edges are 63 px of hitbox travel
+    // from theirs, so a running jump from either one lands on it.
+    { x: 216, y: 184, w: 208 },
   ],
 };

@@ -104,8 +104,8 @@ describe('Run goldens', () => {
       seed: 3,
       overrides: {
         spawns: [
-          // Dropped its drawer 30 ticks before the snapshot.
-          { kind: 'archivador-artillado', x: 200, y: 53 },
+          // Dropped its drawer 30 ticks before the snapshot, between Rexi and the middle Ledge.
+          { kind: 'archivador-artillado', x: 180, y: 53 },
           // Most of the way through lowering its drawer out of the bomb bay.
           { kind: 'archivador-artillado', x: 400, y: 40, atTick: 35 },
           // Still waiting for its first drop.
