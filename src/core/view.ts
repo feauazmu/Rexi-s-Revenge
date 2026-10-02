@@ -9,7 +9,7 @@ import type {
   WeaponId,
 } from './ids';
 import type { Vec2 } from './math';
-import type { DeviceKind } from './options';
+import type { DeviceKind, FullscreenSupport } from './options';
 import type { PauseMenuItem } from './pause-menu';
 import type { RunStats } from './stats';
 import type { QuipTheme } from './quips/catalog';
@@ -25,6 +25,8 @@ export interface GameView {
   /** Ticks since the Game was created. Drives animation phase for every screen. */
   readonly tick: number;
   readonly device: DeviceKind;
+  /** How the player can get fullscreen here (the pause-menu toggle, the Title hint, or neither). */
+  readonly fullscreenSupport: FullscreenSupport;
   readonly screen: ScreenKind;
   /** Ticks since the current screen was entered (entry animations, blinking prompts). */
   readonly screenAge: number;
@@ -51,6 +53,8 @@ export interface GameView {
   readonly pauseMenu: PauseMenuView | null;
   /** The persisted "Silenciar música" choice. */
   readonly musicMuted: boolean;
+  /** True while the page is fullscreen, as last reported by the platform. */
+  readonly fullscreen: boolean;
 }
 
 /**

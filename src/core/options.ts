@@ -5,6 +5,14 @@ import type { TuningOverrides } from './tuning';
 /** Only affects UI prompts and "Cómo jugar" content, never gameplay. */
 export type DeviceKind = 'desktop' | 'touch';
 
+/**
+ * How the page can get the player fullscreen: `toggle` (a "Pantalla completa" item in the pause
+ * menu drives the Fullscreen API), `install-hint` (no Fullscreen API, e.g. an iPhone browser:
+ * the Title explains how to install the game) or `none` (already installed, or neither).
+ * Like {@link DeviceKind}, it only affects UI, never gameplay.
+ */
+export type FullscreenSupport = 'toggle' | 'install-hint' | 'none';
+
 /** Something placed at an exact Run tick and position, for tests and the dev sandbox. */
 export type ScriptedSpawn = ScriptedEnemySpawn | ScriptedCrateSpawn;
 
@@ -45,6 +53,8 @@ export interface GameOptions {
   readonly seed: number;
   /** Default: 'desktop'. */
   readonly device?: DeviceKind;
+  /** Default: 'none'. */
+  readonly fullscreenSupport?: FullscreenSupport;
   /** Where the core persists its data. Default: in-memory (nothing survives a reload). */
   readonly storage?: StoragePort;
   readonly overrides?: GameOverrides;

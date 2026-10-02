@@ -32,6 +32,8 @@ export interface Driver {
   holdFireToward(target: Vec2, seconds: number, input?: InputFramePatch): GameEvent[];
   /** What the shell does when the tab is hidden or loses focus. */
   pause(): void;
+  /** What the shell does when the browser enters or leaves fullscreen. */
+  reportFullscreen(active: boolean): void;
 }
 
 /**
@@ -77,6 +79,9 @@ function driverFor(game: Game): Driver {
     holdFireToward: (target, s, input = {}) => seconds(s, { ...input, aim: target, fire: true }),
     pause: () => {
       game.pause();
+    },
+    reportFullscreen: (active) => {
+      game.reportFullscreen(active);
     },
   };
 }

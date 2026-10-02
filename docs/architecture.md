@@ -496,6 +496,24 @@ On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `v
 the shell and passes it as `ShellOptions.titleIllustration`; if it cannot be loaded, the Title uses its
 code-drawn backdrop.
 
+### Fullscreen
+
+The fullscreen support is chosen once at startup (`src/platform/fullscreen.ts`, pure
+`chooseFullscreenSupport` like the device chooser) and passed to the Game as `GameOptions.fullscreenSupport`
+(UI only, never gameplay): `toggle` when the Fullscreen API is available and the game is not installed
+(display mode `standalone`/`fullscreen`, or iOS's `navigator.standalone`), else `none`.
+`?fullscreen=toggle|install-hint|none` overrides it. The type also has `install-hint` (the iPhone Title
+hint), which detection does not pick yet.
+
+- **Pause menu**: `pauseMenuItems(support)` lists Continuar, Silenciar música, Pantalla completa (only with
+  `toggle`) and Salir; navigation wraps over that list. The item draws an on/off box from `view.fullscreen`.
+- **Request**: choosing Pantalla completa emits `fullscreen-toggle-requested` with the desired state
+  (`!view.fullscreen`). The Game does not change `fullscreen` itself.
+- **Shell**: turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick, inside the
+  browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
+  at startup, the shell calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right away.
+
 ### Touch controls
 
 The device kind is chosen once at startup (`src/platform/device.ts`): `touch` when the primary pointer is

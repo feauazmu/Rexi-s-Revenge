@@ -78,6 +78,26 @@ describe('Screen goldens', () => {
     await expectGolden('pause-menu', renderView(game.view));
   });
 
+  it.each([
+    ['pause-menu-fullscreen-off', false],
+    ['pause-menu-fullscreen-on', true],
+  ] as const)('%s: Pantalla completa selected, with its box', async (name, fullscreen) => {
+    const game = drive({
+      seed: 1,
+      fullscreenSupport: 'toggle',
+      overrides: { spawns: [{ kind: 'maletin-coptero', x: 427, y: 93 }], tuning: holdStill() },
+    });
+    game.seconds(0.5, { aim: { x: 443, y: 105 } });
+    game.reportFullscreen(fullscreen);
+    game.ticks(1, { pause: true });
+    game.ticks(1, { menu: { down: true } });
+    game.ticks(1, { menu: { down: true } });
+    while (game.view.tick % 60 !== 5) game.ticks(1);
+    expect(game.view.pauseMenu?.items[game.view.pauseMenu.selected]).toBe('fullscreen');
+    expect(game.view.fullscreen).toBe(fullscreen);
+    await expectGolden(name, renderView(game.view));
+  });
+
   it('title-high-scores: a full top 10 next to the logo', async () => {
     const storage = memoryStorage();
     const names = ['REX', 'FIL', 'JUZ', 'MAR', 'LEN', 'GYM', 'ABC', 'PIE', 'SOS', 'ZZZ'];

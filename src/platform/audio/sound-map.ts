@@ -92,6 +92,7 @@ const EVENT_SOUNDS: { readonly [T in GameEventType]: Rule<T> } = {
   'run-ended': () => 'sad-trombone',
   'menu-moved': () => 'menu-move',
   'mute-toggled': () => 'menu-confirm',
+  'fullscreen-toggle-requested': () => 'menu-confirm',
   'high-score-recorded': () => 'crate-pickup', // the coin arpeggio: a reward for signing
   'crate-spawned': () => null,
   'crate-landed': () => null,
