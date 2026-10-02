@@ -14,17 +14,17 @@ art pipeline in `scripts/art/`, see "Art pipeline" below).
 
 ## Modules
 
-| Path                | Role                                                                                              | May import         |
-| ------------------- | ------------------------------------------------------------------------------------------------- | ------------------ |
-| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.       | `src/core` only    |
-| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                      |                    |
-| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).  |                    |
-| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                      |                    |
-| `src/render/`       | Pure renderer: `GameView` → pixels on a 640×360 `Surface`. No DOM, no clock.                      | `src/core` (index) |
-| `src/platform/`     | Browser adapters: shell + loop, viewport scaling, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
-| `src/main.ts`       | Entry point: starts the shell.                                                                    |                    |
-| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.           |                    |
-| `e2e/`              | Playwright smoke tests against the production build.                                              |                    |
+| Path                | Role                                                                                                  | May import         |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
+| `src/core/`         | Game core: screen flow, Run simulation, tuning, seeded RNG. No DOM, clock or `Math.random`.           | `src/core` only    |
+| `src/core/index.ts` | The core's **public interface**. Everything else imports the core from here.                          |                    |
+| `src/core/run/`     | Private Run internals (physics, Rexi, Weapons, Crates, Enemies, projectiles, spawning, effects).      |                    |
+| `src/core/tuning/`  | The tuning catalog: every balance number, one file per area.                                          |                    |
+| `src/render/`       | Pure renderer: `GameView` → pixels on a 640×360 `Surface`. No DOM, no clock.                          | `src/core` (index) |
+| `src/platform/`     | Browser adapters: shell + loop, viewport, fullscreen, keyboard/mouse, touch, storage, bitmaps, audio. | core, render       |
+| `src/main.ts`       | Entry point: starts the shell.                                                                        |                    |
+| `tests/`            | Vitest: core behavior, adapter pure logic, golden images. `tests/support/` has helpers.               |                    |
+| `e2e/`              | Playwright smoke tests against the production build.                                                  |                    |
 
 These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clocks and `Math.random` in
 `src/core` and `src/render`, bans cross-layer imports and deep imports into the core, and
@@ -33,17 +33,19 @@ These boundaries are enforced: ESLint (`eslint.config.js`) bans DOM globals, clo
 ## Seam 1: the Game core
 
 ```ts
-const game = createGame({ seed, device?, storage?, overrides?: { tuning?, spawns? } });
+const game = createGame({ seed, device?, fullscreenSupport?, storage?, overrides?: { tuning?, spawns? } });
 const events = game.tick(inputFrame); // exactly one 1/60 s step
 draw(game.view);                       // read-only snapshot, rebuilt lazily after each tick
 game.pause();                          // shell: tab hidden / focus lost (no-op outside a Run)
+game.reportFullscreen(active);         // shell: the browser entered or left fullscreen
 ```
 
 - **`InputFrame`** (`src/core/input.ts`): device-agnostic intent. Held fields (move, jump, drop, aim, fire) and
   edge fields (weapon next/previous/slot, pause, menu, start) that are true for exactly one tick.
 - **`GameEvent`** (`src/core/events.ts`): discriminated union on `type`.
 - **`GameView`** (`src/core/view.ts`): everything needed to draw, including `tick` for animation phase.
-- **Determinism**: same seed + same input frames ⇒ identical event log and view. All randomness goes through
+- **Determinism**: same seed + same input frames (and the same `pause()` / `reportFullscreen()` calls
+  between ticks) ⇒ identical event log and view. All randomness goes through
   seeded `Rng` streams: the gameplay `rng` in `RunContext` (seeded with the Game's seed), plus the effects
   and Quip streams, each seeded from it with `deriveSeed(seed, stream)`; entity ids come from a counter. The streams and the
   id counter belong to the **Game**, not the Run: they carry on across Runs, so a Game's second Run
@@ -72,7 +74,7 @@ Each tick runs exactly one screen's logic, so the tick that changes screens does
 - Title and Cómo jugar accept `start` once `view.startReady` (a guard against double presses,
   `tuning.screens.startGuard`).
 - Pausing (`pause` edge, or `game.pause()` from the shell) freezes the Run entirely: it is not stepped.
-  The pause menu (`PAUSE_MENU_ITEMS`) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
+  The pause menu (`pauseMenuItems(fullscreenSupport)`, see [Fullscreen](#fullscreen)) reads `menu` edges (each move emits `menu-moved`); `pause`/`back` resume. "Silenciar música" toggles
   `view.musicMuted`, persists it and emits `mute-toggled`.
 - **Run end**: the ended Run stays on the `run` screen for the defeat beat (`tuning.screens.defeatBeat`;
   `view.defeatAge` counts it), then the Veredicto (`view.verdict`, `src/core/verdict.ts`) shows its stats over
@@ -483,18 +485,73 @@ DIALOGUE_MAX_LINES` (2), both exported from `src/render`. Quips are game content
 
 ## Platform shell
 
-`src/platform/shell.ts` creates the 640×360 canvas, applies `computeViewport` (largest integer device-pixel scale: 2× at 720p, 3× at 1080p, 4× at 1440p;
-letterboxed, snapped to device pixels), and runs a `requestAnimationFrame` loop. `createFixedStepper`
+`src/platform/shell.ts` creates the 640×360 canvas, applies `computeViewport`, and runs a
+`requestAnimationFrame` loop. `computeViewport` takes a scaling mode; either way the image is centered
+with black letterbox/pillarbox bars, its offsets are snapped to device pixels, and the canvas keeps its
+640×360 backing store with nearest-neighbor display (`image-rendering: pixelated`), so only its CSS size
+changes:
+
+- `integer` (the default, used on desktop): the largest whole device-pixel scale that fits, never below 1
+  (2× at 720p, 3× at 1080p, 4× at 1440p), so every game pixel is a perfect square.
+- `fit` (used for the `touch` device kind): the largest fractional scale that fits, so the game fills the
+  height (or width) of the screen. On an iPhone in landscape the browser bars leave less than 360 CSS px,
+  where whole factors would drop from 3× to 2× and cover about half the screen. At DPR 2–3 the uneven
+  pixel widths are a fraction of a physical pixel and not visible.
+
+It also takes safe-area insets: the image is fitted and centered in the container minus them, with
+offsets still relative to the whole container. Installed on an iPhone home screen
+(`apple-mobile-web-app-capable`, `black-translucent` status bar, `viewport-fit=cover`), the page draws
+under the status bar and notch; the shell reads `env(safe-area-inset-*)` from the computed padding of a
+hidden `.safe-area-probe` element on every layout (resize, rotation), so the notch and home indicator
+never cover the Arena, HUD or touch controls. Elsewhere the insets are zero.
+
+`screenToGame` / `screenToGameUnclamped` map pointer and touch points through the resulting `cssScale` and
+offsets, so mouse aiming and the touch adapter need no per-mode cases. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
 Each tick samples the device's input adapter once (edges are consumed by the first sample).
 On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
 `#app[data-screen]`, which the smoke tests poll (also `data-device`, `data-orientation` and
 `data-touch-controls`).
+Fullscreen wiring lives in `attachFullscreen(game, root, { device, support, onChange })` (see
+[Fullscreen](#fullscreen)); the shell attaches it once, passes each tick's events to its `handle` and
+`dispose`s it on `stop()`.
 `ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there (`src/main.ts`).
 `Shell.view` exposes the Game's view so adapters can read their starting state (the persisted mute).
 `src/main.ts` decodes the title illustration (`loadTitleIllustration`, from the base URL) before starting
 the shell and passes it as `ShellOptions.titleIllustration`; if it cannot be loaded, the Title uses its
 code-drawn backdrop.
+
+### Fullscreen
+
+The fullscreen support is chosen once at startup (`src/platform/fullscreen.ts`, pure
+`chooseFullscreenSupport` like the device chooser) and passed to the Game as `GameOptions.fullscreenSupport`
+(UI only, never gameplay): `toggle` when the Fullscreen API is available and the game is not installed
+(display mode `standalone`/`fullscreen`, or iOS's `navigator.standalone`); `install-hint` on iOS/iPadOS
+(an iPhone/iPad/iPod user agent, or a touch "Macintosh", which is how iPadOS reports itself) without the
+Fullscreen API and not installed, which covers every iPhone browser since all are WebKit; else `none`.
+`?fullscreen=toggle|install-hint|none` overrides it. Known edge: `(display-mode: fullscreen)` also matches a
+browser tab already in F11 fullscreen, so a page loaded that way shows no toggle until it is reloaded outside it.
+
+- **Title hint**: with `install-hint`, the Title footer shows "Pantalla completa: Compartir → Añadir a inicio"
+  between the start prompt and the credits line; the pause menu has no fullscreen item.
+- **Pause menu**: `pauseMenuItems(support)` lists Continuar, Silenciar música, Pantalla completa (only with
+  `toggle`) and Salir; navigation wraps over that list. The item draws an on/off box from `view.fullscreen`.
+- **Request**: choosing Pantalla completa emits `fullscreen-toggle-requested` with the desired state
+  (`!view.fullscreen`). The Game does not change `fullscreen` itself.
+- **Controller**: `attachFullscreen` (in `src/platform/fullscreen.ts`) does the browser side for the shell.
+  Its `handle(events)` turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick,
+  inside the browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **First touch**: on touch devices with `toggle`, the first `touchend` on the page (the Title tap) requests
+  fullscreen inside the handler, so it counts as a user gesture; once per page load, whatever the outcome.
+  Desktop enters fullscreen only through the pause menu.
+- **Landscape lock**: whenever a touch device enters fullscreen (first touch or the pause menu), the
+  controller then calls `screen.orientation.lock('landscape')` (Android; desktop and iOS refuse), so tilting the phone
+  mid-Run doesn't freeze it behind the rotate prompt. Refusals are ignored; the browser releases the lock when
+  the page leaves fullscreen. Both rules come from the pure `chooseFullscreenBehavior(device, support)`,
+  which the controller passes to both entry paths.
+- **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
+  at startup, the controller calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right
+  away; after each change it calls `onChange`, so the shell redraws.
 
 ### Touch controls
 
@@ -528,7 +585,7 @@ the touch adapter (no keyboard/mouse adapter, so a finger is never also a mouse 
 - **Overlay** (`src/render/touch/overlay.ts`): drawn last by `render(surface, view, overlay)`. Idle controls
   are dithered outlines so the Arena shows through (no alpha: determinism rule); held controls turn solid.
 - **Portrait**: the shell hides the game canvas, freezes the game (pausing a Run) and draws the "Gira tu
-  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 192×340 canvas, scaled like the game.
+  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 192×340 canvas, scaled like the game (same scaling mode).
 
 **Manual check on a real phone** (emulation covers the rest in `e2e/touch.spec.ts`): open the site in
 landscape → "Toca para empezar" → tap → Cómo jugar (touch) → tap → Run: move with the left stick, pull it
@@ -768,7 +825,8 @@ await expectGolden('my-scene', renderView(game.view));
   scenarios that aim at fixed points.
 - Renderer building blocks without a view (font metrics, the font specimen golden) are tested directly
   (`tests/render/`, `renderPart` in `tests/support/render-node.ts`).
-- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, `keyboard-mouse` mapping, audio
+- Adapter logic is tested as pure functions (`viewport`, `fixed-step`, the `device`, fullscreen-support and
+  fullscreen-behavior choosers, `keyboard-mouse` mapping, audio
   synth/sound map/voice limiter, touch `stick` math and the touch `controller`, which is driven with real
   views from `drive()`); the audio engine runs against a fake `AudioContext`.
 - Touch goldens (`tests/golden/touch.golden.test.ts`) feed the controller's frames into the core and render

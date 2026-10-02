@@ -34,6 +34,7 @@ export type GameEvent =
   | RunEndedEvent
   | MenuMovedEvent
   | MuteToggledEvent
+  | FullscreenToggleRequestedEvent
   | HighScoreRecordedEvent
   | CrateSpawnedEvent
   | CrateLandedEvent
@@ -231,6 +232,17 @@ export interface MuteToggledEvent {
   readonly type: 'mute-toggled';
   /** The new state: true when the music is now muted. */
   readonly muted: boolean;
+}
+
+/**
+ * "Pantalla completa" was chosen in the pause menu: the platform should enter or leave
+ * fullscreen. The Game's `fullscreen` view flag changes only once the platform reports the
+ * browser's new state (`Game.reportFullscreen`), and never if the browser refuses.
+ */
+export interface FullscreenToggleRequestedEvent {
+  readonly type: 'fullscreen-toggle-requested';
+  /** The desired state: true to enter fullscreen, false to leave it. */
+  readonly fullscreen: boolean;
 }
 
 /** A Quip triggered: the Dialogue Box opens with this Quip (its Hit-stop follows as `hit-stop-started`). */

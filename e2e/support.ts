@@ -1,5 +1,12 @@
 /** Helpers shared by the smoke tests. */
 import type { Page } from '@playwright/test';
+import { defaultTuning } from '../src/core';
+
+/**
+ * Real time to wait before a start input counts: the Title and Cómo jugar ignore `start` for
+ * the start guard after they open, plus margin for a slow frame.
+ */
+export const START_GUARD_MS = defaultTuning.screens.startGuard * 1000 + 100;
 
 /** Collects console errors and uncaught exceptions for the whole test. */
 export function trackErrors(page: Page): string[] {
@@ -32,4 +39,37 @@ export async function readHighScores(
     version?: number;
     entries?: { initials: string; score: number }[];
   };
+}
+
+/** What {@link spyOnFullscreen} counted: fullscreen requests and landscape orientation locks. */
+export interface FullscreenCalls {
+  requests: number;
+  locks: string[];
+}
+
+/**
+ * Before the page loads, replaces `requestFullscreen` and `screen.orientation.lock` with
+ * counters that resolve without entering fullscreen. Read the counts with
+ * {@link readFullscreenCalls}.
+ */
+export async function spyOnFullscreen(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const calls = { requests: 0, locks: [] as string[] };
+    (window as unknown as { __fullscreenCalls: typeof calls }).__fullscreenCalls = calls;
+    Element.prototype.requestFullscreen = function () {
+      calls.requests += 1;
+      return Promise.resolve();
+    };
+    screen.orientation.lock = (orientation) => {
+      calls.locks.push(orientation);
+      return Promise.resolve();
+    };
+  });
+}
+
+/** The calls {@link spyOnFullscreen} has counted so far. */
+export function readFullscreenCalls(page: Page): Promise<FullscreenCalls> {
+  return page.evaluate(
+    () => (window as unknown as { __fullscreenCalls: FullscreenCalls }).__fullscreenCalls,
+  );
 }

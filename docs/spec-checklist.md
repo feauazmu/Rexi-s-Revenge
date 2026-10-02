@@ -6,7 +6,7 @@ is implemented and a test covers it. **Done, amended** means it is implemented a
 decision changed it (listed under "Amendments"). **Deferred** means it is knowingly left out
 of v1.
 
-Result: 89 of 90 stories are done (three of them as amended). One part of one story is deferred: the
+Result: 89 of 90 stories are done (four of them as amended). One part of one story is deferred: the
 dev-sandbox page in story 86.
 
 Tests are named by file: `core/…`, `golden/…`, `render/…`, `platform/…`, `content/…` and
@@ -25,6 +25,9 @@ production build.
   Bufete & Pesas S.A. tower carries a gym billboard instead (owner comment on #1).
 - **Rexi's tattoo** is one continuous shoulder-to-elbow sleeve on his **right** arm (owner
   comment on #1, then #26; see CONTEXT.md).
+- **Fractional scaling on touch devices** (#36, #37; [ADR 0002](adr/0002-pixel-art-rules-and-pipeline.md)
+  rule 1): touch devices show the game at the largest fractional scale that fits, so it fills the
+  screen; desktop keeps crisp integer scaling (story 76).
 - **Budget** raised from $5 to $10 (owner comment on #1). Spent so far: $4.8732 (CREDITS.md).
 
 ## Starting and flow
@@ -141,7 +144,7 @@ production build.
 | 73  | Punchy synthesized sound effects                        | Done          | `platform/audio/presets.ts`, `sound-map.ts`     | `platform/audio/presets`, `platform/audio/sound-map`                      |
 | 74  | Mute from the pause menu, remembered                    | Done          | `core/preferences.ts`, music bus                | `core/screens`, `e2e/smoke`                                               |
 | 75  | Audio starts after the first interaction without errors | Done          | `listenForAudioUnlock`                          | `platform/audio/engine`, `e2e/smoke`                                      |
-| 76  | Crisp integer scaling with letterboxing                 | Done          | `platform/viewport.ts`                          | `platform/viewport`, `e2e/smoke`                                          |
+| 76  | Crisp integer scaling with letterboxing                 | Done, amended | `platform/viewport.ts`                          | `platform/viewport`, `e2e/smoke`, `e2e/touch`                             |
 | 77  | Short screen shake on big explosions                    | Done          | trauma shake, Arena bleed (#30)                 | `core/effects`, `render/arena`, `golden/effects` (`effects-screen-shake`) |
 | 78  | The Arena tells the premise at a glance                 | Done, amended | `render/layers/arena.ts`, `arena-signs.ts`      | `render/arena`, every Run golden                                          |
 | 79  | Same speed on 60 Hz and high-refresh displays           | Done          | `platform/fixed-step.ts`                        | `platform/fixed-step`                                                     |

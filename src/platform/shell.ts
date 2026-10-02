@@ -16,10 +16,17 @@ import {
 import { createCanvasBitmap, loadBitmap } from './bitmaps';
 import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
+import { attachFullscreen, detectFullscreenSupport } from './fullscreen';
 import { createKeyboardMouseInput } from './keyboard-mouse';
 import { browserStorage } from './storage';
 import { createTouchInput } from './touch/touch';
-import { computeViewport, type ImageSize, type Viewport } from './viewport';
+import {
+  computeViewport,
+  type ImageSize,
+  type Insets,
+  type ScaleMode,
+  type Viewport,
+} from './viewport';
 
 export interface ShellOptions {
   /** Seed for the Run. Default: `?seed=` from the URL, else random. */
@@ -57,12 +64,16 @@ interface InputAdapter {
 }
 
 /**
- * Browser shell: creates the 640×360 canvas, scales it by the largest integer factor that fits
- * (letterboxed, no smoothing), and runs the fixed-timestep loop that feeds input frames to the
- * Game core and draws its view. It pauses the Run when the tab is hidden or loses focus.
+ * Browser shell: creates the 640×360 canvas, scales it to fit (letterboxed, no smoothing): by
+ * the largest integer factor on desktop, by the largest fractional one on touch devices. It
+ * runs the fixed-timestep loop that feeds input frames to the Game core and draws its view. It
+ * pauses the Run when the tab is hidden or loses focus.
  *
  * On touch devices it uses the touch adapter and draws its controls over the game; held in
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
+ *
+ * Fullscreen (the pause-menu toggle, the first touch, the landscape lock, mirroring the
+ * browser's state to the Game) is wired by {@link attachFullscreen}.
  */
 export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell {
   const device = detectDevice();
@@ -77,21 +88,27 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
           height: ROTATE_PROMPT_HEIGHT,
         })
       : null;
+  const safeArea = createSafeAreaProbe(root);
 
+  // Touch screens fill the space with fractional scaling; desktop keeps whole-number scaling.
+  const scaleMode: ScaleMode = device === 'touch' ? 'fit' : 'integer';
   let viewport: Viewport = computeViewport(1, 1);
   /** True while a touch device is held upright: the game is frozen behind the prompt. */
   let blocked = false;
   const layout = () => {
     const { clientWidth: w, clientHeight: h } = root;
     const dpr = window.devicePixelRatio;
-    viewport = computeViewport(w, h, dpr);
+    const insets = safeArea.read();
+    const fitImage = (image?: ImageSize) =>
+      computeViewport(w, h, dpr, { image, mode: scaleMode, insets });
+    viewport = fitImage();
     place(canvas.element, viewport);
     const wasBlocked = blocked;
     blocked = rotateCanvas !== null && isPortrait(w, h);
     root.dataset.orientation = isPortrait(w, h) ? 'portrait' : 'landscape';
     canvas.element.hidden = blocked;
     if (rotateCanvas) {
-      place(rotateCanvas.element, computeViewport(w, h, dpr, rotateCanvas.size));
+      place(rotateCanvas.element, fitImage(rotateCanvas.size));
       rotateCanvas.element.hidden = !blocked;
     }
     if (blocked && !wasBlocked) {
@@ -100,9 +117,11 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     }
   };
 
+  const fullscreenSupport = detectFullscreenSupport();
   const game = createGame({
     seed: options.seed ?? seedFromUrl() ?? randomSeed(),
     device,
+    fullscreenSupport,
     storage: browserStorage(),
   });
   const input =
@@ -127,6 +146,12 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     }
     root.dataset.screen = game.view.screen;
   };
+
+  const fullscreen = attachFullscreen(game, root, {
+    device,
+    support: fullscreenSupport,
+    onChange: present,
+  });
 
   layout();
   present();
@@ -157,6 +182,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     } else {
       for (let i = 0; i < ticks; i++) {
         const events = game.tick(input.sample(game.view, viewport));
+        fullscreen.handle(events);
         if (events.length > 0) options.onEvents?.(events);
       }
     }
@@ -174,9 +200,11 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       window.removeEventListener('resize', onResize);
       window.removeEventListener('blur', autoPause);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      fullscreen.dispose();
       input.dispose();
       canvas.element.remove();
       rotateCanvas?.element.remove();
+      safeArea.element.remove();
     },
   };
 }
@@ -222,6 +250,31 @@ function createCanvas(root: HTMLElement, className: string, size: ImageSize): Pi
   const ctx = element.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('2D canvas is not available');
   return { element, ctx, size };
+}
+
+/**
+ * A hidden element padded by `env(safe-area-inset-*)` (see `.safe-area-probe` in style.css):
+ * its computed padding is the safe-area insets in CSS px, re-read on every layout so a
+ * rotation picks up the new notch side. Zero outside an installed iPhone app.
+ */
+function createSafeAreaProbe(root: HTMLElement): { element: HTMLElement; read(): Insets } {
+  const element = document.createElement('div');
+  element.className = 'safe-area-probe';
+  element.setAttribute('aria-hidden', 'true');
+  root.append(element);
+  return {
+    element,
+    read() {
+      const style = getComputedStyle(element);
+      const px = (value: string) => parseFloat(value) || 0;
+      return {
+        top: px(style.paddingTop),
+        right: px(style.paddingRight),
+        bottom: px(style.paddingBottom),
+        left: px(style.paddingLeft),
+      };
+    },
+  };
 }
 
 function place(element: HTMLCanvasElement, viewport: Viewport): void {

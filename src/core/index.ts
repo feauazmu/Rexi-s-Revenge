@@ -16,6 +16,7 @@ export type * from './view';
 export type { RunStats } from './stats';
 export type {
   DeviceKind,
+  FullscreenSupport,
   GameOptions,
   GameOverrides,
   ScriptedCrateSpawn,
@@ -35,7 +36,7 @@ export {
   type HighScoreEntry,
   type HighScoreTable,
 } from './high-scores';
-export { PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
+export { pauseMenuItems, type PauseMenuItem } from './pause-menu';
 export {
   defaultTuning,
   EXPLOSION_SIZES,

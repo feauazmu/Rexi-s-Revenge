@@ -22,7 +22,7 @@ describe('computeViewport', () => {
   });
 
   it('fits other image sizes too (the portrait rotate prompt)', () => {
-    const vp = computeViewport(390, 844, 3, { width: 192, height: 340 }); // phone portrait
+    const vp = computeViewport(390, 844, 3, { image: { width: 192, height: 340 } }); // phone portrait
     expect(vp.scale).toBe(6); // 1170 / 192 = 6.1, 2532 / 340 = 7.4
     expect(vp.width).toBeCloseTo(384);
     expect(vp.height).toBeCloseTo(680);
@@ -83,5 +83,154 @@ describe('screenToGameUnclamped', () => {
     const vp = computeViewport(1366, 768, 1); // 2×, offset (43, 24)
     expect(screenToGameUnclamped({ x: 3, y: 4 }, vp)).toEqual({ x: -20, y: -10 });
     expect(screenToGame({ x: 3, y: 4 }, vp)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('computeViewport in fit mode', () => {
+  it.each([
+    // iPhone landscape with browser bars: less than 360 CSS px of height
+    { w: 844, h: 340, dpr: 3 },
+    { w: 932, h: 330, dpr: 3 },
+    { w: 812, h: 300, dpr: 3 },
+  ])('fills the height of a $w×$h @$dpr phone landscape', ({ w, h, dpr }) => {
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
+    expect(vp.height).toBeCloseTo(h, 6);
+    expect(vp.width).toBeCloseTo((h * 16) / 9, 6);
+    expect(vp.offsetY).toBe(0);
+  });
+
+  it('pillarboxes a wide phone, centered, with offsets on device pixels', () => {
+    // 844×340 @3: 1020 / 360 = 2.833 device px per game px, image 604.44 CSS px wide,
+    // side bars of 119.78 CSS px = 359.33 device px, snapped to 359.
+    const vp = computeViewport(844, 340, 3, { mode: 'fit' });
+    expect(vp.scale).toBeCloseTo(1020 / 360, 9);
+    expect(vp.width).toBeCloseTo(604.444, 3);
+    expect(vp.offsetX).toBeCloseTo(359 / 3, 9);
+    expect(vp.offsetX + vp.width / 2).toBeCloseTo(422, 0); // centered within a device px
+  });
+
+  it.each([
+    { w: 844, h: 340, dpr: 3 },
+    { w: 932, h: 330, dpr: 3 },
+    { w: 915, h: 380, dpr: 2.625 }, // Pixel 7 screen, landscape: letterboxed top and bottom
+    { w: 1000, h: 1000, dpr: 2 },
+    { w: 1366, h: 768, dpr: 1 },
+  ])('keeps offsets on device-pixel boundaries at $w×$h @$dpr', ({ w, h, dpr }) => {
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
+    const onDevicePixel = (cssPx: number) => Math.abs(cssPx * dpr - Math.round(cssPx * dpr));
+    expect(onDevicePixel(vp.offsetX)).toBeLessThan(1e-9);
+    expect(onDevicePixel(vp.offsetY)).toBeLessThan(1e-9);
+    // The image fills one dimension and fits within the other.
+    expect(vp.width <= w + 1e-9 && vp.height <= h + 1e-9).toBe(true);
+    expect(Math.max(vp.width / w, vp.height / h)).toBeCloseTo(1, 9);
+  });
+
+  it('scales up past whole factors on large screens', () => {
+    const vp = computeViewport(1366, 768, 1, { mode: 'fit' });
+    expect(vp.scale).toBeCloseTo(768 / 360, 9); // 2.133, where integer mode gives 2
+    expect(vp.width).toBeCloseTo(1365.333, 3);
+    expect(vp.offsetX).toBe(0); // 0.33 px bars round to 0
+    expect(vp.offsetY).toBe(0);
+  });
+
+  it('fits the rotate prompt too', () => {
+    const vp = computeViewport(390, 844, 3, { image: { width: 192, height: 340 }, mode: 'fit' });
+    expect(vp.width).toBeCloseTo(390, 6); // 1170 / 192 = 6.09 < 2532 / 340 = 7.45
+    expect(vp.height).toBeCloseTo((390 * 340) / 192, 6);
+  });
+
+  it.each([
+    { w: 844, h: 340, dpr: 3 },
+    { w: 932, h: 330, dpr: 3 },
+    { w: 915, h: 380, dpr: 2.625 },
+  ])('maps screen points back to game coordinates at $w×$h @$dpr', ({ w, h, dpr }) => {
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
+    for (const [gx, gy] of [
+      [0, 0],
+      [320, 180],
+      [639.5, 359.5],
+      [12.25, 267.75],
+    ] as const) {
+      const screen = { x: vp.offsetX + gx * vp.cssScale, y: vp.offsetY + gy * vp.cssScale };
+      const game = screenToGame(screen, vp);
+      expect(game.x).toBeCloseTo(gx, 6);
+      expect(game.y).toBeCloseTo(gy, 6);
+    }
+  });
+});
+
+describe('computeViewport with safe-area insets', () => {
+  // iPhone 15 landscape, installed app: 852×393 CSS px @3. iOS reports the notch inset on both
+  // sides (whichever way the phone is turned) and the home indicator below.
+  const notch = { top: 0, right: 59, bottom: 21, left: 59 };
+
+  it('never gives a negative size when the insets exceed the container', () => {
+    // The first layout can run before the root has a size, with the iPhone insets already set.
+    const vp = computeViewport(0, 0, 3, { mode: 'fit', insets: notch });
+    expect(vp.scale).toBe(0);
+    expect(vp.width).toBe(0);
+    expect(vp.height).toBe(0);
+  });
+
+  it('fits the game inside the safe area in fit mode, centered there', () => {
+    const vp = computeViewport(852, 393, 3, { mode: 'fit', insets: notch });
+    // Safe area 734×372: height-bound, 372 / 360 = 1.0333 CSS px per game px.
+    expect(vp.height).toBeCloseTo(372, 6);
+    expect(vp.width).toBeCloseTo(661.333, 3);
+    expect(vp.offsetY).toBe(0);
+    // Centered in the safe area: 59 + (734 - 661.33) / 2 = 95.33 CSS px = 286 device px.
+    expect(vp.offsetX).toBeCloseTo(286 / 3, 9);
+  });
+
+  it('fits the game inside the safe area in integer mode, centered there', () => {
+    // 1366×768 fits 2×, but the 1366×668 safe area only fits 1× (668 / 360 = 1.86).
+    const vp = computeViewport(1366, 768, 1, {
+      insets: { top: 100, right: 0, bottom: 0, left: 0 },
+    });
+    expect(vp.scale).toBe(1);
+    expect(vp.offsetX).toBe(363); // (1366 - 640) / 2
+    expect(vp.offsetY).toBe(254); // 100 + (668 - 360) / 2
+  });
+
+  it('centers in the safe area when insets are uneven', () => {
+    // 1240×720 safe area: 1240 / 640 = 1.94, so 1×, centered at 40 + (1240 - 640) / 2.
+    const vp = computeViewport(1280, 720, 1, {
+      insets: { top: 0, right: 0, bottom: 0, left: 40 },
+    });
+    expect(vp.scale).toBe(1);
+    expect(vp.offsetX).toBe(340);
+    expect(vp.offsetY).toBe(180);
+  });
+
+  it.each([
+    { w: 1366, h: 768, dpr: 1, mode: 'integer' as const },
+    { w: 844, h: 390, dpr: 3, mode: 'integer' as const },
+    { w: 844, h: 340, dpr: 3, mode: 'fit' as const },
+    { w: 915, h: 380, dpr: 2.625, mode: 'fit' as const },
+  ])(
+    'matches the inset-free result with zero insets at $w×$h @$dpr ($mode)',
+    ({ w, h, dpr, mode }) => {
+      const zero = { top: 0, right: 0, bottom: 0, left: 0 };
+      expect(computeViewport(w, h, dpr, { mode, insets: zero })).toEqual(
+        computeViewport(w, h, dpr, { mode }),
+      );
+    },
+  );
+
+  it('keeps offsets on device pixels and maps screen points back to the game', () => {
+    const vp = computeViewport(852, 393, 3, { mode: 'fit', insets: notch });
+    const onDevicePixel = (cssPx: number) => Math.abs(cssPx * 3 - Math.round(cssPx * 3));
+    expect(onDevicePixel(vp.offsetX)).toBeLessThan(1e-9);
+    expect(onDevicePixel(vp.offsetY)).toBeLessThan(1e-9);
+    for (const [gx, gy] of [
+      [0, 0],
+      [320, 180],
+      [639.5, 359.5],
+    ] as const) {
+      const screen = { x: vp.offsetX + gx * vp.cssScale, y: vp.offsetY + gy * vp.cssScale };
+      const game = screenToGame(screen, vp);
+      expect(game.x).toBeCloseTo(gx, 6);
+      expect(game.y).toBeCloseTo(gy, 6);
+    }
   });
 });

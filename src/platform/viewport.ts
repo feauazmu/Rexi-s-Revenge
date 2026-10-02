@@ -2,7 +2,10 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, type Vec2 } from '../core';
 
 /** Where and how big the 640×360 game image is drawn inside its container. */
 export interface Viewport {
-  /** Whole device pixels per game pixel (crisp integer scaling). */
+  /**
+   * Device pixels per game pixel: a whole number in `integer` mode, possibly fractional in
+   * `fit` mode.
+   */
   readonly scale: number;
   /** CSS pixels per game pixel (`scale / devicePixelRatio`). */
   readonly cssScale: number;
@@ -20,35 +23,70 @@ export interface ImageSize {
   readonly height: number;
 }
 
+/**
+ * How the image is scaled to its container:
+ * - `integer`: the largest whole number of device pixels per image pixel (never below 1), so
+ *   every image pixel is a perfect square. Used on desktop.
+ * - `fit`: the largest fractional scale that fits, so the image fills the container's width or
+ *   height. Used on touch devices, where at DPR 2–3 the uneven pixel widths are invisible.
+ */
+export type ScaleMode = 'integer' | 'fit';
+
+/**
+ * Edges of the container the image must stay clear of, CSS px: the safe-area insets that keep
+ * it out from under a phone's notch and home indicator.
+ */
+export interface Insets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
+/** What {@link computeViewport} fits and how. */
+export interface ViewportOptions {
+  /** The image to fit (default: the 640×360 game). */
+  readonly image?: ImageSize;
+  /** How to scale it (default: `integer`). */
+  readonly mode?: ScaleMode;
+  /**
+   * Edges to keep clear (default: none). The image is fitted and centered in the container
+   * minus these; offsets stay relative to the whole container.
+   */
+  readonly insets?: Insets;
+}
+
+const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
+
 const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
 
 /**
- * Largest integer scale (in device pixels) that fits an image (by default the 640×360 game)
- * in the container, centered with letterbox bars. Offsets are snapped to device pixels so
- * image pixels stay perfectly square.
+ * Fits an image (by default the 640×360 game) in the container, minus any insets, at the
+ * largest scale the mode allows, centered there with letterbox bars. Offsets are relative to
+ * the container and snapped to device pixels.
  */
 export function computeViewport(
   containerWidth: number,
   containerHeight: number,
   devicePixelRatio = 1,
-  image: ImageSize = GAME_SIZE,
+  { image = GAME_SIZE, mode = 'integer', insets = NO_INSETS }: ViewportOptions = {},
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const scale = Math.max(
-    1,
-    Math.floor(
-      Math.min((containerWidth * dpr) / image.width, (containerHeight * dpr) / image.height),
-    ),
-  );
+  // Clamped so insets wider than the container (e.g. before it has a size) never flip the image.
+  const areaWidth = Math.max(0, containerWidth - insets.left - insets.right);
+  const areaHeight = Math.max(0, containerHeight - insets.top - insets.bottom);
+  const fitScale = Math.min((areaWidth * dpr) / image.width, (areaHeight * dpr) / image.height);
+  const scale = mode === 'fit' ? fitScale : Math.max(1, Math.floor(fitScale));
   const cssScale = scale / dpr;
   const width = image.width * cssScale;
   const height = image.height * cssScale;
-  const snap = (cssPx: number) => Math.round(cssPx * dpr) / dpr;
+  // `+ 0` turns the -0 that rounding a tiny negative gap gives into 0.
+  const snap = (cssPx: number) => Math.round(cssPx * dpr) / dpr + 0;
   return {
     scale,
     cssScale,
-    offsetX: snap((containerWidth - width) / 2),
-    offsetY: snap((containerHeight - height) / 2),
+    offsetX: snap(insets.left + (areaWidth - width) / 2),
+    offsetY: snap(insets.top + (areaHeight - height) / 2),
     width,
     height,
   };

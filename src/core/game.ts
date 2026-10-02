@@ -1,7 +1,7 @@
 import { secondsToTicks } from './constants';
 import type { GameEvent } from './events';
 import type { InputFrame } from './input';
-import type { DeviceKind, GameOptions } from './options';
+import type { DeviceKind, FullscreenSupport, GameOptions } from './options';
 import {
   highScoreRank,
   INITIALS_ALPHABET,
@@ -11,7 +11,7 @@ import {
   saveHighScores,
   type HighScoreEntry,
 } from './high-scores';
-import { moveSelection, PAUSE_MENU_ITEMS, type PauseMenuItem } from './pause-menu';
+import { moveSelection, pauseMenuItems, type PauseMenuItem } from './pause-menu';
 import { loadPreferences, savePreference } from './preferences';
 import { createRng, deriveSeed } from './rng';
 import { createRun, type Run } from './run/run';
@@ -38,6 +38,12 @@ export interface Game {
    * next tick.
    */
   pause(): void;
+  /**
+   * Reports whether the page is fullscreen now. The shell calls it whenever the browser's
+   * fullscreen state changes (including when the player leaves through the browser); the Game
+   * only mirrors it, for the pause menu's "Pantalla completa" box.
+   */
+  reportFullscreen(active: boolean): void;
   /** Read-only snapshot of the current state, rebuilt lazily after each tick. */
   readonly view: GameView;
 }
@@ -53,6 +59,8 @@ export function createGame(options: GameOptions): Game {
   const verdictGuardTicks = secondsToTicks(tuning.screens.verdictGuard);
   const defeatBeatTicks = secondsToTicks(tuning.screens.defeatBeat);
   const device: DeviceKind = options.device ?? 'desktop';
+  const fullscreenSupport: FullscreenSupport = options.fullscreenSupport ?? 'none';
+  const menuItems = pauseMenuItems(fullscreenSupport);
   const storage = resilientStorage(options.storage ?? memoryStorage());
   let { howToPlaySeen, musicMuted } = loadPreferences(storage);
   let highScores = loadHighScores(storage);
@@ -72,6 +80,8 @@ export function createGame(options: GameOptions): Game {
   /** Tick count when the initials were signed (start is guarded after it), or null. */
   let signedAt: number | null = null;
   let menuSelected = 0;
+  /** Mirrors the browser's fullscreen state, as reported by the shell. */
+  let fullscreen = false;
   let cachedView: GameView | null = null;
   /** Events not yet returned. Events emitted between ticks (`pause`) go out with the next one. */
   let pending: GameEvent[] = [];
@@ -148,6 +158,9 @@ export function createGame(options: GameOptions): Game {
         savePreference(storage, 'musicMuted', musicMuted);
         emit({ type: 'mute-toggled', muted: musicMuted });
         return;
+      case 'fullscreen':
+        emit({ type: 'fullscreen-toggle-requested', fullscreen: !fullscreen });
+        return;
       case 'quit':
         // Pausing can interrupt a Hit-stop; abandoning the Run ends it.
         if (run?.view().hitStop) emit({ type: 'hit-stop-ended' });
@@ -188,10 +201,10 @@ export function createGame(options: GameOptions): Game {
         // A fast "move, then confirm" can land in one tick: navigate first, then confirm.
         if (input.menu.up !== input.menu.down) {
           const step = input.menu.down ? 1 : -1;
-          menuSelected = moveSelection(menuSelected, step, PAUSE_MENU_ITEMS.length);
+          menuSelected = moveSelection(menuSelected, step, menuItems.length);
           emit({ type: 'menu-moved', selected: menuSelected });
         }
-        if (input.menu.confirm) choose(PAUSE_MENU_ITEMS[menuSelected] ?? 'resume');
+        if (input.menu.confirm) choose(menuItems[menuSelected] ?? 'resume');
         return;
       case 'verdict':
         if (!verdict || !verdictReady()) return;
@@ -218,10 +231,17 @@ export function createGame(options: GameOptions): Game {
       if (screen === 'run' && !run?.ended) openPauseMenu();
     },
 
+    reportFullscreen(active) {
+      if (active === fullscreen) return;
+      fullscreen = active;
+      cachedView = null;
+    },
+
     get view() {
       cachedView ??= {
         tick: tickCount,
         device,
+        fullscreenSupport,
         screen: screen ?? 'title',
         screenAge: screenAge(),
         startReady: startReady(),
@@ -229,8 +249,9 @@ export function createGame(options: GameOptions): Game {
         defeatAge: screen === 'run' && run?.ended ? endedTicks : null,
         verdict: screen === 'verdict' ? (verdict?.view() ?? null) : null,
         highScores,
-        pauseMenu: screen === 'paused' ? { items: PAUSE_MENU_ITEMS, selected: menuSelected } : null,
+        pauseMenu: screen === 'paused' ? { items: menuItems, selected: menuSelected } : null,
         musicMuted,
+        fullscreen,
       };
       return cachedView;
     },

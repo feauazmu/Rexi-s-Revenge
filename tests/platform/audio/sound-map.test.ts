@@ -121,6 +121,10 @@ const TABLE: Record<GameEventType, readonly [GameEvent, string | null][]> = {
     [{ type: 'mute-toggled', muted: true }, 'menu-confirm'],
     [{ type: 'mute-toggled', muted: false }, 'menu-confirm'],
   ],
+  'fullscreen-toggle-requested': [
+    [{ type: 'fullscreen-toggle-requested', fullscreen: true }, 'menu-confirm'],
+    [{ type: 'fullscreen-toggle-requested', fullscreen: false }, 'menu-confirm'],
+  ],
   'crate-spawned': [
     [
       {
