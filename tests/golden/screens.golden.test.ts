@@ -67,7 +67,7 @@ describe('Screen goldens', () => {
     await expectGolden('title-install-hint', renderView(game.view, null, { titleIllustration }));
   });
 
-  it('title-backdrop:the code-drawn backdrop when the illustration is missing', async () => {
+  it('title-backdrop: the code-drawn backdrop when the illustration is missing', async () => {
     const game = driveFromTitle();
     untilPromptShows(game);
     await expectGolden('title-backdrop', renderView(game.view));

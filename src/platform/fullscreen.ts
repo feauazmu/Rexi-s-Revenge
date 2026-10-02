@@ -15,8 +15,9 @@ const SUPPORT_VALUES: readonly FullscreenSupport[] = ['toggle', 'install-hint', 
 /**
  * Picks how the player can get fullscreen: the pause-menu toggle when the Fullscreen API is
  * available and the game is not installed; on iOS without the API (every iPhone browser), the
- * Title's hint to add the game to the home screen, unless it already is; else nothing. `?fullscreen=toggle|install-hint|none`
- * in the URL overrides it (for trying each value in a desktop browser's device emulation).
+ * Title's hint to add the game to the home screen, unless it already is; else nothing.
+ * `?fullscreen=toggle|install-hint|none` in the URL overrides it (for trying each value in a
+ * desktop browser's device emulation).
  */
 export function chooseFullscreenSupport(
   urlParam: string | null,
@@ -41,9 +42,10 @@ export function detectFullscreenSupport(): FullscreenSupport {
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const agent = navigator.userAgent;
+  const { userAgent } = navigator;
   const ios =
-    /iPhone|iPad|iPod/.test(agent) || (agent.includes('Macintosh') && navigator.maxTouchPoints > 1);
+    /iPhone|iPad|iPod/.test(userAgent) ||
+    (userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
   // iPhone browsers leave `fullscreenEnabled` undefined rather than false.
   const api = (document.fullscreenEnabled as boolean | undefined) ?? false;
   return chooseFullscreenSupport(param, { api, installed, ios });
