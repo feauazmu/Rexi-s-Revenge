@@ -390,7 +390,7 @@
         "cloud_d",
         "cloud_e"
       ],
-      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky).",
+      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky). The ledges land in stone/, and scripts/art/scenes/ledges.py redraws them as the mahogany Ledges.",
       "post": {
         "cloud_a": {
           "outline": false,

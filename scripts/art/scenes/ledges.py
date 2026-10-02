@@ -18,8 +18,8 @@ redrawn by the rules below; the key light comes from the upper left.
   left end catches the light and the right end is in shadow.
 - **Panel seams** where the stone had block joints, every `PANEL` columns from `FIRST_SEAM`: a
   `leather1` groove and a `leather3` lit edge right of it. Each panel has its own grain, seeded
-  by its index, so the 102 px Ledge's second panel is the block `ledgeSprite` repeats.
-- **Fittings** (rows 11-15): the two stone corbels become brass brackets, shaded from their
+  by its index; the 102 px Ledge's panel from column 30 to 48 is the block `ledgeSprite` repeats.
+- **Fittings** (rows 11-15): the two stone corbels become brass fittings, shaded from their
   silhouette (lit where the left or top side is open, shadowed along the right and bottom side),
   with a `light` rivet head.
 """
@@ -32,7 +32,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from palette import ROOT  # noqa: E402
-from pixtext import CODE_OF, RGB, to_text  # noqa: E402
+from pixtext import CODE_OF, from_text, to_text  # noqa: E402
 
 ART = os.path.join(ROOT, "art", "sprites", "arena")
 SOURCE = os.path.join(ART, "stone")
@@ -46,11 +46,13 @@ FIRST_SEAM, PANEL = 12, 18
 
 C = {name: CODE_OF[name] for name in
      ("night", "leather1", "leather2", "leather3", "brass", "gold", "light")}
-#: The slab's rows inside the outline, by material: lip top, lip face, lip shadow, wood x4,
-#: groove, moulding.
-SLAB = ["gold", "brass", "leather1", "leather2", "leather2", "leather2", "leather2",
-        "leather1", "leather2"]
-WOOD = range(4, 8)
+#: The slab's rows inside the outline, top to bottom: (part, colour).
+SLAB = [("lip", "gold"), ("lip", "brass"), ("lip shadow", "leather1")] \
+    + [("wood", "leather2")] * 4 + [("groove", "leather1"), ("moulding", "leather2")]
+assert TOP + 1 + len(SLAB) == BOTTOM
+#: The walkable lip top, and the wood rows (the upper half takes lit grain, the lower dark).
+LIP_TOP = TOP + 1
+WOOD = [TOP + 1 + i for i, (part, _) in enumerate(SLAB) if part == "wood"]
 #: Lip top columns lit to `light` at the slab's left end.
 GLINT = 4
 
@@ -64,10 +66,11 @@ def grain(rows, x0, x1, seed):
     one high and a dark one low."""
     rng = random.Random(seed)
     span = x1 - x0 - 3
-    if span < 6:
+    if span < 4:
         return
-    for (top, low), code in (((4, 5), "leather3"), ((6, 7), "leather1")):
-        length = rng.randint(span * 3 // 5, span)
+    half = len(WOOD) // 2
+    for (top, low), code in ((WOOD[:half], "leather3"), (WOOD[half:], "leather1")):
+        length = rng.randint(max(4, span * 3 // 5), span)
         start = rng.randint(x0 + 2, x1 - 1 - length)
         step = rng.randint(start + 2, start + length - 2)
         y0, y1 = (top, low) if rng.random() < 0.5 else (low, top)
@@ -77,7 +80,7 @@ def grain(rows, x0, x1, seed):
 
 def slab(rows, width):
     inner = range(1, width - 1)
-    for i, name in enumerate(SLAB, start=TOP + 1):
+    for i, (_, name) in enumerate(SLAB, start=TOP + 1):
         for x in inner:
             rows[i][x] = C[name]
     cuts = [1] + seams(width) + [width - 1]
@@ -88,9 +91,9 @@ def slab(rows, width):
             rows[y][x] = C["leather1"]
             rows[y][x + 1] = C["leather3"]
     for x in range(1, 1 + GLINT):
-        rows[1][x] = C["light"]
-    # The ends: the left end is lit, the right end in shadow.
-    for y in range(2, BOTTOM):
+        rows[LIP_TOP][x] = C["light"]
+    # The ends below the lip top: the left end is lit, the right end in shadow.
+    for y in range(LIP_TOP + 1, BOTTOM):
         left, right = rows[y][1], rows[y][width - 2]
         rows[y][1] = {C["brass"]: C["gold"], C["leather1"]: C["leather2"]}.get(left, C["leather3"])
         rows[y][width - 2] = {C["brass"]: C["leather3"]}.get(right, C["leather1"])
@@ -108,10 +111,14 @@ def fittings(rows, width):
         shade[y, x] = "gold" if lit and not dark else "leather3" if dark and not lit else "brass"
     for (y, x), name in shade.items():
         rows[y][x] = C[name]
-    # A rivet head in each bracket: the first fill pixel two columns in, on its second row.
-    for x0 in sorted({x for y, x in fill if y == FITTINGS[1] and open_at(y, x - 1)}):
-        rows[FITTINGS[1]][x0 + 2] = C["light"]
-        rows[FITTINGS[1] + 1][x0 + 3] = C["leather3"]
+    # A rivet head in each fitting: its second row, two columns in, with a shadow below right;
+    # only where both pixels are inside the fitting (never on its outline).
+    inside = set(fill)
+    y = FITTINGS[1]
+    for x0 in sorted({x for yy, x in fill if yy == y and open_at(yy, x - 1)}):
+        if (y, x0 + 2) in inside and (y + 1, x0 + 3) in inside:
+            rows[y][x0 + 2] = C["light"]
+            rows[y + 1][x0 + 3] = C["leather3"]
 
 
 def redraw(stone):
@@ -122,13 +129,7 @@ def redraw(stone):
     assert height == FITTINGS[-1] + 2, f"expected a 17 px ledge, got {height}"
     slab(rows, width)
     fittings(rows, width)
-    out = np.zeros_like(stone)
-    for y, r in enumerate(rows):
-        for x, c in enumerate(r):
-            if c != ".":
-                out[y, x, :3] = RGB[c]
-                out[y, x, 3] = 255
-    return out
+    return from_text(["".join(r) for r in rows])
 
 
 def build(source=SOURCE, out=ART):

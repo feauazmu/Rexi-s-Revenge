@@ -342,9 +342,10 @@ uses the pipeline only where generated art helps (icons, the court record).
 style of a 16-bit palette (ADR 0002). `paletteRamps` lists them as ramps, dark to light: robe,
 grey (trousers, smoke, marble, tank top), skin, hair, leather (boots, benches, the Ledges'
 mahogany), red (gym), brass (the Ledges' lip and fittings), stone (plaza, courthouse), steel (guns,
-rotors, casings), sky, glass, neonCyan, neonPink, neonLime, fire and foliage. The swatch golden `palette-swatches` shows every color. The art pipeline reads both
-from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of its class
-(characters never use sky, glass, neon or foliage).
+rotors, casings), sky, glass, neonCyan, neonPink, neonLime, fire and foliage. The swatch golden
+`palette-swatches` shows every color. The art pipeline reads both from this file
+(`scripts/art/palette.py`) and snaps each asset to the ramps of its class (characters never use
+sky, glass, neon or foliage).
 
 - **Rules**: draw only with `masterPalette` colors, named (`masterPalette.skin3`), never hex
   literals. No blending or alpha: the renderer must put exact palette colors on screen.
@@ -416,8 +417,8 @@ with `uv`, outside the game build: the game only ever sees the TypeScript it exp
     from a props sheet. The Ledges (#34) are redrawn by `scripts/art/scenes/ledges.py` from the
     props sheet's stone ledges as polished mahogany (leather ramp) with a brass lip for the
     walkable top and brass fittings underneath, keeping the outline and silhouette, so they stand
-    out over the marble, the sunset sky and the glass alike. `src/render/layers/arena.ts` draws sky → drifting clouds → far →
-    buildings → plaza → signs → platforms. The lettering (gym billboard, name plate, Boissons
+    out over the marble, the sunset sky and the glass alike. `src/render/layers/arena.ts` draws
+    sky → drifting clouds → far → buildings → plaza → signs → platforms. The lettering (gym billboard, name plate, Boissons
     neon and chalkboard) is code (`arena-signs.ts`), because the image model cannot letter at
     1:1; the tile edits left those faces blank. Ambient animation (cloud drift, billboard bulbs,
     neon flicker) is a pure function of the Run tick.

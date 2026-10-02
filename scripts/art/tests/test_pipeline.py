@@ -3,6 +3,7 @@ the TypeScript export round-trips."""
 import json
 import os
 import importlib.util
+import re
 import shutil
 
 import numpy as np
@@ -77,6 +78,20 @@ def test_the_ledges_keep_the_stone_silhouette_and_match_the_committed_ones(tmp_p
         assert (ledge[:ledges.BOTTOM, [0, -1], :3] == stone[:ledges.BOTTOM, [0, -1], :3]).all(), name
         want = np.asarray(Image.open(os.path.join(ledges.ART, f"{name}.png")).convert("RGBA"))
         assert (ledge == want).all(), name
+
+
+def test_the_ledge_panels_line_up_with_the_renderers_block_tiling():
+    path = os.path.join(ROOT, "scripts", "art", "scenes", "ledges.py")
+    spec = importlib.util.spec_from_file_location("ledges_scene", path)
+    ledges = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledges)
+
+    ts = open(os.path.join(ROOT, "src", "render", "layers", "arena.ts")).read()
+    block = re.search(r"LEDGE_BLOCK = \{ from: (\d+), to: (\d+) \}", ts)
+    right = re.search(r"LEDGE_RIGHT_FROM = (\d+);", ts)
+    start, end, right_from = int(block[1]), int(block[2]), int(right[1])
+    seams = ledges.seams(102)
+    assert start in seams and right_from in seams and end - start == ledges.PANEL
 
 
 def test_rle_round_trips_and_rows_use_fixed_codes():
