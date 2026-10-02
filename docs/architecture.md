@@ -512,6 +512,9 @@ Each tick samples the device's input adapter once (edges are consumed by the fir
 On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
 `#app[data-screen]`, which the smoke tests poll (also `data-device`, `data-orientation` and
 `data-touch-controls`).
+Fullscreen wiring lives in `attachFullscreen(game, root, { device, support, onChange })` (see
+[Fullscreen](#fullscreen)); the shell attaches it once, passes each tick's events to its `handle` and
+`dispose`s it on `stop()`.
 `ShellOptions.onEvents` receives every tick's events — the audio engine plugs in there (`src/main.ts`).
 `Shell.view` exposes the Game's view so adapters can read their starting state (the persisted mute).
 `src/main.ts` decodes the title illustration (`loadTitleIllustration`, from the base URL) before starting
@@ -535,17 +538,20 @@ browser tab already in F11 fullscreen, so a page loaded that way shows no toggle
   `toggle`) and Salir; navigation wraps over that list. The item draws an on/off box from `view.fullscreen`.
 - **Request**: choosing Pantalla completa emits `fullscreen-toggle-requested` with the desired state
   (`!view.fullscreen`). The Game does not change `fullscreen` itself.
-- **Shell**: turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick, inside the
-  browser's transient user-activation window of the key press or touch); refusals are ignored.
+- **Controller**: `attachFullscreen` (in `src/platform/fullscreen.ts`) does the browser side for the shell.
+  Its `handle(events)` turns each request into `requestFullscreen()` / `exitFullscreen()` (on the next tick,
+  inside the browser's transient user-activation window of the key press or touch); refusals are ignored.
 - **First touch**: on touch devices with `toggle`, the first `touchend` on the page (the Title tap) requests
   fullscreen inside the handler, so it counts as a user gesture; once per page load, whatever the outcome.
   Desktop enters fullscreen only through the pause menu.
-- **Landscape lock**: whenever a touch device enters fullscreen (first touch or the pause menu), the shell
-  then calls `screen.orientation.lock('landscape')` (Android; desktop and iOS refuse), so tilting the phone
+- **Landscape lock**: whenever a touch device enters fullscreen (first touch or the pause menu), the
+  controller then calls `screen.orientation.lock('landscape')` (Android; desktop and iOS refuse), so tilting the phone
   mid-Run doesn't freeze it behind the rotate prompt. Refusals are ignored; the browser releases the lock when
-  the page leaves fullscreen. Both rules come from the pure `chooseFullscreenBehavior(device, support)`.
+  the page leaves fullscreen. Both rules come from the pure `chooseFullscreenBehavior(device, support)`,
+  which the controller passes to both entry paths.
 - **Mirror**: on `fullscreenchange` (including leaving through the browser: Esc, the back gesture) and once
-  at startup, the shell calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right away.
+  at startup, the controller calls `game.reportFullscreen(active)`, which `view.fullscreen` reflects right
+  away; after each change it calls `onChange`, so the shell redraws.
 
 ### Touch controls
 

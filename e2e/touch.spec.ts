@@ -1,8 +1,10 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { TOUCH_LAYOUT } from '../src/render';
 import {
   readFullscreenCalls,
   readHighScores,
   spyOnFullscreen,
+  START_GUARD_MS,
   SWEEP_STEP_MS,
   SWEEP_STEPS,
   sweepAngle,
@@ -28,6 +30,15 @@ async function tapGame(page: Page, x: number, y: number): Promise<void> {
   if (!box) throw new Error('game canvas has no layout box');
   await page.touchscreen.tap(box.x + (x * box.width) / 640, box.y + (y * box.height) / 360);
 }
+
+/** Taps the center of an on-screen touch control (see `TOUCH_LAYOUT`). */
+function tapControl(page: Page, control: { x: number; y: number }): Promise<void> {
+  return tapGame(page, control.x, control.y);
+}
+
+const { back, confirm, dpad, pause } = TOUCH_LAYOUT;
+/** The menu d-pad's up arrow. */
+const dpadUp = { x: dpad.x, y: dpad.y - dpad.arm };
 
 /** Number of distinct colors in a canvas (1 means blank). */
 function distinctColors(page: Page, selector: string): Promise<number> {
@@ -71,26 +82,26 @@ test.describe('phone in landscape', () => {
     await expect(app(page)).toHaveAttribute('data-screen', 'title');
 
     // Title and Cómo jugar: a tap anywhere starts.
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'how-to-play');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
     await expect(app(page)).toHaveAttribute('data-touch-controls', 'play');
 
     // Pause button (top right), then the menu's back button resumes.
-    await tapGame(page, 621, 39);
+    await tapControl(page, pause);
     await expect(app(page)).toHaveAttribute('data-screen', 'paused');
     await expect(app(page)).toHaveAttribute('data-touch-controls', 'menu');
-    await tapGame(page, 528, 315);
+    await tapControl(page, back);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
 
     // Pause again; d-pad up wraps to Salir, confirm returns to the Title.
-    await tapGame(page, 621, 39);
+    await tapControl(page, pause);
     await expect(app(page)).toHaveAttribute('data-screen', 'paused');
-    await tapGame(page, 69, 285 - 23);
-    await tapGame(page, 576, 280);
+    await tapControl(page, dpadUp);
+    await tapControl(page, confirm);
     await expect(app(page)).toHaveAttribute('data-screen', 'title');
 
     expect(await distinctColors(page, '.game-canvas')).toBeGreaterThan(8);
@@ -119,10 +130,10 @@ test.describe('phone in landscape, fullscreen', () => {
       });
 
     // The stub never enters fullscreen, so a second request would show up in the count.
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).not.toHaveAttribute('data-screen', 'title');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
     expect(await readFullscreenCalls(page)).toEqual({ requests: 1, locks: ['landscape'] });
@@ -132,18 +143,18 @@ test.describe('phone in landscape, fullscreen', () => {
   test('Pantalla completa in the pause menu also locks landscape', async ({ page }) => {
     await spyOnFullscreen(page);
     await page.goto('');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
 
     // Pause; d-pad up twice wraps to Salir, then Pantalla completa; confirm.
-    await tapGame(page, 621, 39);
+    await tapControl(page, pause);
     await expect(app(page)).toHaveAttribute('data-screen', 'paused');
-    await tapGame(page, 69, 285 - 23);
-    await tapGame(page, 69, 285 - 23);
-    await tapGame(page, 576, 280);
+    await tapControl(page, dpadUp);
+    await tapControl(page, dpadUp);
+    await tapControl(page, confirm);
     await expect
       .poll(() => readFullscreenCalls(page))
       .toEqual({
@@ -162,7 +173,7 @@ test.describe('phone in landscape, fullscreen', () => {
         Promise.reject(new DOMException('not supported', 'NotSupportedError'));
     });
     await page.goto('');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).not.toHaveAttribute('data-screen', 'title');
     expect(errors).toEqual([]);
@@ -223,7 +234,7 @@ test.describe('phone in landscape, a whole Run', () => {
     // After the read-out, ✓ signs the default initials letter by letter.
     await page.clock.runFor(1500);
     for (let letter = 0; letter < 3; letter++) {
-      await tapGame(page, 576, 280);
+      await tapControl(page, confirm);
       await page.clock.runFor(100);
     }
     const { entries } = await readHighScores(page);
@@ -258,7 +269,7 @@ test.describe('phone in portrait', () => {
     });
     await page.setViewportSize({ width: 839, height: 412 });
     await page.goto('');
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(START_GUARD_MS);
     await tapGame(page, 320, 180);
     await expect(app(page)).toHaveAttribute('data-screen', 'run');
 

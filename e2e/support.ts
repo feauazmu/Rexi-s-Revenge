@@ -1,5 +1,12 @@
 /** Helpers shared by the smoke tests. */
 import type { Page } from '@playwright/test';
+import { defaultTuning } from '../src/core';
+
+/**
+ * Real time to wait before a start input counts: the Title and Cómo jugar ignore `start` for
+ * the start guard after they open, plus margin for a slow frame.
+ */
+export const START_GUARD_MS = defaultTuning.screens.startGuard * 1000 + 100;
 
 /** Collects console errors and uncaught exceptions for the whole test. */
 export function trackErrors(page: Page): string[] {

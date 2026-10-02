@@ -16,14 +16,7 @@ import {
 import { createCanvasBitmap, loadBitmap } from './bitmaps';
 import { detectDevice, isPortrait } from './device';
 import { createFixedStepper } from './fixed-step';
-import {
-  chooseFullscreenBehavior,
-  detectFullscreenSupport,
-  fullscreenOnFirstTouch,
-  isFullscreen,
-  setFullscreen,
-  watchFullscreen,
-} from './fullscreen';
+import { attachFullscreen, detectFullscreenSupport } from './fullscreen';
 import { createKeyboardMouseInput } from './keyboard-mouse';
 import { browserStorage } from './storage';
 import { createTouchInput } from './touch/touch';
@@ -79,10 +72,8 @@ interface InputAdapter {
  * On touch devices it uses the touch adapter and draws its controls over the game; held in
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
  *
- * Where the pause menu can toggle fullscreen, it turns the Game's fullscreen toggle requests
- * into Fullscreen API calls and reports every browser fullscreen change back to the Game. Touch
- * devices there also enter fullscreen on the first tap, and lock the screen to landscape
- * whenever they enter it.
+ * Fullscreen (the pause-menu toggle, the first touch, the landscape lock, mirroring the
+ * browser's state to the Game) is wired by {@link attachFullscreen}.
  */
 export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell {
   const device = detectDevice();
@@ -108,17 +99,16 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     const { clientWidth: w, clientHeight: h } = root;
     const dpr = window.devicePixelRatio;
     const insets = safeArea.read();
-    viewport = computeViewport(w, h, dpr, { mode: scaleMode, insets });
+    const fitImage = (image?: ImageSize) =>
+      computeViewport(w, h, dpr, { image, mode: scaleMode, insets });
+    viewport = fitImage();
     place(canvas.element, viewport);
     const wasBlocked = blocked;
     blocked = rotateCanvas !== null && isPortrait(w, h);
     root.dataset.orientation = isPortrait(w, h) ? 'portrait' : 'landscape';
     canvas.element.hidden = blocked;
     if (rotateCanvas) {
-      place(
-        rotateCanvas.element,
-        computeViewport(w, h, dpr, { image: rotateCanvas.size, mode: scaleMode, insets }),
-      );
+      place(rotateCanvas.element, fitImage(rotateCanvas.size));
       rotateCanvas.element.hidden = !blocked;
     }
     if (blocked && !wasBlocked) {
@@ -128,14 +118,12 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   };
 
   const fullscreenSupport = detectFullscreenSupport();
-  const fullscreenBehavior = chooseFullscreenBehavior(device, fullscreenSupport);
   const game = createGame({
     seed: options.seed ?? seedFromUrl() ?? randomSeed(),
     device,
     fullscreenSupport,
     storage: browserStorage(),
   });
-  game.reportFullscreen(isFullscreen());
   const input =
     device === 'touch' ? touchAdapter(root, () => viewport) : keyboardMouseAdapter(root);
   const renderer = createRenderer(createCanvasBitmap, {
@@ -159,6 +147,12 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     root.dataset.screen = game.view.screen;
   };
 
+  const fullscreen = attachFullscreen(game, root, {
+    device,
+    support: fullscreenSupport,
+    onChange: present,
+  });
+
   layout();
   present();
   const onResize = () => {
@@ -166,17 +160,6 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     present();
   };
   window.addEventListener('resize', onResize);
-
-  // Touch devices go fullscreen on the first tap; desktop only through the pause menu.
-  const stopFullscreenOnFirstTouch = fullscreenBehavior.onFirstTouch
-    ? fullscreenOnFirstTouch(root)
-    : null;
-
-  // Also catches the player leaving through the browser (Esc, the back gesture, system UI).
-  const unwatchFullscreen = watchFullscreen((active) => {
-    game.reportFullscreen(active);
-    present();
-  });
 
   // Never let Rexi die while the player is away: pause when the tab hides or loses focus.
   const autoPause = () => {
@@ -199,11 +182,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     } else {
       for (let i = 0; i < ticks; i++) {
         const events = game.tick(input.sample(game.view, viewport));
-        for (const event of events) {
-          if (event.type === 'fullscreen-toggle-requested') {
-            setFullscreen(event.fullscreen, { lockLandscape: fullscreenBehavior.lockLandscape });
-          }
-        }
+        fullscreen.handle(events);
         if (events.length > 0) options.onEvents?.(events);
       }
     }
@@ -221,8 +200,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       window.removeEventListener('resize', onResize);
       window.removeEventListener('blur', autoPause);
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      unwatchFullscreen();
-      stopFullscreenOnFirstTouch?.();
+      fullscreen.dispose();
       input.dispose();
       canvas.element.remove();
       rotateCanvas?.element.remove();

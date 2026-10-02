@@ -91,9 +91,9 @@ export function drawPauseMenu(dc: DrawContext, menu: PauseMenuView): void {
       surface.drawBitmap(dc.sprites.get(CURSOR), x + 16 + nudge, rowTop + 6);
     }
     drawOutlinedText(dc, font, LABELS[item], x + 34, textTop, selected ? ui.gold : ui.text);
-    const on = CHECKBOX_STATE[item](view);
-    if (on !== null) {
-      surface.drawBitmap(dc.sprites.get(on ? CHECK : UNCHECKED), x + PANEL_W - 28, rowTop + 5);
+    const checked = CHECKBOX_STATE[item](view);
+    if (checked !== null) {
+      surface.drawBitmap(dc.sprites.get(checked ? CHECK : UNCHECKED), x + PANEL_W - 28, rowTop + 5);
     }
   });
 }

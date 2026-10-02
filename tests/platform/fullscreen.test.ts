@@ -3,7 +3,7 @@ import { chooseFullscreenBehavior, chooseFullscreenSupport } from '../../src/pla
 
 describe('chooseFullscreenSupport', () => {
   it.each([
-    // api, installed, ios → support
+    // fullscreenApi, installed, ios → support
     [true, false, false, 'toggle'],
     [true, true, false, 'none'],
     [false, false, false, 'none'],
@@ -14,15 +14,18 @@ describe('chooseFullscreenSupport', () => {
     // iPadOS Safari has the Fullscreen API, so it gets the toggle like any other browser.
     [true, false, true, 'toggle'],
     [true, true, true, 'none'],
-  ] as const)('with api=%s, installed=%s, ios=%s offers %s', (api, installed, ios, support) => {
-    expect(chooseFullscreenSupport(null, { api, installed, ios })).toBe(support);
-  });
+  ] as const)(
+    'with fullscreenApi=%s, installed=%s, ios=%s offers %s',
+    (fullscreenApi, installed, ios, support) => {
+      expect(chooseFullscreenSupport(null, { fullscreenApi, installed, ios })).toBe(support);
+    },
+  );
 
   it('lets ?fullscreen= override detection, ignoring unknown values', () => {
-    const facts = { api: false, installed: true, ios: false };
+    const facts = { fullscreenApi: false, installed: true, ios: false };
     expect(chooseFullscreenSupport('toggle', facts)).toBe('toggle');
     expect(chooseFullscreenSupport('install-hint', facts)).toBe('install-hint');
-    const browser = { api: true, installed: false, ios: false };
+    const browser = { fullscreenApi: true, installed: false, ios: false };
     expect(chooseFullscreenSupport('none', browser)).toBe('none');
     expect(chooseFullscreenSupport('yes', browser)).toBe('toggle');
   });
