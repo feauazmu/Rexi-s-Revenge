@@ -40,13 +40,15 @@ test.describe('phone in landscape', () => {
   test.use(phoneLandscape);
 
   test('the game canvas fills the viewport height', async ({ page }) => {
+    const canvasHeight = async () =>
+      (await page.locator('.game-canvas').boundingBox())?.height ?? 0;
     await page.goto('');
     await expect(page.locator('.game-canvas')).toBeVisible();
-    const viewportHeight = await page.evaluate(() => window.innerHeight);
-    // At DPR 2.625 a whole-number scale would drop to 2 device px (274 CSS px tall).
-    await expect
-      .poll(async () => (await page.locator('.game-canvas').boundingBox())?.height ?? 0)
-      .toBeCloseTo(viewportHeight, 0);
+    // 863×360 at DPR 2.625: a whole-number scale would drop to 2 device px (274 CSS px tall).
+    await expect.poll(canvasHeight).toBeCloseTo(360, 0);
+    // Browser bars leaving less than 360 CSS px: the game still fills the height.
+    await page.setViewportSize({ width: 863, height: 320 });
+    await expect.poll(canvasHeight).toBeCloseTo(320, 0);
   });
 
   test('shows the touch controls and plays with touch only', async ({ page }) => {

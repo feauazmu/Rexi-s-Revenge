@@ -22,7 +22,7 @@ describe('computeViewport', () => {
   });
 
   it('fits other image sizes too (the portrait rotate prompt)', () => {
-    const vp = computeViewport(390, 844, 3, { width: 192, height: 340 }); // phone portrait
+    const vp = computeViewport(390, 844, 3, { image: { width: 192, height: 340 } }); // phone portrait
     expect(vp.scale).toBe(6); // 1170 / 192 = 6.1, 2532 / 340 = 7.4
     expect(vp.width).toBeCloseTo(384);
     expect(vp.height).toBeCloseTo(680);
@@ -93,7 +93,7 @@ describe('computeViewport in fit mode', () => {
     { w: 932, h: 330, dpr: 3 },
     { w: 812, h: 300, dpr: 3 },
   ])('fills the height of a $w×$h @$dpr phone landscape', ({ w, h, dpr }) => {
-    const vp = computeViewport(w, h, dpr, undefined, 'fit');
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
     expect(vp.height).toBeCloseTo(h, 6);
     expect(vp.width).toBeCloseTo((h * 16) / 9, 6);
     expect(vp.offsetY).toBe(0);
@@ -102,7 +102,7 @@ describe('computeViewport in fit mode', () => {
   it('pillarboxes a wide phone, centered, with offsets on device pixels', () => {
     // 844×340 @3: 1020 / 360 = 2.833 device px per game px, image 604.44 CSS px wide,
     // side bars of 119.78 CSS px = 359.33 device px, snapped to 359.
-    const vp = computeViewport(844, 340, 3, undefined, 'fit');
+    const vp = computeViewport(844, 340, 3, { mode: 'fit' });
     expect(vp.scale).toBeCloseTo(1020 / 360, 9);
     expect(vp.width).toBeCloseTo(604.444, 3);
     expect(vp.offsetX).toBeCloseTo(359 / 3, 9);
@@ -112,11 +112,11 @@ describe('computeViewport in fit mode', () => {
   it.each([
     { w: 844, h: 340, dpr: 3 },
     { w: 932, h: 330, dpr: 3 },
-    { w: 915, h: 380, dpr: 2.625 }, // Pixel 7 landscape: letterboxed top and bottom
+    { w: 915, h: 380, dpr: 2.625 }, // Pixel 7 screen, landscape: letterboxed top and bottom
     { w: 1000, h: 1000, dpr: 2 },
     { w: 1366, h: 768, dpr: 1 },
   ])('keeps offsets on device-pixel boundaries at $w×$h @$dpr', ({ w, h, dpr }) => {
-    const vp = computeViewport(w, h, dpr, undefined, 'fit');
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
     const onDevicePixel = (cssPx: number) => Math.abs(cssPx * dpr - Math.round(cssPx * dpr));
     expect(onDevicePixel(vp.offsetX)).toBeLessThan(1e-9);
     expect(onDevicePixel(vp.offsetY)).toBeLessThan(1e-9);
@@ -126,7 +126,7 @@ describe('computeViewport in fit mode', () => {
   });
 
   it('scales up past whole factors on large screens', () => {
-    const vp = computeViewport(1366, 768, 1, undefined, 'fit');
+    const vp = computeViewport(1366, 768, 1, { mode: 'fit' });
     expect(vp.scale).toBeCloseTo(768 / 360, 9); // 2.133, where integer mode gives 2
     expect(vp.width).toBeCloseTo(1365.333, 3);
     expect(vp.offsetX).toBe(0); // 0.33 px bars round to 0
@@ -134,7 +134,7 @@ describe('computeViewport in fit mode', () => {
   });
 
   it('fits the rotate prompt too', () => {
-    const vp = computeViewport(390, 844, 3, { width: 192, height: 340 }, 'fit');
+    const vp = computeViewport(390, 844, 3, { image: { width: 192, height: 340 }, mode: 'fit' });
     expect(vp.width).toBeCloseTo(390, 6); // 1170 / 192 = 6.09 < 2532 / 340 = 7.45
     expect(vp.height).toBeCloseTo((390 * 340) / 192, 6);
   });
@@ -144,7 +144,7 @@ describe('computeViewport in fit mode', () => {
     { w: 932, h: 330, dpr: 3 },
     { w: 915, h: 380, dpr: 2.625 },
   ])('maps screen points back to game coordinates at $w×$h @$dpr', ({ w, h, dpr }) => {
-    const vp = computeViewport(w, h, dpr, undefined, 'fit');
+    const vp = computeViewport(w, h, dpr, { mode: 'fit' });
     for (const [gx, gy] of [
       [0, 0],
       [320, 180],

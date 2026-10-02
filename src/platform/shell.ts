@@ -59,7 +59,8 @@ interface InputAdapter {
 /**
  * Browser shell: creates the 640×360 canvas, scales it to fit (letterboxed, no smoothing): by
  * the largest integer factor on desktop, by the largest fractional one on touch devices. It
- * runs the fixed-timestep loop that feeds input frames to the Game core and draws its view. It pauses the Run when the tab is hidden or loses focus.
+ * runs the fixed-timestep loop that feeds input frames to the Game core and draws its view. It
+ * pauses the Run when the tab is hidden or loses focus.
  *
  * On touch devices it uses the touch adapter and draws its controls over the game; held in
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
@@ -86,14 +87,17 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   const layout = () => {
     const { clientWidth: w, clientHeight: h } = root;
     const dpr = window.devicePixelRatio;
-    viewport = computeViewport(w, h, dpr, undefined, scaleMode);
+    viewport = computeViewport(w, h, dpr, { mode: scaleMode });
     place(canvas.element, viewport);
     const wasBlocked = blocked;
     blocked = rotateCanvas !== null && isPortrait(w, h);
     root.dataset.orientation = isPortrait(w, h) ? 'portrait' : 'landscape';
     canvas.element.hidden = blocked;
     if (rotateCanvas) {
-      place(rotateCanvas.element, computeViewport(w, h, dpr, rotateCanvas.size, scaleMode));
+      place(
+        rotateCanvas.element,
+        computeViewport(w, h, dpr, { image: rotateCanvas.size, mode: scaleMode }),
+      );
       rotateCanvas.element.hidden = !blocked;
     }
     if (blocked && !wasBlocked) {

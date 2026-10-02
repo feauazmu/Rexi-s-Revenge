@@ -32,6 +32,14 @@ export interface ImageSize {
  */
 export type ScaleMode = 'integer' | 'fit';
 
+/** What {@link computeViewport} fits and how. */
+export interface ViewportOptions {
+  /** The image to fit (default: the 640×360 game). */
+  readonly image?: ImageSize;
+  /** How to scale it (default: `integer`). */
+  readonly mode?: ScaleMode;
+}
+
 const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
 
 /**
@@ -42,8 +50,7 @@ export function computeViewport(
   containerWidth: number,
   containerHeight: number,
   devicePixelRatio = 1,
-  image: ImageSize = GAME_SIZE,
-  mode: ScaleMode = 'integer',
+  { image = GAME_SIZE, mode = 'integer' }: ViewportOptions = {},
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
   const fitScale = Math.min(
