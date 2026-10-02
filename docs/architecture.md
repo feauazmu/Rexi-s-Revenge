@@ -340,9 +340,9 @@ uses the pipeline only where generated art helps (icons, the court record).
 
 `masterPalette` (`src/render/palette.ts`) is the game's one curated palette: 56 named colors in the
 style of a 16-bit palette (ADR 0002). `paletteRamps` lists them as ramps, dark to light: robe,
-grey (trousers, smoke, marble, tank top), skin, hair, leather, red (gym), brass, stone (plaza,
-ledges, courthouse), steel (guns, rotors, casings), sky, glass, neonCyan, neonPink, neonLime, fire
-and foliage. The swatch golden `palette-swatches` shows every color. The art pipeline reads both
+grey (trousers, smoke, marble, tank top), skin, hair, leather (boots, benches, the Ledges'
+mahogany), red (gym), brass (the Ledges' lip and fittings), stone (plaza, courthouse), steel (guns,
+rotors, casings), sky, glass, neonCyan, neonPink, neonLime, fire and foliage. The swatch golden `palette-swatches` shows every color. The art pipeline reads both
 from this file (`scripts/art/palette.py`) and snaps each asset to the ramps of its class
 (characters never use sky, glass, neon or foliage).
 
@@ -412,8 +412,11 @@ with `uv`, outside the game build: the game only ever sees the TypeScript it exp
     hand pass is in `scripts/art/ui/`).
   - **The Arena** (#28), `src/render/art/generated/arena.ts`: four 640×360 layers (sky, far
     skyline, buildings, plaza) from nine tile edits and one fix-up edit, assembled by `clean`
-    and split by the hand-pass script `scripts/art/scenes/arena.py`; five clouds and two stone
-    ledges from a props sheet. `src/render/layers/arena.ts` draws sky → drifting clouds → far →
+    and split by the hand-pass script `scripts/art/scenes/arena.py`; five clouds and two Ledges
+    from a props sheet. The Ledges (#34) are redrawn by `scripts/art/scenes/ledges.py` from the
+    props sheet's stone ledges as polished mahogany (leather ramp) with a brass lip for the
+    walkable top and brass fittings underneath, keeping the outline and silhouette, so they stand
+    out over the marble, the sunset sky and the glass alike. `src/render/layers/arena.ts` draws sky → drifting clouds → far →
     buildings → plaza → signs → platforms. The lettering (gym billboard, name plate, Boissons
     neon and chalkboard) is code (`arena-signs.ts`), because the image model cannot letter at
     1:1; the tile edits left those faces blank. Ambient animation (cloud drift, billboard bulbs,
@@ -719,8 +722,8 @@ every step is done.
 ### A platform
 
 Add `{ x, y, w }` (y = walkable top) to `arena.platforms` in `src/core/tuning/arena.ts`. Physics
-(`src/core/run/physics.ts`) treats every platform as one-way and the renderer draws each as a stone
-ledge (the pipeline's 102 or 144 px ledge, or its ends and repeated blocks for any other width), so
+(`src/core/run/physics.ts`) treats every platform as one-way and the renderer draws each as a mahogany
+Ledge (the pipeline's 102 or 144 px Ledge, or its ends and repeated panels for any other width), so
 no other code changes. Keep each one less than a full jump above the surface below it
 (the layout tests in `tests/core/platforms.test.ts` check this).
 

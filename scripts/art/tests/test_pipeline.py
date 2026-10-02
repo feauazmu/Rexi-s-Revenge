@@ -40,7 +40,7 @@ def test_the_arena_rebuilds_from_its_committed_grids(tmp_path):
     for folder in ("grid", "drafts"):
         shutil.copytree(os.path.join(art, folder), root / folder)
     assert clean.run(Project(str(root)), ["arena", "arena_props"], log=lambda *_: None) == 0
-    names = ["scene", "ledge_102", "ledge_144"] + [f"cloud_{c}" for c in "abcde"]
+    names = ["scene", "stone/ledge_102", "stone/ledge_144"] + [f"cloud_{c}" for c in "abcde"]
     for name in names:
         got = np.asarray(Image.open(root / "sprites" / "arena" / f"{name}.png").convert("RGBA"))
         want = np.asarray(Image.open(os.path.join(art, "sprites", "arena", f"{name}.png")).convert("RGBA"))
@@ -61,6 +61,22 @@ def test_the_arena_layers_partition_the_scene_and_match_the_committed_ones(tmp_p
     for name, layer in split.items():
         want = np.asarray(Image.open(os.path.join(arena.OUT, f"{name}.png")).convert("RGBA"))
         assert (layer == want).all(), name
+
+
+def test_the_ledges_keep_the_stone_silhouette_and_match_the_committed_ones(tmp_path):
+    path = os.path.join(ROOT, "scripts", "art", "scenes", "ledges.py")
+    spec = importlib.util.spec_from_file_location("ledges_scene", path)
+    ledges = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledges)
+
+    for name, ledge in ledges.build(out=str(tmp_path)).items():
+        stone = np.asarray(Image.open(os.path.join(ledges.SOURCE, f"{name}.png")).convert("RGBA"))
+        assert ((ledge[..., 3] > 0) == (stone[..., 3] > 0)).all(), name
+        for row in (ledges.TOP, ledges.BOTTOM):                    # the slab's outline
+            assert (ledge[row, :, :3] == stone[row, :, :3]).all(), name
+        assert (ledge[:ledges.BOTTOM, [0, -1], :3] == stone[:ledges.BOTTOM, [0, -1], :3]).all(), name
+        want = np.asarray(Image.open(os.path.join(ledges.ART, f"{name}.png")).convert("RGBA"))
+        assert (ledge == want).all(), name
 
 
 def test_rle_round_trips_and_rows_use_fixed_codes():

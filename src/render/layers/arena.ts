@@ -158,11 +158,11 @@ function drawBillboardBulbs(surface: Surface, tick: number): void {
 // Platforms
 // ---------------------------------------------------------------------------------------------
 
-/** The pipeline's stone ledges, by width; the walkable top is their second row. */
+/** The pipeline's mahogany ledges, by width; the walkable top is their second row, in brass. */
 const LEDGES: readonly SpriteDef[] = [art.ledge_102, art.ledge_144];
 /**
- * Columns of the 102 px ledge used for other widths: the left end with its corbel runs up to
- * the second block joint, then 18 px blocks repeat, then the right end with its corbel.
+ * Columns of the 102 px ledge used for other widths: the left end with its brass fitting runs up
+ * to the second panel seam, then 18 px panels repeat, then the right end with its fitting.
  */
 const LEDGE_BLOCK = { from: 30, to: 48 } as const;
 const LEDGE_RIGHT_FROM = 84;
@@ -170,8 +170,8 @@ const LEDGE_RIGHT_FROM = 84;
 const ledgeCache = new Map<number, SpriteDef>();
 
 /**
- * A stone ledge exactly `w` px wide: the pipeline's own ledge when one has that width, else
- * the 102 px ledge's ends around as many of its blocks as fit (the last one cut short). A
+ * A ledge exactly `w` px wide: the pipeline's own ledge when one has that width, else
+ * the 102 px ledge's ends around as many of its panels as fit (the last one cut short). A
  * ledge narrower than both ends keeps the outer part of each end.
  */
 export function ledgeSprite(w: number): SpriteDef {
