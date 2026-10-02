@@ -498,6 +498,13 @@ changes:
   where whole factors would drop from 3× to 2× and cover about half the screen. At DPR 2–3 the uneven
   pixel widths are a fraction of a physical pixel and not visible.
 
+It also takes safe-area insets: the image is fitted and centered in the container minus them, with
+offsets still relative to the whole container. Installed on an iPhone home screen
+(`apple-mobile-web-app-capable`, `black-translucent` status bar, `viewport-fit=cover`), the page draws
+under the status bar and notch; the shell reads `env(safe-area-inset-*)` from the computed padding of a
+hidden `.safe-area-probe` element on every layout (resize, rotation), so the notch and home indicator
+never cover the Arena, HUD or touch controls. Elsewhere the insets are zero.
+
 `screenToGame` / `screenToGameUnclamped` map pointer and touch points through the resulting `cssScale` and
 offsets, so mouse aiming and the touch adapter need no per-mode cases. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
