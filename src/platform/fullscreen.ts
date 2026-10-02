@@ -6,14 +6,18 @@ export interface FullscreenFacts {
   readonly api: boolean;
   /** The page runs as an installed app (standalone display mode, or iOS's standalone flag). */
   readonly installed: boolean;
+  /** The browser runs on iOS or iPadOS, where every browser is WebKit. */
+  readonly ios: boolean;
 }
 
 const SUPPORT_VALUES: readonly FullscreenSupport[] = ['toggle', 'install-hint', 'none'];
 
 /**
  * Picks how the player can get fullscreen: the pause-menu toggle when the Fullscreen API is
- * available and the game is not installed, else nothing. `?fullscreen=toggle|install-hint|none`
- * in the URL overrides it (for trying each value in a desktop browser's device emulation).
+ * available and the game is not installed; on iOS without the API (every iPhone browser), the
+ * Title's hint to add the game to the home screen, unless it already is; else nothing.
+ * `?fullscreen=toggle|install-hint|none` in the URL overrides it (for trying each value in a
+ * desktop browser's device emulation).
  */
 export function chooseFullscreenSupport(
   urlParam: string | null,
@@ -21,13 +25,16 @@ export function chooseFullscreenSupport(
 ): FullscreenSupport {
   const override = SUPPORT_VALUES.find((value) => value === urlParam);
   if (override) return override;
-  return facts.api && !facts.installed ? 'toggle' : 'none';
+  if (facts.installed) return 'none';
+  if (facts.api) return 'toggle';
+  return facts.ios ? 'install-hint' : 'none';
 }
 
 /**
  * {@link chooseFullscreenSupport} for the current page. The installed app runs in the
  * manifest's `fullscreen` display mode (or `standalone` where that is unavailable); iOS flags
- * a home-screen app with `navigator.standalone`.
+ * a home-screen app with `navigator.standalone`. iPadOS reports itself as a Mac, so a Mac
+ * with a touch screen counts as iOS too.
  */
 export function detectFullscreenSupport(): FullscreenSupport {
   const param = new URLSearchParams(window.location.search).get('fullscreen');
@@ -35,7 +42,13 @@ export function detectFullscreenSupport(): FullscreenSupport {
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  return chooseFullscreenSupport(param, { api: document.fullscreenEnabled, installed });
+  const { userAgent } = navigator;
+  const ios =
+    /iPhone|iPad|iPod/.test(userAgent) ||
+    (userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1);
+  // iPhone browsers leave `fullscreenEnabled` undefined rather than false.
+  const api = (document.fullscreenEnabled as boolean | undefined) ?? false;
+  return chooseFullscreenSupport(param, { api, installed, ios });
 }
 
 /** True while the page is fullscreen. */

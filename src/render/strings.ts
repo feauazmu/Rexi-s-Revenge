@@ -49,6 +49,8 @@ export const strings = {
     highScores: 'Jurisprudencia',
     /** Shown instead of the top 10 while it is empty ("no criminal record"). */
     noHighScores: 'Sin antecedentes',
+    /** On iPhone, where no browser can go fullscreen: how to install the game instead. */
+    installHint: 'Pantalla completa: Compartir → Añadir a inicio',
   },
 
   howToPlay: {

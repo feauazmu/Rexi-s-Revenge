@@ -1,7 +1,8 @@
 /**
  * Title screen: the title illustration, the "Rexi's Revenge" logo in its empty sky at the upper
  * left, and below it, in the same left column, the local top 10, the start prompt and the
- * credits line. Rexi stays uncovered on the right.
+ * credits line (with, on iPhone, the hint to install the game for fullscreen between them).
+ * Rexi stays uncovered on the right.
  *
  * The backdrop is the bundled title illustration (a 640×360 bitmap the platform decodes and
  * hands to the renderer, per ADR 0001) or, when it is missing, a code-drawn sunset plaza with
@@ -36,6 +37,9 @@ const SCORES_SLIDE_TICKS = 12;
 const PROMPT_Y = 300;
 const PLATE_PAD_X = 8;
 
+/** Top of the install hint's text cell: between the prompt's plate and the credits line. */
+const INSTALL_HINT_Y = 322;
+
 /** Top of the credits line's text cell. */
 const CREDITS_Y = 340;
 
@@ -44,6 +48,7 @@ const ink = {
   plate: masterPalette.night,
   plateEdge: masterPalette.robeSheen,
   prompt: masterPalette.gold,
+  installHint: masterPalette.light,
   credits: masterPalette.grey3,
 } as const satisfies Record<string, Color>;
 
@@ -74,6 +79,18 @@ export function drawTitleScreen(dc: DrawContext, illustration: Bitmap | null): v
       align: 'center',
       outline: ink.outline,
     });
+  }
+
+  if (view.fullscreenSupport === 'install-hint') {
+    drawOutlinedText(
+      dc,
+      fonts.regular,
+      strings.titleScreen.installHint,
+      COLUMN_CENTER_X,
+      INSTALL_HINT_Y,
+      ink.installHint,
+      { align: 'center', outline: ink.outline },
+    );
   }
 
   drawOutlinedText(

@@ -60,6 +60,13 @@ describe('Screen goldens', () => {
     await expectGolden('title-touch', renderView(game.view, null, { titleIllustration }));
   });
 
+  it('title-install-hint: an iPhone browser is told how to add the game to the home screen', async () => {
+    const game = driveFromTitle({ device: 'touch', fullscreenSupport: 'install-hint' });
+    untilPromptShows(game);
+    const titleIllustration = await loadTitleIllustration();
+    await expectGolden('title-install-hint', renderView(game.view, null, { titleIllustration }));
+  });
+
   it('title-backdrop: the code-drawn backdrop when the illustration is missing', async () => {
     const game = driveFromTitle();
     untilPromptShows(game);
