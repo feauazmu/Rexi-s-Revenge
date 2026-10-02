@@ -39,6 +39,16 @@ function distinctColors(page: Page, selector: string): Promise<number> {
 test.describe('phone in landscape', () => {
   test.use(phoneLandscape);
 
+  test('the game canvas fills the viewport height', async ({ page }) => {
+    await page.goto('');
+    await expect(page.locator('.game-canvas')).toBeVisible();
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    // At DPR 2.625 a whole-number scale would drop to 2 device px (274 CSS px tall).
+    await expect
+      .poll(async () => (await page.locator('.game-canvas').boundingBox())?.height ?? 0)
+      .toBeCloseTo(viewportHeight, 0);
+  });
+
   test('shows the touch controls and plays with touch only', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));

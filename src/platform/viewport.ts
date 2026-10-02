@@ -2,7 +2,10 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, type Vec2 } from '../core';
 
 /** Where and how big the 640×360 game image is drawn inside its container. */
 export interface Viewport {
-  /** Whole device pixels per game pixel (crisp integer scaling). */
+  /**
+   * Device pixels per game pixel: a whole number in `integer` mode, possibly fractional in
+   * `fit` mode.
+   */
   readonly scale: number;
   /** CSS pixels per game pixel (`scale / devicePixelRatio`). */
   readonly cssScale: number;
@@ -20,30 +23,39 @@ export interface ImageSize {
   readonly height: number;
 }
 
+/**
+ * How the image is scaled to its container:
+ * - `integer`: the largest whole number of device pixels per image pixel (never below 1), so
+ *   every image pixel is a perfect square. Used on desktop.
+ * - `fit`: the largest fractional scale that fits, so the image fills the container's width or
+ *   height. Used on touch devices, where at DPR 2–3 the uneven pixel widths are invisible.
+ */
+export type ScaleMode = 'integer' | 'fit';
+
 const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
 
 /**
- * Largest integer scale (in device pixels) that fits an image (by default the 640×360 game)
- * in the container, centered with letterbox bars. Offsets are snapped to device pixels so
- * image pixels stay perfectly square.
+ * Fits an image (by default the 640×360 game) in the container at the largest scale the
+ * mode allows, centered with letterbox bars. Offsets are snapped to device pixels.
  */
 export function computeViewport(
   containerWidth: number,
   containerHeight: number,
   devicePixelRatio = 1,
   image: ImageSize = GAME_SIZE,
+  mode: ScaleMode = 'integer',
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const scale = Math.max(
-    1,
-    Math.floor(
-      Math.min((containerWidth * dpr) / image.width, (containerHeight * dpr) / image.height),
-    ),
+  const fitScale = Math.min(
+    (containerWidth * dpr) / image.width,
+    (containerHeight * dpr) / image.height,
   );
+  const scale = mode === 'fit' ? fitScale : Math.max(1, Math.floor(fitScale));
   const cssScale = scale / dpr;
   const width = image.width * cssScale;
   const height = image.height * cssScale;
-  const snap = (cssPx: number) => Math.round(cssPx * dpr) / dpr;
+  // `+ 0` turns the -0 that rounding a tiny negative gap gives into 0.
+  const snap = (cssPx: number) => Math.round(cssPx * dpr) / dpr + 0;
   return {
     scale,
     cssScale,

@@ -19,7 +19,7 @@ import { createFixedStepper } from './fixed-step';
 import { createKeyboardMouseInput } from './keyboard-mouse';
 import { browserStorage } from './storage';
 import { createTouchInput } from './touch/touch';
-import { computeViewport, type ImageSize, type Viewport } from './viewport';
+import { computeViewport, type ImageSize, type ScaleMode, type Viewport } from './viewport';
 
 export interface ShellOptions {
   /** Seed for the Run. Default: `?seed=` from the URL, else random. */
@@ -57,9 +57,9 @@ interface InputAdapter {
 }
 
 /**
- * Browser shell: creates the 640×360 canvas, scales it by the largest integer factor that fits
- * (letterboxed, no smoothing), and runs the fixed-timestep loop that feeds input frames to the
- * Game core and draws its view. It pauses the Run when the tab is hidden or loses focus.
+ * Browser shell: creates the 640×360 canvas, scales it to fit (letterboxed, no smoothing): by
+ * the largest integer factor on desktop, by the largest fractional one on touch devices. It
+ * runs the fixed-timestep loop that feeds input frames to the Game core and draws its view. It pauses the Run when the tab is hidden or loses focus.
  *
  * On touch devices it uses the touch adapter and draws its controls over the game; held in
  * portrait, it freezes the game and shows the "Gira tu teléfono" prompt instead.
@@ -78,20 +78,22 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
         })
       : null;
 
+  // Touch screens fill the space with fractional scaling; desktop keeps whole-number scaling.
+  const scaleMode: ScaleMode = device === 'touch' ? 'fit' : 'integer';
   let viewport: Viewport = computeViewport(1, 1);
   /** True while a touch device is held upright: the game is frozen behind the prompt. */
   let blocked = false;
   const layout = () => {
     const { clientWidth: w, clientHeight: h } = root;
     const dpr = window.devicePixelRatio;
-    viewport = computeViewport(w, h, dpr);
+    viewport = computeViewport(w, h, dpr, undefined, scaleMode);
     place(canvas.element, viewport);
     const wasBlocked = blocked;
     blocked = rotateCanvas !== null && isPortrait(w, h);
     root.dataset.orientation = isPortrait(w, h) ? 'portrait' : 'landscape';
     canvas.element.hidden = blocked;
     if (rotateCanvas) {
-      place(rotateCanvas.element, computeViewport(w, h, dpr, rotateCanvas.size));
+      place(rotateCanvas.element, computeViewport(w, h, dpr, rotateCanvas.size, scaleMode));
       rotateCanvas.element.hidden = !blocked;
     }
     if (blocked && !wasBlocked) {

@@ -483,8 +483,21 @@ DIALOGUE_MAX_LINES` (2), both exported from `src/render`. Quips are game content
 
 ## Platform shell
 
-`src/platform/shell.ts` creates the 640×360 canvas, applies `computeViewport` (largest integer device-pixel scale: 2× at 720p, 3× at 1080p, 4× at 1440p;
-letterboxed, snapped to device pixels), and runs a `requestAnimationFrame` loop. `createFixedStepper`
+`src/platform/shell.ts` creates the 640×360 canvas, applies `computeViewport`, and runs a
+`requestAnimationFrame` loop. `computeViewport` takes a scaling mode; either way the image is centered
+with black letterbox/pillarbox bars, its offsets are snapped to device pixels, and the canvas keeps its
+640×360 backing store with nearest-neighbor display (`image-rendering: pixelated`), so only its CSS size
+changes:
+
+- `integer` (the default, used on desktop): the largest whole device-pixel scale that fits, never below 1
+  (2× at 720p, 3× at 1080p, 4× at 1440p), so every game pixel is a perfect square.
+- `fit` (used for the `touch` device kind): the largest fractional scale that fits, so the game fills the
+  height (or width) of the screen. On an iPhone in landscape the browser bars leave less than 360 CSS px,
+  where whole factors would drop from 3× to 2× and cover about half the screen. At DPR 2–3 the uneven
+  pixel widths are a fraction of a physical pixel and not visible.
+
+`screenToGame` / `screenToGameUnclamped` map pointer and touch points through the resulting `cssScale` and
+offsets, so mouse aiming and the touch adapter need no per-mode cases. `createFixedStepper`
 converts frame times into whole ticks (clamped to 5 per frame), so speed is identical at 60/120/144 Hz.
 Each tick samples the device's input adapter once (edges are consumed by the first sample).
 On `blur` or `visibilitychange` to hidden it calls `game.pause()`. It mirrors `view.screen` to
@@ -528,7 +541,7 @@ the touch adapter (no keyboard/mouse adapter, so a finger is never also a mouse 
 - **Overlay** (`src/render/touch/overlay.ts`): drawn last by `render(surface, view, overlay)`. Idle controls
   are dithered outlines so the Arena shows through (no alpha: determinism rule); held controls turn solid.
 - **Portrait**: the shell hides the game canvas, freezes the game (pausing a Run) and draws the "Gira tu
-  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 192×340 canvas, scaled like the game.
+  teléfono" prompt (`renderer.renderRotatePrompt`) on a separate 192×340 canvas, scaled like the game (same scaling mode).
 
 **Manual check on a real phone** (emulation covers the rest in `e2e/touch.spec.ts`): open the site in
 landscape → "Toca para empezar" → tap → Cómo jugar (touch) → tap → Run: move with the left stick, pull it
