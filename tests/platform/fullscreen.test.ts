@@ -2,21 +2,28 @@ import { describe, expect, it } from 'vitest';
 import { chooseFullscreenSupport } from '../../src/platform/fullscreen';
 
 describe('chooseFullscreenSupport', () => {
-  it('offers the toggle when the Fullscreen API is available and the game is not installed', () => {
-    expect(chooseFullscreenSupport(null, { api: true, installed: false })).toBe('toggle');
-  });
-
-  it('offers nothing once installed, or without the Fullscreen API', () => {
-    expect(chooseFullscreenSupport(null, { api: true, installed: true })).toBe('none');
-    expect(chooseFullscreenSupport(null, { api: false, installed: false })).toBe('none');
-    expect(chooseFullscreenSupport(null, { api: false, installed: true })).toBe('none');
+  it.each([
+    // api, installed, ios → support
+    [true, false, false, 'toggle'],
+    [true, true, false, 'none'],
+    [false, false, false, 'none'],
+    [false, true, false, 'none'],
+    // iPhone browsers (all WebKit) have no Fullscreen API: hint at installing instead.
+    [false, false, true, 'install-hint'],
+    [false, true, true, 'none'],
+    // iPadOS Safari has the Fullscreen API, so it gets the toggle like any other browser.
+    [true, false, true, 'toggle'],
+    [true, true, true, 'none'],
+  ] as const)('with api=%s, installed=%s, ios=%s offers %s', (api, installed, ios, support) => {
+    expect(chooseFullscreenSupport(null, { api, installed, ios })).toBe(support);
   });
 
   it('lets ?fullscreen= override detection, ignoring unknown values', () => {
-    const facts = { api: false, installed: true };
+    const facts = { api: false, installed: true, ios: false };
     expect(chooseFullscreenSupport('toggle', facts)).toBe('toggle');
     expect(chooseFullscreenSupport('install-hint', facts)).toBe('install-hint');
-    expect(chooseFullscreenSupport('none', { api: true, installed: false })).toBe('none');
-    expect(chooseFullscreenSupport('yes', { api: true, installed: false })).toBe('toggle');
+    const browser = { api: true, installed: false, ios: false };
+    expect(chooseFullscreenSupport('none', browser)).toBe('none');
+    expect(chooseFullscreenSupport('yes', browser)).toBe('toggle');
   });
 });

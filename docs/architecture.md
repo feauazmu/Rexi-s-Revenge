@@ -516,11 +516,14 @@ code-drawn backdrop.
 The fullscreen support is chosen once at startup (`src/platform/fullscreen.ts`, pure
 `chooseFullscreenSupport` like the device chooser) and passed to the Game as `GameOptions.fullscreenSupport`
 (UI only, never gameplay): `toggle` when the Fullscreen API is available and the game is not installed
-(display mode `standalone`/`fullscreen`, or iOS's `navigator.standalone`), else `none`.
-`?fullscreen=toggle|install-hint|none` overrides it. The type also has `install-hint` (the iPhone Title
-hint), which detection does not pick yet. Known edge: `(display-mode: fullscreen)` also matches a browser tab
+(display mode `standalone`/`fullscreen`, or iOS's `navigator.standalone`); `install-hint` on iOS/iPadOS
+(an iPhone/iPad/iPod user agent, or a touch "Macintosh", which is how iPadOS reports itself) without the
+Fullscreen API and not installed, which covers every iPhone browser since all are WebKit; else `none`.
+`?fullscreen=toggle|install-hint|none` overrides it. Known edge: `(display-mode: fullscreen)` also matches a browser tab
 already in F11 fullscreen, so a page loaded that way shows no toggle until it is reloaded outside it.
 
+- **Title hint**: with `install-hint`, the Title footer shows "Pantalla completa: Compartir → Añadir a inicio"
+  between the start prompt and the credits line; the pause menu has no fullscreen item.
 - **Pause menu**: `pauseMenuItems(support)` lists Continuar, Silenciar música, Pantalla completa (only with
   `toggle`) and Salir; navigation wraps over that list. The item draws an on/off box from `view.fullscreen`.
 - **Request**: choosing Pantalla completa emits `fullscreen-toggle-requested` with the desired state
