@@ -226,7 +226,7 @@ Outputs are `<name>.png` and `<name>_<layer>.png`.
 
 **Registered tiles and patches** (`tiles.py`). Independent tile edits never agree pixel for pixel, and grid recovery usually returns 239×133 cells with the first column and row dropped. With `"register": "drafts/x.png"` (the draft the tiles were cut from, at scene size), `clean` places each tile where it best matches its draft crop, searching ±3 cells; a mostly flat sky tile keeps the offset most tiles agree on. Overlaps are then cut along the least-difference path, as in image quilting, so a cut follows an edge or a flat area. `"patches": [{"name", "guide", "at": [x, y]}]` insets fix-up edits: `guide` is the crop of the assembled scene at `at` that was patched up by hand and edited (`scene_tiles` of a 240×135 guide gives its one template). The patch is registered against its guide and inset along least-difference seams on all four sides.
 
-**Scene scripts** (`scenes/`). Like character scripts, a scene's hand pass is code, so every change to the pipeline's pixels is reviewable. `scenes/arena.py` (#28) rebuilds the sky row by row (a running median of each row's majority sky colour, never stepping back up the ramp, with dithered band seams), clears and copies a few listed rectangles where tiles disagreed, then splits the scene into the `sky`, `far`, `buildings` and `plaza` layers that are exported.
+**Scene scripts** (`scenes/`). Like character scripts, a scene's hand pass is code, so every change to the pipeline's pixels is reviewable. `scenes/arena.py` (#28) rebuilds the sky row by row (a running median of each row's majority sky colour, never stepping back up the ramp, with dithered band seams), clears and copies a few listed rectangles where tiles disagreed, then splits the scene into the `sky`, `far`, `buildings` and `plaza` layers that are exported. `scenes/ledges.py` (#34) redraws the Ledges (see "The Arena").
 
 ## Parts
 
@@ -342,11 +342,12 @@ The prompt files and their sidecars keep the prompts as they were sent. The aimi
 
 ## The Arena (#28)
 
-`art/sheets.json` → `arena` and `arena_props`; `npm run art -- clean`, then `uv run -q --with pillow --with numpy python scripts/art/scenes/arena.py`, then `npm run art -- export arena`.
+`art/sheets.json` → `arena` and `arena_props`; `npm run art -- clean`, then `uv run -q --with pillow --with numpy python scripts/art/scenes/arena.py` and `scripts/art/scenes/ledges.py` (the same way), then `npm run art -- export arena`.
 
 - **Draft:** `art/drafts/arena.png` is the retired code-drawn Arena (the composition already fitted to the ground line, the platforms and the HUD and Dialogue Box bands), with every sign face blanked. `reference/arena.png` predates Boissons and puts the 2×1 promo on the gym billboard, so it is not used.
 - **Tiles:** nine edits of the draft's 240×135 tiles (`prompts/arena_rNcM.txt`, each naming what its tile holds), then one fix-up edit of the centre (`drafts/arena_fix_center.png`, built from the assembly with the skyline extruded by hand), because the centre tile invented a far richer skyline than its neighbours.
-- **Props:** `drafts/arena_props.png`, the old ledges and clouds on chroma green, edited into two ledges (102 and 144 px, the tuned platform widths) and five clouds.
+- **Props:** `drafts/arena_props.png`, the old ledges and clouds on chroma green, edited into two stone ledges (102 and 144 px, the tuned platform widths; `clean` writes them to `sprites/arena/stone/`) and five clouds.
+- **Ledges** (#34): stone vanished into the marble courthouse, so `scenes/ledges.py` redraws both as polished mahogany (`leather1`–`leather3`) with a brass lip on the walkable top and brass fittings in place of the stone corbels. It keeps the stone sprites' silhouette and `night` outline and turns their block joints into panel seams 18 px apart, so `ledgeSprite`'s block tiling still holds; everything inside is drawn by rule, lit from the upper left. The audit holds them to the leather and brass ramps.
 - **Lettering is code** (`src/render/layers/arena-signs.ts`): the model cannot letter at 1:1, so the prompts keep sign faces blank.
 
 Lessons:
@@ -366,7 +367,7 @@ Lessons:
 | `templates.py`, `template_specs.py`   | Template builders and the manifest's `templates` section.                                               |
 | `pixelize.py`, `clean.py`, `holes.py` | Grid reconstruction, palette snap, slicing, scenes, hole fill.                                          |
 | `tiles.py`                            | Scene tiles: registration against the draft, least-difference seams, patch insets.                      |
-| `scenes/`                             | Scene hand passes and layer splits (`arena.py`).                                                        |
+| `scenes/`                             | Scene hand passes and layer splits (`arena.py`), and the Ledges' redraw (`ledges.py`).                  |
 | `rotsprite.py`, `bake.py`             | RotSprite and the parts bake.                                                                           |
 | `ik.py`                               | Two-bone IK and outlined, ramp-shaded limbs.                                                            |
 | `export_ts.py`                        | The TypeScript export (rows and RLE).                                                                   |

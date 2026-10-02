@@ -54,5 +54,19 @@
     "w": 640,
     "x": 0,
     "y": 0
+  },
+  "stone/ledge_102": {
+    "h": 17,
+    "sheet": "arena_props",
+    "w": 102,
+    "x": 5,
+    "y": 39
+  },
+  "stone/ledge_144": {
+    "h": 17,
+    "sheet": "arena_props",
+    "w": 144,
+    "x": 5,
+    "y": 7
   }
 }

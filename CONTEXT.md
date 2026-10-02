@@ -12,6 +12,10 @@ _Avoid_: Player, hero, protagonist
 The single screen where a Run takes place: the plaza between the courthouse and the Bufete & Pesas S.A. tower. Rexi stays in it and Enemies fly into it.
 _Avoid_: Level, stage, map
 
+**Ledge**:
+A floating one-way slab of polished courtroom mahogany with a brass edge, like a piece of a judge's bench, in the arcade tradition: nothing holds it up. Rexi jumps up through it from below, stands on its top and can drop down through it.
+_Avoid_: Platform, shelf
+
 **Run**:
 One endless survival attempt, from spawning until Rexi is defeated, scored by points.
 _Avoid_: Game, match, round

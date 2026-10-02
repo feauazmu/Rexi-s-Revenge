@@ -30,7 +30,7 @@ export const masterPalette = {
   steel2: '#6684aa',
   steel3: '#a2c0dc',
 
-  // Warm mauve stone (plaza paving, ledges, courthouse); stoneLight is the sunlit stone before marble.
+  // Warm mauve stone (plaza paving, courthouse); stoneLight is the sunlit stone before marble.
   stone1: '#6c5a6a',
   stone2: '#a28e92',
   stoneLight: '#c4aca8',
@@ -43,7 +43,7 @@ export const masterPalette = {
   skin4: '#eeac78',
   skin5: '#fcdcae',
 
-  // Brown leather (boots, briefcase, benches, gavel); light-brown hair is leather3 → leather4 → hairLight.
+  // Brown leather (boots, briefcase, benches, gavel, the Ledges' mahogany); light-brown hair is leather3 → leather4 → hairLight.
   leather1: '#3a1a22',
   leather2: '#62302a',
   leather3: '#8e5232',
@@ -57,7 +57,7 @@ export const masterPalette = {
   redLight: '#ec4a3c',
   coral: '#f4664c',
 
-  // Brass and gold (UI, labels, handles, muzzle flash, sun).
+  // Brass and gold (UI, labels, handles, the Ledges' lip and fittings, muzzle flash, sun).
   brass: '#c88a2c',
   gold: '#f8c43c',
   light: '#fff4b0',

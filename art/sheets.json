@@ -381,8 +381,16 @@
         "ramps": ["stone", "sky", "fire"]
       },
       "out": "sprites/arena",
-      "names": ["ledge_144", "cloud_a", "ledge_102", "cloud_b", "cloud_c", "cloud_d", "cloud_e"],
-      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky).",
+      "names": [
+        "stone/ledge_144",
+        "cloud_a",
+        "stone/ledge_102",
+        "cloud_b",
+        "cloud_c",
+        "cloud_d",
+        "cloud_e"
+      ],
+      "_post": "The snap lands the clouds' mauve tops on the stone ramp; their recolor moves them onto the sky ramp. Clouds have no outline (ADR 0002: scene shapes against the sky). The ledges land in stone/, and scripts/art/scenes/ledges.py redraws them as the mahogany Ledges.",
       "post": {
         "cloud_a": {
           "outline": false,
@@ -646,6 +654,10 @@
     "enemies/**/*.png": "enemy",
     "projectiles/*.png": "enemy",
     "sprites/arena/layers/*.png": "scene",
+    "sprites/arena/ledge_*.png": {
+      "ramps": ["leather", "brass"],
+      "colors": ["night"]
+    },
     "frames/rexi/**/*.png": "character",
     "sprites/rexi/portrait*.png": "icon",
     "sprites/rexi/*.png": "character"
