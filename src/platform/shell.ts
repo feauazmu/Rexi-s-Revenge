@@ -19,7 +19,13 @@ import { createFixedStepper } from './fixed-step';
 import { createKeyboardMouseInput } from './keyboard-mouse';
 import { browserStorage } from './storage';
 import { createTouchInput } from './touch/touch';
-import { computeViewport, type ImageSize, type ScaleMode, type Viewport } from './viewport';
+import {
+  computeViewport,
+  type ImageSize,
+  type Insets,
+  type ScaleMode,
+  type Viewport,
+} from './viewport';
 
 export interface ShellOptions {
   /** Seed for the Run. Default: `?seed=` from the URL, else random. */
@@ -78,6 +84,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
           height: ROTATE_PROMPT_HEIGHT,
         })
       : null;
+  const safeArea = createSafeAreaProbe(root);
 
   // Touch screens fill the space with fractional scaling; desktop keeps whole-number scaling.
   const scaleMode: ScaleMode = device === 'touch' ? 'fit' : 'integer';
@@ -87,7 +94,8 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
   const layout = () => {
     const { clientWidth: w, clientHeight: h } = root;
     const dpr = window.devicePixelRatio;
-    viewport = computeViewport(w, h, dpr, { mode: scaleMode });
+    const insets = safeArea.read();
+    viewport = computeViewport(w, h, dpr, { mode: scaleMode, insets });
     place(canvas.element, viewport);
     const wasBlocked = blocked;
     blocked = rotateCanvas !== null && isPortrait(w, h);
@@ -96,7 +104,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
     if (rotateCanvas) {
       place(
         rotateCanvas.element,
-        computeViewport(w, h, dpr, { image: rotateCanvas.size, mode: scaleMode }),
+        computeViewport(w, h, dpr, { image: rotateCanvas.size, mode: scaleMode, insets }),
       );
       rotateCanvas.element.hidden = !blocked;
     }
@@ -183,6 +191,7 @@ export function startShell(root: HTMLElement, options: ShellOptions = {}): Shell
       input.dispose();
       canvas.element.remove();
       rotateCanvas?.element.remove();
+      safeArea.element.remove();
     },
   };
 }
@@ -228,6 +237,31 @@ function createCanvas(root: HTMLElement, className: string, size: ImageSize): Pi
   const ctx = element.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('2D canvas is not available');
   return { element, ctx, size };
+}
+
+/**
+ * A hidden element padded by `env(safe-area-inset-*)` (see `.safe-area-probe` in style.css):
+ * its computed padding is the safe-area insets in CSS px, re-read on every layout so a
+ * rotation picks up the new notch side. Zero outside an installed iPhone app.
+ */
+function createSafeAreaProbe(root: HTMLElement): { element: HTMLElement; read(): Insets } {
+  const element = document.createElement('div');
+  element.className = 'safe-area-probe';
+  element.setAttribute('aria-hidden', 'true');
+  root.append(element);
+  return {
+    element,
+    read() {
+      const style = getComputedStyle(element);
+      const px = (value: string) => parseFloat(value) || 0;
+      return {
+        top: px(style.paddingTop),
+        right: px(style.paddingRight),
+        bottom: px(style.paddingBottom),
+        left: px(style.paddingLeft),
+      };
+    },
+  };
 }
 
 function place(element: HTMLCanvasElement, viewport: Viewport): void {

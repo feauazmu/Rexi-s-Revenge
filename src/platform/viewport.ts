@@ -32,31 +32,49 @@ export interface ImageSize {
  */
 export type ScaleMode = 'integer' | 'fit';
 
+/**
+ * Edges of the container the image must stay clear of, CSS px: the safe-area insets that keep
+ * it out from under a phone's notch and home indicator.
+ */
+export interface Insets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
 /** What {@link computeViewport} fits and how. */
 export interface ViewportOptions {
   /** The image to fit (default: the 640×360 game). */
   readonly image?: ImageSize;
   /** How to scale it (default: `integer`). */
   readonly mode?: ScaleMode;
+  /**
+   * Edges to keep clear (default: none). The image is fitted and centered in the container
+   * minus these; offsets stay relative to the whole container.
+   */
+  readonly insets?: Insets;
 }
+
+const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
 const GAME_SIZE: ImageSize = { width: SCREEN_WIDTH, height: SCREEN_HEIGHT };
 
 /**
- * Fits an image (by default the 640×360 game) in the container at the largest scale the
- * mode allows, centered with letterbox bars. Offsets are snapped to device pixels.
+ * Fits an image (by default the 640×360 game) in the container, minus any insets, at the
+ * largest scale the mode allows, centered there with letterbox bars. Offsets are relative to
+ * the container and snapped to device pixels.
  */
 export function computeViewport(
   containerWidth: number,
   containerHeight: number,
   devicePixelRatio = 1,
-  { image = GAME_SIZE, mode = 'integer' }: ViewportOptions = {},
+  { image = GAME_SIZE, mode = 'integer', insets = NO_INSETS }: ViewportOptions = {},
 ): Viewport {
   const dpr = devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const fitScale = Math.min(
-    (containerWidth * dpr) / image.width,
-    (containerHeight * dpr) / image.height,
-  );
+  const areaWidth = containerWidth - insets.left - insets.right;
+  const areaHeight = containerHeight - insets.top - insets.bottom;
+  const fitScale = Math.min((areaWidth * dpr) / image.width, (areaHeight * dpr) / image.height);
   const scale = mode === 'fit' ? fitScale : Math.max(1, Math.floor(fitScale));
   const cssScale = scale / dpr;
   const width = image.width * cssScale;
@@ -66,8 +84,8 @@ export function computeViewport(
   return {
     scale,
     cssScale,
-    offsetX: snap((containerWidth - width) / 2),
-    offsetY: snap((containerHeight - height) / 2),
+    offsetX: snap(insets.left + (areaWidth - width) / 2),
+    offsetY: snap(insets.top + (areaHeight - height) / 2),
     width,
     height,
   };
